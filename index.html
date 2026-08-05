@@ -18,9 +18,15 @@
   --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10);
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#0D0E13; --card:#181A21; --ink:#F1F2F6; --mute:#8B8F9A; --line:#262933; --soft:#20232C;
-         --sh:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -14px rgba(0,0,0,.7); }
+  :root{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
+         --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
 }
+html[data-tema="claro"]{ --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
+  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10); }
+html[data-tema="escuro"]{ --bg:#0D0E13; --card:#181A21; --ink:#F1F2F6; --mute:#8B8F9A; --line:#262933; --soft:#20232C;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -14px rgba(0,0,0,.7); }
+html[data-tema="quente"]{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
+  --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
@@ -43,7 +49,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 /* ---------- cartão-herói ---------- */
 .hero{margin:12px 14px 0;border-radius:var(--r);padding:20px 20px 18px;color:var(--heroink);
   background:radial-gradient(120% 130% at 88% 8%, #8B5CF6 0%, var(--hero1) 38%, var(--hero2) 100%);
-  box-shadow:0 12px 30px -14px rgba(74,32,150,.75);position:relative;overflow:hidden}
+  box-shadow:0 12px 30px -16px rgba(74,32,150,.6);position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%)}
 .hero .lbl{font-size:13px;color:var(--heromute);position:relative}
@@ -180,7 +186,19 @@ textarea{min-height:170px;font-family:ui-monospace,monospace;font-size:14px}
 .sheetbox::before{content:"";display:block;width:42px;height:5px;border-radius:99px;background:var(--line);margin:0 auto 16px}
 .sheetbox h3{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.04em}
 .warn{background:#FFF4D6;border:1px solid #E8CE86;color:#4A3A10;border-radius:14px;padding:13px;font-size:13.5px;margin-bottom:12px;white-space:pre-wrap}
-@media (prefers-color-scheme: dark){ .warn{background:#33290D;border-color:#5C4A17;color:#F0DFB4} }
+@media (prefers-color-scheme: dark){ .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE} }
+html[data-tema="claro"] .warn{background:#FFF4D6;border-color:#E8CE86;color:#4A3A10}
+html[data-tema="escuro"] .warn{background:#33290D;border-color:#5C4A17;color:#F0DFB4}
+html[data-tema="quente"] .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE}
+.seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px}
+.seg button{flex:1 1 44%;border:1px solid transparent;background:transparent;border-radius:15px;padding:13px 8px;
+  font-size:14px;font-weight:600;color:var(--mute);display:flex;align-items:center;gap:9px;justify-content:flex-start}
+.seg button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:var(--sh);border-color:var(--line)}
+.sw{width:19px;height:19px;border-radius:7px;flex:0 0 auto;border:1.5px solid rgba(128,128,128,.4)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;font-size:14.5px}
+.kv+.kv{border-top:1px solid var(--line)}
+.kv span{color:var(--mute)}
+.kv b{font-weight:600}
 .pv{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;
   display:grid;grid-template-columns:76px 1fr 90px 56px 40px;gap:6px;align-items:center}
 .pv input{padding:9px;font-size:13.5px;border-radius:9px;background:var(--soft)}
@@ -575,7 +593,26 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
+const VERSAO = "1.7";
+const TEMAS = [
+  ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
+  ["claro",  "Claro",         "#F0F1F6"],
+  ["escuro", "Escuro",        "#0D0E13"],
+  ["quente", "Escuro quente", "#262624"]
+];
+const CORBARRA = {claro:"#F0F1F6", escuro:"#0D0E13", quente:"#262624"};
+function aplicarTema(){
+  const t = (S && S.tema) || "auto";
+  if (t === "auto") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  const sis = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  const efetivo = t === "auto" ? (sis ? "quente" : "claro") : t;
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", CORBARRA[efetivo] || "#F0F1F6");
+}
+
 function render(){
+  aplicarTema();
   const y = window.scrollY;
   const PAGINAS = {inicio:viewInicio, lista:viewLista, config:viewConfig};
   document.getElementById("app").innerHTML = (PAGINAS[UI.view] || viewInicio)();
@@ -949,11 +986,50 @@ function viewConfig(){
     <div style="font-size:13px;color:var(--mute);margin-top:6px">${Object.keys(S.regrasCat).length} com categoria ajustada à mão.</div></div>
     <button class="btn dgr" data-act="limparRegras">Apagar todas as regras</button>
 
-    <h2>Backup</h2>
-    <button class="btn" data-act="backup">Baixar backup (.json)</button>
-    <button class="btn" data-act="restaurar">Restaurar backup</button>
-    <input type="file" id="filein" accept="application/json" style="display:none">
-    <p style="font-size:13px;color:var(--mute);line-height:1.6;margin-top:14px">Tudo fica guardado só neste aparelho.</p>
+    <h2>Aplicativo</h2>
+    ${(()=>{
+      const tema = S.tema || "auto";
+      const nLanc = S.faturas.reduce((a,f)=>a+f.lanc.length,0);
+      const nAuto = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.auto).length,0);
+      const bytes = (()=>{ try { return JSON.stringify(S).length; } catch(e){ return 0; } })();
+      const tam = bytes > 1024*1024 ? (bytes/1048576).toFixed(1)+" MB" : Math.round(bytes/1024)+" KB";
+      return `
+      <div class="row">
+        <label class="f" style="margin-top:0">Aparência</label>
+        <div class="seg">
+          ${TEMAS.map(([k,n,c])=>
+            `<button data-act="tema" data-v="${k}" data-on="${tema===k?1:0}">
+               <i class="sw" style="background:${c}"></i>${n}</button>`).join("")}
+        </div>
+        <p style="font-size:12.5px;color:var(--mute);margin:9px 0 0;line-height:1.5">
+          Automático segue o celular e usa o escuro quente à noite.
+          Escuro é quase preto; escuro quente é um cinza acinzentado mais suave.</p>
+      </div>
+
+      <div class="row">
+        <div class="kv"><span>Lançamentos</span><b class="num">${nLanc}</b></div>
+        <div class="kv"><span>Parcelas previstas</span><b class="num">${nAuto}</b></div>
+        <div class="kv"><span>Faturas</span><b class="num">${S.faturas.length}</b></div>
+        <div class="kv"><span>Cartões</span><b class="num">${S.cartoes.length}</b></div>
+        <div class="kv"><span>Pessoas</span><b class="num">${S.pessoas.length}</b></div>
+        <div class="kv"><span>Categorias</span><b class="num">${S.cats.length}</b></div>
+        <div class="kv"><span>Regras salvas</span><b class="num">${Object.keys(S.regras).length + Object.keys(S.regrasCat).length}</b></div>
+        <div class="kv"><span>Espaço ocupado</span><b class="num">${tam}</b></div>
+        <div class="kv"><span>Versão</span><b class="num">${VERSAO}</b></div>
+      </div>
+
+      <label class="f">Backup</label>
+      <button class="btn" data-act="backup">Baixar backup (.json)</button>
+      <button class="btn" data-act="compartilharbackup">Compartilhar backup</button>
+      <button class="btn" data-act="restaurar">Restaurar backup</button>
+      <input type="file" id="filein" accept="application/json" style="display:none">
+      <p style="font-size:12.5px;color:var(--mute);line-height:1.6;margin:10px 0 0">
+        Tudo fica guardado só neste aparelho — nada é enviado para servidor nenhum.
+        Faça backup antes de reinstalar o app ou trocar de celular.</p>
+
+      <label class="f">Zona de risco</label>
+      <button class="btn dgr" data-act="apagartudo">Apagar todos os dados</button>`;
+    })()}
   </div>` + navbar();
 }
 
@@ -1235,6 +1311,11 @@ function nomeArquivo(t, ext){
   const base = t.escopo==="todas" ? "todas" : (S.rotuloAtivo.replace(/\W+/g,"-").toLowerCase());
   return "gastos-" + base + "." + ext;
 }
+function nomeBackup(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  return "divisor-backup-" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + ".json";
+}
 function baixar(nome, conteudo, tipo){
   const u = URL.createObjectURL(new Blob([conteudo],{type:tipo}));
   const a = document.createElement("a");
@@ -1383,7 +1464,27 @@ document.addEventListener("click", ev => {
     case "limparRegras":
       if (!confirm("Apagar todas as regras de dono e categoria?")) return;
       S.regras = {}; S.regrasCat = {}; salvar(); return render();
-    case "backup": baixar("divisor-backup-"+new Date().toISOString().slice(0,10)+".json", JSON.stringify(S), "application/json"); return;
+    case "tema": S.tema = v; salvar(); return render();
+    case "backup": baixar(nomeBackup(), JSON.stringify(S), "application/json"); return;
+    case "compartilharbackup": {
+      const nome = nomeBackup();
+      const file = new File([JSON.stringify(S)], nome, {type:"application/json"});
+      if (navigator.canShare && navigator.canShare({files:[file]}))
+        navigator.share({files:[file], title:nome}).catch(()=>{});
+      else { baixar(nome, JSON.stringify(S), "application/json");
+             alert("Este navegador não abre o compartilhamento. Baixei o arquivo na pasta Downloads."); }
+      return;
+    }
+    case "apagartudo": {
+      if (!confirm("Apagar TUDO: lançamentos, faturas, cartões, pessoas, categorias e regras?")) return;
+      if (!confirm("Isso não tem volta. Você baixou um backup? Toque em OK só se tiver certeza.")) return;
+      const tema = S.tema;
+      S = inicial(); S.tema = tema; S.faturas = []; S.cartoes = []; S.ativa = null;
+      S.cartaoAtivo = "todos"; S.rotuloAtivo = "";
+      salvar(); UI = {view:"config", modo:"grupo", soPend:false, filtroP:null, aberto:null,
+                      sheet:null, tmp:null, editando:null, editandoItem:null, buffer:""};
+      window.scrollTo(0,0); return render();
+    }
     case "restaurar": return document.getElementById("filein").click();
 
     case "nfcriar": {
@@ -1469,7 +1570,9 @@ document.addEventListener("change", ev => {
     r.onload = () => { try {
       const d = JSON.parse(r.result);
       if (!d.pessoas || !d.faturas) throw 0;
+      const temaAtual = S.tema;
       S = d; S.regrasCat = S.regrasCat||{}; S.cats = (d.cats&&d.cats.length)?d.cats:DEFAULT_CATS.slice();
+      if (!S.tema) S.tema = temaAtual;
       S.faturas.forEach(f=>f.lanc.forEach(l=>{ if(!l.cat) l.cat = categorizar(l.g);
         if(!S.cats.includes(l.cat)) S.cats.push(l.cat); }));
       salvar(); render(); alert("Backup restaurado.");
@@ -1539,6 +1642,9 @@ document.addEventListener("keydown", ev => {
 });
 
 migrar();
+aplicarTema();
+if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", () => { if (!S.tema || S.tema==="auto") aplicarTema(); });
 render();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
