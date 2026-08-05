@@ -1,0 +1,2414 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14161C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Divisor de Fatura</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+:root{
+  --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
+  --hero1:#6A34C9; --hero2:#3F1F8C; --heroink:#fff; --heromute:#C9C2EA;
+  --r:22px; --r2:16px;
+  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
+         --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
+}
+html[data-tema="claro"]{ --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
+  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10); }
+html[data-tema="escuro"]{ --bg:#0D0E13; --card:#181A21; --ink:#F1F2F6; --mute:#8B8F9A; --line:#262933; --soft:#20232C;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -14px rgba(0,0,0,.7); }
+html[data-tema="quente"]{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
+  --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:16px;line-height:1.42;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.disp,.big,.nm,h2,h3,.stat b,.badge,.tog button,.foot button,.btn{
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-optical-sizing:auto}
+button{font-family:inherit;cursor:pointer;font-size:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--hero1);outline-offset:2px}
+
+/* ---------- topo ---------- */
+.top{padding:calc(12px + env(safe-area-inset-top)) 14px 0}
+.selrow{display:flex;gap:8px}
+.selrow select{flex:1;min-width:0;background:var(--card);color:var(--ink);border:1px solid var(--line);
+  border-radius:99px;padding:12px 16px;font-size:14.5px;font-weight:600;box-shadow:var(--sh);
+  appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+
+/* ---------- cartão-herói ---------- */
+.hero{margin:12px 14px 0;border-radius:var(--r);padding:20px 20px 18px;color:var(--heroink);
+  background:radial-gradient(120% 130% at 88% 8%, #8B5CF6 0%, var(--hero1) 38%, var(--hero2) 100%);
+  box-shadow:0 12px 30px -16px rgba(74,32,150,.6);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%)}
+.hero .lbl{font-size:13px;color:var(--heromute);position:relative}
+.hero .big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.045em;margin-top:5px;position:relative}
+.bar{display:flex;height:9px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18);margin-top:15px;position:relative}
+.bar>span{transition:width .35s cubic-bezier(.4,0,.2,1)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:13px;font-size:13.5px;color:var(--heromute);position:relative}
+.legend span{display:flex;align-items:center;gap:7px;min-width:0}
+.legend em{font-style:normal;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend b{color:#fff;font-weight:600}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto}
+.acerto{margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:var(--heromute);position:relative}
+.acerto div{margin-top:5px}
+.acerto b{color:#fff}
+.selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;position:relative}
+.selo{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
+
+/* ---------- faixa de números ---------- */
+.stats{display:flex;gap:9px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
+.stats::-webkit-scrollbar{display:none}
+.stat{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
+  padding:11px 15px;box-shadow:var(--sh);min-width:104px}
+.stat b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.035em}
+.stat i{font-style:normal;font-size:11.5px;color:var(--mute)}
+
+/* ---------- filtros e abas ---------- */
+.fscroll{display:flex;gap:7px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
+.fscroll::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:10px 15px;
+  font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap;display:flex;align-items:center;gap:7px;box-shadow:var(--sh)}
+.fchip[data-on="1"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stick{position:sticky;top:0;z-index:15;background:var(--bg);padding:12px 14px 8px;
+  box-shadow:0 10px 12px -10px rgba(0,0,0,.10)}
+.tog{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;box-shadow:var(--sh)}
+.tog button{flex:1;border:0;background:transparent;padding:11px 2px;border-radius:99px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.tog button[data-on="1"]{background:var(--ink);color:var(--bg)}
+.check{display:flex;align-items:center;gap:11px;font-size:14.5px;color:var(--mute);margin:12px 2px 14px;padding:0 2px}
+.check input{width:21px;height:21px;margin:0;accent-color:var(--hero1)}
+
+.body{padding:0 14px}
+/* ---------- linhas ---------- */
+.row{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:9px;box-shadow:var(--sh)}
+.rowtop{display:flex;gap:12px;align-items:flex-start}
+.badge{width:42px;height:42px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.nm{font-weight:600;font-size:16.5px;letter-spacing:-.025em;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left;width:100%}
+.val{font-weight:700;font-size:17px;white-space:nowrap;margin-left:auto}
+.meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px}
+.lnk{border:1px solid var(--line);background:var(--soft);padding:5px 11px;border-radius:99px;font-size:12px;color:var(--mute);font-weight:600}
+.tag{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap;border:0}
+.cardtag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap}
+.hero .cardtag{background:rgba(255,255,255,.14);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.chip{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;padding:12px 8px;font-size:14px;
+  font-weight:600;color:var(--mute);flex:1 1 0;min-width:74px;min-height:46px}
+.chip[data-on="1"]{color:#fff;border-color:transparent}
+.editwrap{display:flex;gap:8px;align-items:center}
+.editwrap input{flex:1;font-size:16px;font-weight:600;padding:11px;border:2px solid var(--hero1);border-radius:12px}
+.ok{background:var(--hero1);color:#fff;border:0;border-radius:12px;padding:13px 17px;font-weight:700}
+
+.sub{border-top:1px solid var(--line);margin-top:14px;padding-top:11px}
+.catsel{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.catsel span{font-size:12.5px;color:var(--mute);font-weight:600;flex:0 0 auto}
+.catsel select{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;font-size:14.5px;background:var(--soft);color:var(--ink)}
+.it{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.it:last-child{border-bottom:0}
+.it2{display:block}
+.itop{display:flex;align-items:center;gap:10px}
+.it .t{flex:1;min-width:0}
+.it .t button{display:block;font-size:14.5px;font-weight:550;background:none;border:0;padding:0;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it .t i{font-style:normal;font-size:12px;color:var(--mute)}
+.pin{width:28px;height:28px;border-radius:9px;flex:0 0 auto;border:0;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.catbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--soft);
+  border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600}
+.catbtn i{width:13px;height:13px;border-radius:5px;display:inline-block}
+.catopt{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
+.catopt+.catopt{border-top:1px solid var(--line)}
+.catopt b{flex:1;font-size:15px;font-weight:600}
+.mini{display:flex;gap:5px;flex-shrink:0}
+.mini-full{margin-top:10px}
+.mini button{min-width:46px;height:40px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);
+  color:var(--mute);font-size:12px;font-weight:700;padding:0 4px;overflow:hidden}
+.mini-full button{flex:1;min-width:0}
+.mini button[data-on="1"]{color:#fff;border-color:transparent}
+.pct{height:9px;border-radius:99px;background:var(--soft);overflow:hidden;margin:11px 0 6px}
+.pct>span{display:block;height:100%;background:var(--hero1);border-radius:99px}
+
+/* ---------- barra de navegação ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;
+  background:color-mix(in srgb, var(--card) 88%, transparent);backdrop-filter:blur(16px);
+  border-top:1px solid var(--line)}
+.navb{flex:1;border:0;background:transparent;border-radius:16px;padding:9px 2px 7px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:10.5px;font-weight:600}
+.navb svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.navb[data-on="1"]{color:var(--ink);background:var(--soft)}
+.navb[data-on="1"] svg{stroke-width:2.3}
+
+/* ---------- contas ---------- */
+.mesnav{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:99px;padding:5px;box-shadow:var(--sh)}
+.mesnav button{border:0;background:var(--soft);border-radius:99px;width:40px;height:40px;font-size:18px;color:var(--mute)}
+.mesnav .m{flex:1;text-align:center;font-size:16px;font-weight:700;letter-spacing:-.02em;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.conta{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 0;text-align:left}
+.conta+.conta{border-top:1px solid var(--line)}
+.conta .t{flex:1;min-width:0}
+.conta .t b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:15.5px;font-weight:600;letter-spacing:-.015em;line-height:1.25;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.conta .t i{display:block;font-style:normal;font-size:12.5px;color:var(--mute);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conta .v{text-align:right;flex:0 0 auto}
+.conta .v b{display:block;font-size:15.5px;font-weight:700;font-family:"JetBrains Mono",monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.mk{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;width:34px;height:34px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--mute)}
+.mk[data-pago="1"]{background:#0A8A6E;border-color:#0A8A6E;color:#fff}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:7px}
+.pg-vencida{background:#FDE4E4;color:#A32A3C} .pg-perto{background:#FDF0DC;color:#8A5A0C}
+.pg-paga{background:#DCF0E9;color:#0A6B55}
+html[data-tema="escuro"] .pg-vencida,html[data-tema="quente"] .pg-vencida{background:#4A2226;color:#FFB6BE}
+html[data-tema="escuro"] .pg-perto,html[data-tema="quente"] .pg-perto{background:#463619;color:#F5CE86}
+html[data-tema="escuro"] .pg-paga,html[data-tema="quente"] .pg-paga{background:#1E4038;color:#8FE0C6}
+@media (prefers-color-scheme: dark){
+  .pg-vencida{background:#4A2226;color:#FFB6BE} .pg-perto{background:#463619;color:#F5CE86}
+  .pg-paga{background:#1E4038;color:#8FE0C6}
+}
+
+/* ---------- página inicial ---------- */
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
+.sec h2{margin:0}
+.sec button{border:0;background:none;font-size:13px;font-weight:600;color:var(--hero1)}
+.cbar{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
+.cbar+.cbar{border-top:1px solid var(--line)}
+.cbar .t{flex:1;min-width:0}
+.cbar .t b{display:block;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.cbar .track{height:7px;border-radius:99px;background:var(--soft);margin-top:7px;overflow:hidden}
+.cbar .track span{display:block;height:100%;border-radius:99px}
+.cbar .v{text-align:right;flex:0 0 auto}
+.cbar .v b{display:block;font-size:14.5px;font-weight:700}
+.cbar .v i{font-style:normal;font-size:11.5px;color:var(--mute)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;box-shadow:var(--sh)}
+.pcard .h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.pcard .v{font-size:19px;font-weight:700;letter-spacing:-.035em;margin-top:8px}
+.pcard .p{font-size:11.5px;color:var(--mute);margin-top:2px}
+.mrow{display:flex;align-items:center;gap:12px;padding:12px 0}
+.mrow+.mrow{border-top:1px solid var(--line)}
+.mrow .m{flex:1;font-size:14.5px;font-weight:600}
+.mrow .c{font-size:12px;color:var(--mute)}
+.cta{display:flex;gap:9px;margin-top:16px}
+.cta button{flex:1;border-radius:99px;padding:16px 8px;font-size:15px;font-weight:700;
+  border:1px solid var(--line);background:var(--card);box-shadow:var(--sh)}
+.cta button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:26px 0 10px;font-weight:700}
+h2:first-child{margin-top:8px}
+label.f{display:block;font-size:12.5px;color:var(--mute);margin:12px 0 5px;font-weight:600}
+input,select,textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font-size:16px;
+  font-family:inherit;background:var(--card);color:var(--ink)}
+textarea{min-height:170px;font-family:ui-monospace,monospace;font-size:14px}
+.btn{width:100%;padding:16px;border-radius:99px;border:1px solid var(--line);background:var(--card);
+  font-size:15.5px;font-weight:650;margin-top:10px;box-shadow:var(--sh)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.dgr{color:#D2475F;border-color:transparent;background:var(--soft);box-shadow:none}
+.mini2{border:1px solid var(--line);background:var(--soft);border-radius:99px;padding:9px 13px;font-size:12.5px;font-weight:600;color:var(--mute)}
+
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(8,9,13,.6);display:flex;align-items:flex-end;backdrop-filter:blur(3px)}
+.sheetbox{background:var(--bg);width:100%;max-height:93vh;overflow:auto;border-radius:26px 26px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom))}
+.sheetbox::before{content:"";display:block;width:42px;height:5px;border-radius:99px;background:var(--line);margin:0 auto 16px}
+.sheetbox h3{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.04em}
+.warn{background:#FFF4D6;border:1px solid #E8CE86;color:#4A3A10;border-radius:14px;padding:13px;font-size:13.5px;margin-bottom:12px;white-space:pre-wrap}
+@media (prefers-color-scheme: dark){ .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE} }
+html[data-tema="claro"] .warn{background:#FFF4D6;border-color:#E8CE86;color:#4A3A10}
+html[data-tema="escuro"] .warn{background:#33290D;border-color:#5C4A17;color:#F0DFB4}
+html[data-tema="quente"] .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE}
+.seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px}
+.seg button{flex:1 1 44%;border:1px solid transparent;background:transparent;border-radius:15px;padding:13px 8px;
+  font-size:14px;font-weight:600;color:var(--mute);display:flex;align-items:center;gap:9px;justify-content:flex-start}
+.seg button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:var(--sh);border-color:var(--line)}
+.sw{width:19px;height:19px;border-radius:7px;flex:0 0 auto;border:1.5px solid rgba(128,128,128,.4)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;font-size:14.5px}
+.kv+.kv{border-top:1px solid var(--line)}
+.kv span{color:var(--mute)}
+.kv b{font-weight:600}
+.pv{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;
+  display:grid;grid-template-columns:76px 1fr 90px 56px 40px;gap:6px;align-items:center}
+.pv input{padding:9px;font-size:13.5px;border-radius:9px;background:var(--soft)}
+.empty{text-align:center;color:var(--mute);font-size:15px;padding:46px 18px;line-height:1.6}
+.srch{position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:2}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+
+<script>
+"use strict";
+const SEED = [];
+
+/* ================= armazenamento ================= */
+let MEM = null, AVISO_STORAGE = "";
+const DB = {
+  read(){
+    if (MEM) return MEM;
+    try { const s = localStorage.getItem("divisor:v1"); return s ? JSON.parse(s) : null; }
+    catch(e){ AVISO_STORAGE = "Este navegador bloqueou o armazenamento. Instale o app para que as marcações fiquem salvas."; return MEM; }
+  },
+  write(s){
+    MEM = s;
+    try { localStorage.setItem("divisor:v1", JSON.stringify(s)); }
+    catch(e){ AVISO_STORAGE = "Não consegui salvar no aparelho. Use Configurar › Backup."; }
+  }
+};
+
+/* ================= categorias ================= */
+const DEFAULT_CATS = ["Alimentação/bebidas","Mercado","Saúde","Cuidados pessoais","Transporte",
+  "Boletos","Streamings","Assinaturas","Compras online","Entretenimento","Lazer","Pets",
+  "Pix parcelado","Presentes","Taxas","Outros"];
+
+const semAcento = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+
+const REGRAS_CAT = [
+  [/caesb|\bceb\b|neoenergia|flexpag|neobsb|picpay credi|boleto|iptu|ipva|condominio/i, "Boletos"],
+  [/\bsky\b|netflix|spotify|disney|prime canais|amazon music|globoplay|\bhbo\b|paramount|deezer|youtube premium|telecine/i, "Streamings"],
+  [/picpay|\bpix\b/i, "Pix parcelado"],
+  [/petz|pet ?supermark|gold ?dog|petcare|veterinar|racao/i, "Pets"],
+  [/drogar|drogasil|rd ?saude|rdsaude|farmac|plano de saude|life plano|clinic|consulta|exame|laborator|hospital|dentist|psicolog/i, "Saúde"],
+  [/esmalteria|que beleza|wow ?fio|wowfio|salao|cabelo|barbear|manicure|depilac|estetica|spa\b/i, "Cuidados pessoais"],
+  [/auto posto|posto |estacionamento|sem parar|uber|99 ?pop|combust|gasolina|taxi|metro|onibus|pedagio/i, "Transporte"],
+  [/ingresso|ticket|entretenimento|cinema|show|teatro|estadio|futebol|\btks\b/i, "Entretenimento"],
+  [/hotel|pousada|decolar|airbnb|booking|resort|viagem|bar da|\bbar\b|vale da lua|balneario|parque/i, "Lazer"],
+  [/microsoft|google|gamma|anthropic|claude|eduzz|escola do|as manhas|openai|adobe|canva|notion|figma|ifood club|icloud|dropbox/i, "Assinaturas"],
+  [/amazon|shopee|centauro|nike|trussardi|zerezes|mercado ?livre|magalu|aliexpress|shein|renner|riachuelo|fotop|asaas/i, "Compras online"],
+  [/^iof|iof |juros|anuidade|tarifa|multa|encargo|fapetec|inscricao|taxa/i, "Taxas"],
+  [/superquadra|baratao|viva convenien|supermerc|hortifruti|acougue|quitanda|atacad|mercado/i, "Mercado"],
+  [/ifd|ifood|restaurant|pizza|massa|padaria|panificad|lanch|burger|mc ?donald|arcos dourados|subway|estrogonof|parmegiana|potiguar|capelletto|cozin|china|foods|dona |giu medeiros|marice|panelinhas|pamonha|sandri|aricine|\bdvf\b|cb lago|ls dias|jnrt|unique|rozostolato|g cnb|cantina|vinny|fatima|jonatan|casa do|balcao|cafe|doceria|sorvet|hot m|comercio|conveni/i, "Alimentação/bebidas"],
+];
+
+function categorizar(nome){
+  const n = semAcento(nome);
+  for (const [re, cat] of REGRAS_CAT) if (re.test(n)) return cat;
+  return "Outros";
+}
+
+/* ================= estado ================= */
+const CORES = ["#6A34C9","#0A7568","#AC5F08","#B0234A","#1E5FB4","#4E7A0C","#8A3FA0","#0F6E8C"];
+const CORCAT = {
+  "Alimentação/bebidas":"#E0632B", "Mercado":"#1E7A3C", "Saúde":"#C0334D", "Cuidados pessoais":"#B0348A",
+  "Transporte":"#1E5FB4", "Boletos":"#585D69", "Streamings":"#7B34C9", "Assinaturas":"#0F6E8C",
+  "Compras online":"#A85C0A", "Entretenimento":"#C43D6B", "Lazer":"#0A8A6E", "Pets":"#6B7A0C",
+  "Pix parcelado":"#2B6FA8", "Presentes":"#9A2FB0", "Taxas":"#8A6A1E", "Outros":"#6B6F79"
+};
+const PALETA = ["#E0632B","#1E7A3C","#C0334D","#B0348A","#1E5FB4","#7B34C9","#0F6E8C","#A85C0A","#0A8A6E","#6B7A0C"];
+function corCat(c){
+  if (CORCAT[c]) return CORCAT[c];
+  let s = 0; for (const ch of String(c)) s = (s*31 + ch.charCodeAt(0)) >>> 0;
+  return PALETA[s % PALETA.length];
+}
+const inicialCat = c => (String(c||"?").trim()[0]||"?").toUpperCase();
+
+const CORESBG = ["#EFE8FC","#DDF1ED","#FBEDDB","#FCE6EB","#E5EEFB","#ECF3E0","#F7E9FB","#E2EFF5"];
+const uid = p => p + Math.random().toString(36).slice(2,8);
+
+function inicial(){
+  return {
+    pessoas:[{id:"p1",nome:"Eu",cor:0},{id:"p2",nome:"Ele",cor:1}], euId:"p1",
+    cartoes:[{id:"c1",nome:"Personnalité",pagador:"p2"}],
+    faturas:[{id:"f1",cartaoId:"c1",rotulo:"Julho/26",lanc:SEED.map((x,i)=>({id:"s"+i,d:x.d,r:x.r,g:x.g,v:x.v,p:x.p||null}))}],
+    regras:{}, regrasCat:{}, aloc:{}, ativa:"f1", cartaoAtivo:"c1", rotuloAtivo:"Julho/26",
+    contas:[], pagos:{}, fatPagas:{}, acertos:{}, acertos:{},
+    cats:DEFAULT_CATS.slice(), catv:2
+  };
+}
+let S = DB.read() || inicial();
+
+/* migração: garante campos novos sem perder nada do que já existe.
+   Chamada no fim do arquivo, quando todos os utilitários já existem. */
+function migrar(){
+  let mudou = false, mudouEscopo = false;
+  S.contas = S.contas || [];
+  S.pagos = S.pagos || {};
+  S.fatPagas = S.fatPagas || {};
+  S.acertos = S.acertos || {};
+  S.acertos = S.acertos || {};
+  if (!S.mesContas){ const d=new Date();
+    S.mesContas = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); mudouEscopo = true; }
+  S.regrasCat = S.regrasCat || {};
+  S.regras = S.regras || {};
+  S.aloc = S.aloc || {};
+  if (!S.cats || !S.cats.length) S.cats = DEFAULT_CATS.slice();
+  if (!S.rotuloAtivo || !S.cartaoAtivo){
+    const f0 = S.faturas.find(f=>f.id===S.ativa) || S.faturas[0];
+    S.rotuloAtivo = f0 ? f0.rotulo : "";
+    S.cartaoAtivo = f0 ? f0.cartaoId : (S.cartoes[0]||{}).id;
+    mudouEscopo = true;
+  }
+  // rótulos manuais viram competência ("Julho/26" -> "2026-07")
+  (S.faturas||[]).forEach(f => {
+    if (!f.comp){ const c = compDeRotulo(f.rotulo); if (c){ f.comp = c; mudouEscopo = true; } }
+    if (f.comp) f.rotulo = compLabel(f.comp);
+  });
+  // cria a fatura do mês corrente para cada cartão que tem dia de fechamento
+  (S.cartoes||[]).forEach(c => {
+    if (!c.fechamento) return;
+    const comp = compAtual(c);
+    if (!S.faturas.some(f => f.cartaoId===c.id && f.comp===comp)){
+      S.faturas.push({id:uid("f"), cartaoId:c.id, comp, rotulo:compLabel(comp), lanc:[]});
+      mudouEscopo = true;
+    }
+  });
+  // taxonomia nova: recategoriza tudo, menos o que foi ajustado à mão
+  if (S.catv !== 2){
+    (S.faturas||[]).forEach(f => (f.lanc||[]).forEach(l => {
+      l.cat = S.regrasCat[l.g] || categorizar(l.g + " " + (l.r||""));
+    }));
+    S.catv = 2; mudou = true;
+  }
+  (S.faturas||[]).forEach(f => (f.lanc||[]).forEach(l => {
+    if (!l.cat){ l.cat = S.regrasCat[l.g] || categorizar(l.g + " " + (l.r||"")); mudou = true; }
+    if (!S.cats.includes(l.cat)){ S.cats.push(l.cat); mudou = true; }
+  }));
+  if (mudou || mudouEscopo || !DB.read()) DB.write(S);
+}
+
+let UI = {view:"inicio", modo:"grupo", soPend:false, filtroP:null, aberto:null,
+          sheet:null, tmp:null, editando:null, editandoItem:null, buffer:""};
+
+/* ================= utilidades ================= */
+const brl = n => (n<0?"−R$ ":"R$ ") + Math.abs(n).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const dia = s => /^\d{4}-/.test(s) ? s.slice(8,10)+"/"+s.slice(5,7) : s;
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pessoa = id => S.pessoas.find(p=>p.id===id);
+const MESES_NOME = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const diasNoMes = (a,m) => new Date(a, m, 0).getDate();
+const compSoma = (comp, n) => {
+  let [a,m] = comp.split("-").map(Number);
+  const t = (a*12 + (m-1)) + n;
+  return Math.floor(t/12) + "-" + String(t%12 + 1).padStart(2,"0");
+};
+const compLabel = comp => {
+  const [a,m] = comp.split("-").map(Number);
+  return MESES_NOME[m-1] + "/" + String(a).slice(2);
+};
+function compDeRotulo(r){
+  const m = String(r||"").match(/^([a-zç]+)\s*\/\s*(\d{2,4})$/i);
+  if (!m) return null;
+  const i = MESES_NOME.findIndex(x => semAcento(x) === semAcento(m[1]));
+  if (i < 0) return null;
+  const a = m[2].length === 2 ? 2000 + Number(m[2]) : Number(m[2]);
+  return a + "-" + String(i+1).padStart(2,"0");
+}
+function compAtual(c){
+  const h = new Date();
+  let a = h.getFullYear(), m = h.getMonth()+1;
+  if (c && c.fechamento && h.getDate() > c.fechamento){ m++; if (m>12){ m=1; a++; } }
+  return a + "-" + String(m).padStart(2,"0");
+}
+const fmtData = d => String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0");
+function statusFatura(c, comp){
+  if (!c || !c.fechamento || !comp) return null;
+  const [a,m] = comp.split("-").map(Number);
+  const fech = new Date(a, m-1, Math.min(c.fechamento, diasNoMes(a,m)));
+  let venc = null;
+  if (c.vencimento){
+    let va=a, vm=m;
+    if (c.vencimento <= c.fechamento){ vm++; if (vm>12){ vm=1; va++; } }
+    venc = new Date(va, vm-1, Math.min(c.vencimento, diasNoMes(va,vm)));
+  }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if (hoje < fech) return {e:"aberta", t:"em aberto · fecha " + fmtData(fech)};
+  if (venc){
+    const dias = Math.round((venc - hoje)/86400000);
+    if (dias > 0) return {e:"fechada", t:"fechada · vence em " + dias + (dias===1?" dia":" dias")};
+    if (dias === 0) return {e:"vence", t:"vence hoje"};
+    return {e:"vencida", t:"venceu em " + fmtData(venc)};
+  }
+  return {e:"fechada", t:"fechada em " + fmtData(fech)};
+}
+const faturaPaga = f => !!(f && f.pgto && f.pgto.pago);
+function totalFatura(f){ return f.lanc.reduce((a,l)=>a+l.v, 0); }
+
+function garantirFatura(cartaoId, comp){
+  let f = S.faturas.find(x => x.cartaoId===cartaoId && x.comp===comp);
+  if (f) return f;
+  f = {id:uid("f"), cartaoId, comp, rotulo:compLabel(comp), lanc:[]};
+  S.faturas.push(f);
+  return f;
+}
+
+const TITULOS = /^(tio|tia|sr|sra|dona|dom|dr|dra|vo|seu|prof|padrinho|madrinha)$/;
+function curtoNome(n){
+  const w = String(n||"").trim().split(/\s+/);
+  if (w.length <= 1) return w[0] || "";
+  return TITULOS.test(semAcento(w[0])) ? w[0] + " " + w[1] : w[0];
+}
+function sigla(n){
+  const w = String(n||"").trim().split(/\s+/).filter(Boolean);
+  if (!w.length) return "?";
+  if (w.length === 1) return w[0].slice(0,2).toUpperCase();
+  return (w[0][0] + w[w.length-1][0]).toUpperCase();
+}
+
+const rotulos = () => [...new Set(S.faturas
+  .filter(f => S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo)
+  .map(f => f.rotulo))];
+function faturasAtivas(){
+  return S.faturas.filter(f =>
+    (S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo) && f.rotulo===S.rotuloAtivo);
+}
+function lancAtivos(){
+  const out = [];
+  faturasAtivas().forEach(f => f.lanc.forEach(l => out.push(Object.assign({_f:f}, l))));
+  return out;
+}
+const fatura = () => faturasAtivas()[0] || S.faturas.find(f=>f.id===S.ativa) || S.faturas[0];
+const nomeCartao = f => { const c = S.cartoes.find(x=>x.id===f.cartaoId); return c?c.nome:"—"; };
+const multiCartao = () => S.cartaoAtivo==="todos" && new Set(faturasAtivas().map(f=>f.cartaoId)).size>1;
+const cartaoDe = f => S.cartoes.find(c=>c.id===f.cartaoId) || S.cartoes[0];
+const alocDe = id => S.aloc[id] || [];
+const salvar = () => DB.write(S);
+const curto = n => n.length>6 ? n.slice(0,5)+"." : n;
+
+function totais(){
+  const t = {porPessoa:{}, total:0, pend:0, nPend:0};
+  S.pessoas.forEach(p=>t.porPessoa[p.id]=0);
+  lancAtivos().forEach(l=>{
+    t.total += l.v;
+    const a = alocDe(l.id).filter(id=>pessoa(id));
+    if (!a.length){ t.pend += l.v; t.nPend++; return; }
+    a.forEach(id => t.porPessoa[id] += l.v/a.length);
+  });
+  return t;
+}
+function visiveis(){
+  let L = lancAtivos();
+  if (UI.filtroP === "sem") L = L.filter(l=>!alocDe(l.id).length);
+  else if (UI.filtroP) L = L.filter(l=>alocDe(l.id).includes(UI.filtroP));
+  if (UI.soPend) L = L.filter(l=>!alocDe(l.id).length);
+  return L;
+}
+
+// mês do resumo: segue o rótulo da fatura quando ele é um mês reconhecível
+const mesResumo = () => compDeRotulo(S.rotuloAtivo) || S.mesContas;
+
+function fecharAcerto(dev){
+  const eu = S.euId; let pago = 0, receber = 0; const linhas = [];
+  Object.entries(dev).forEach(([pag, quem])=>{
+    if (pag === eu) Object.entries(quem).forEach(([id,v])=>{ receber += v;
+      linhas.push({txt:(pessoa(id)?curtoNome(pessoa(id).nome):"?")+" te deve", v}); });
+    else if (quem[eu]){ pago += quem[eu];
+      linhas.push({txt:"você paga a "+(pessoa(pag)?curtoNome(pessoa(pag).nome):"?"), v:quem[eu]}); }
+  });
+  return {pago, receber, liquido: pago - receber, linhas};
+}
+function devDosCartoes(){
+  const dev = {};
+  faturasAtivas().forEach(f=>{
+    const c = S.cartoes.find(x=>x.id===f.cartaoId); if (!c) return;
+    f.lanc.forEach(l=>{
+      const a = alocDe(l.id).filter(id=>pessoa(id)); if (!a.length) return;
+      a.forEach(id=>{ if (id===c.pagador) return;
+        dev[c.pagador] = dev[c.pagador]||{};
+        dev[c.pagador][id] = (dev[c.pagador][id]||0) + l.v/a.length; });
+    });
+  });
+  return dev;
+}
+function devDasContas(m){
+  const dev = {};
+  contasDoMes(m).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id)); if (!a.length) return;
+    a.forEach(id=>{ if (id===x.c.pagador || !x.c.pagador) return;
+      dev[x.c.pagador] = dev[x.c.pagador]||{};
+      dev[x.c.pagador][id] = (dev[x.c.pagador][id]||0) + x.valor/a.length; });
+  });
+  return dev;
+}
+function acertoGeral(){
+  const dev = devDosCartoes();
+  const dc = devDasContas(mesResumo());
+  Object.entries(dc).forEach(([pag,quem])=>{ dev[pag]=dev[pag]||{};
+    Object.entries(quem).forEach(([id,v])=>{ dev[pag][id]=(dev[pag][id]||0)+v; }); });
+  return fecharAcerto(dev);
+}
+
+// para onde foi o dinheiro, por categoria — opcionalmente a fatia de uma pessoa
+function gastosResumo(pid){
+  const m = mesResumo(), out = {};
+  let total = 0, nCart = 0, nCont = 0, semDono = 0;
+  lancAtivos().forEach(l=>{
+    const a = alocDe(l.id).filter(id=>pessoa(id));
+    let v;
+    if (pid){ if (!a.includes(pid)) return; v = l.v/a.length; }
+    else { v = l.v; if (!a.length) semDono += l.v; }
+    const c = l.cat||"Outros";
+    out[c] = (out[c]||0)+v; total += v; nCart++;
+  });
+  contasDoMes(m).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id));
+    let v;
+    if (pid){ if (!a.includes(pid)) return; v = x.valor/a.length; }
+    else { v = x.valor; if (!a.length) semDono += x.valor; }
+    const c = x.c.cat||"Boletos";
+    out[c] = (out[c]||0)+v; total += v; nCont++;
+  });
+  return {itens: Object.entries(out).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])),
+          total, nCart, nCont, semDono};
+}
+
+function acerto(){
+  const dev = {};   // dev[pagador][pessoa] = quanto pessoa deve ao pagador
+  faturasAtivas().forEach(f=>{
+    const c = S.cartoes.find(x=>x.id===f.cartaoId); if (!c) return;
+    const pag = c.pagador;
+    f.lanc.forEach(l=>{
+      const a = alocDe(l.id).filter(id=>pessoa(id));
+      if (!a.length) return;
+      a.forEach(id=>{
+        if (id === pag) return;
+        dev[pag] = dev[pag] || {};
+        dev[pag][id] = (dev[pag][id]||0) + l.v/a.length;
+      });
+    });
+  });
+  return fecharAcerto(dev);
+}
+
+/* --------- parcelas futuras --------- */
+function parcelaInfo(p){
+  const m = String(p||"").match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!m) return null;
+  const k = +m[1], n = +m[2];
+  return (n > 1 && k >= 1 && k <= n) ? {k, n} : null;
+}
+// gera as parcelas seguintes de um lançamento nas competências futuras do mesmo cartão
+function propagar(l, f){
+  const pi = parcelaInfo(l.p);
+  if (!pi || !f.comp || pi.k >= pi.n) return 0;
+  const serie = l.serie || uid("sr");
+  l.serie = serie;
+  let n = 0;
+  for (let i = pi.k + 1; i <= pi.n; i++){
+    const comp = compSoma(f.comp, i - pi.k);
+    const alvo = garantirFatura(f.cartaoId, comp);
+    const jaTem = alvo.lanc.some(x => x.serie === serie && x.p === i+"/"+pi.n);
+    if (jaTem) continue;
+    const id = uid("l");
+    alvo.lanc.push({id, d:l.d, r:l.r, g:l.g, v:l.v, p:i+"/"+pi.n, cat:l.cat, serie, auto:true});
+    const a = alocDe(l.id);
+    if (a.length) S.aloc[id] = a.slice();
+    else if (S.regras[l.g]) S.aloc[id] = S.regras[l.g].slice();
+    n++;
+  }
+  return n;
+}
+function previsaoParcelas(){   // quantas seriam geradas, sem gerar
+  let n = 0, v = 0;
+  S.faturas.forEach(f => f.lanc.forEach(l => {
+    const pi = parcelaInfo(l.p);
+    if (!pi || !f.comp || l.auto) return;
+    for (let i = pi.k+1; i <= pi.n; i++){
+      const comp = compSoma(f.comp, i - pi.k);
+      const alvo = S.faturas.find(x => x.cartaoId===f.cartaoId && x.comp===comp);
+      if (alvo && alvo.lanc.some(x => x.serie && x.serie===l.serie && x.p === i+"/"+pi.n)) continue;
+      n++; v += l.v;
+    }
+  }));
+  return {n, v};
+}
+// remove as parcelas previstas de um cartão e as faturas que ficarem vazias
+function limparAuto(cartaoId, manter){
+  S.faturas.filter(f=>f.cartaoId===cartaoId).forEach(f=>{
+    f.lanc.filter(l=>l.auto).forEach(l=>delete S.aloc[l.id]);
+    f.lanc = f.lanc.filter(l=>!l.auto);
+  });
+  const c = S.cartoes.find(x=>x.id===cartaoId);
+  const atual = c && c.fechamento ? compAtual(c) : null;
+  S.faturas = S.faturas.filter(f =>
+    f.cartaoId!==cartaoId || f.lanc.length || f.id===manter || f.comp===atual);
+}
+function propagarTudo(cartaoId){
+  let n = 0;
+  S.faturas.filter(f=>f.cartaoId===cartaoId).slice()
+    .forEach(f => f.lanc.slice().forEach(l => { if (!l.auto) n += propagar(l, f); }));
+  return n;
+}
+function refazerParcelas(cartaoId){ limparAuto(cartaoId); return propagarTudo(cartaoId); }
+// uma fatura só "conflita" se tiver algum lançamento de verdade
+const faturaReal = f => f.lanc.some(l => !l.auto);
+function gerarTodasParcelas(){
+  let n = 0;
+  S.faturas.slice().forEach(f => f.lanc.slice().forEach(l => { if (!l.auto) n += propagar(l, f); }));
+  salvar();
+  return n;
+}
+const irmaosSerie = id => {
+  const l = S.faturas.flatMap(f=>f.lanc).find(x=>x.id===id);
+  if (!l || !l.serie) return [id];
+  return S.faturas.flatMap(f=>f.lanc).filter(x=>x.serie===l.serie).map(x=>x.id);
+};
+
+/* --------- contas a pagar --------- */
+const chavePg = (id, m) => id + ":" + m;
+const hojeISO = () => { const d=new Date(); const p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); };
+
+function vencDe(c, m){
+  if (c.tipo === "avulsa") return c.data || (m + "-01");
+  const [a, mm] = m.split("-").map(Number);
+  return m + "-" + String(Math.min(c.dia || 1, diasNoMes(a, mm))).padStart(2, "0");
+}
+function contasDoMes(m){
+  return S.contas.filter(c => {
+    if (c.tipo === "avulsa") return String(c.data||"").slice(0,7) === m;
+    if (c.desde && m < c.desde) return false;
+    if (c.ate && m > c.ate) return false;
+    return true;
+  }).map(c => {
+    const pg = S.pagos[chavePg(c.id, m)];
+    const venc = vencDe(c, m);
+    const hoje = hojeISO();
+    const dias = Math.round((new Date(venc+"T00:00") - new Date(hoje+"T00:00")) / 86400000);
+    return {c, venc, dias,
+            valor: pg && pg.valor != null ? pg.valor : (c.valor || 0),
+            pago: !!(pg && pg.pago), quando: pg ? pg.quando : null,
+            estado: (pg && pg.pago) ? "paga" : (dias < 0 ? "vencida" : (dias <= 7 ? "perto" : "aberta"))};
+  }).sort((a,b) => a.venc < b.venc ? -1 : (a.venc > b.venc ? 1 : 0));
+}
+function resumoContas(m){
+  const L = contasDoMes(m);
+  const r = {total:0, pago:0, aberto:0, nVencidas:0, porPessoa:{}, dev:{}};
+  S.pessoas.forEach(p => r.porPessoa[p.id] = 0);
+  L.forEach(x => {
+    r.total += x.valor;
+    if (x.pago) r.pago += x.valor; else { r.aberto += x.valor; if (x.estado==="vencida") r.nVencidas++; }
+    const a = (x.c.pessoas || []).filter(id => pessoa(id));
+    if (!a.length) return;
+    a.forEach(id => {
+      r.porPessoa[id] += x.valor / a.length;
+      const pag = x.c.pagador;
+      if (pag && id !== pag){ r.dev[pag] = r.dev[pag] || {};
+        r.dev[pag][id] = (r.dev[pag][id] || 0) + x.valor / a.length; }
+    });
+  });
+  const red = reduzirDev(r.dev, null);
+  r.liquido = red.liquido; r.linhas = red.linhas; r.lista = L;
+  return r;
+}
+const mesSoma = (m, n) => compSoma(m, n);
+
+/* ================= alocação ================= */
+function togglePessoa(ids, pid, chaveRegra){
+  const ligar = ids.some(id=>!alocDe(id).includes(pid));
+  ids.forEach(id=>{
+    const a = new Set(alocDe(id));
+    if (ligar) a.add(pid); else a.delete(pid);
+    const arr = [...a];
+    if (arr.length) S.aloc[id] = arr; else delete S.aloc[id];
+  });
+  if (chaveRegra){
+    const a = alocDe(ids[0]);
+    if (a.length) S.regras[chaveRegra] = a; else delete S.regras[chaveRegra];
+  }
+  salvar(); render();
+}
+
+/* ================= renomear ================= */
+function renomearGrupo(velho, novo){
+  novo = (novo||"").trim();
+  if (!novo || novo === velho) return;
+  const f = fatura();
+  S.faturas.forEach(x => x.lanc.forEach(l => { if (l.g === velho) l.g = novo; }));
+  if (S.regras[velho]){ S.regras[novo] = S.regras[velho]; delete S.regras[velho]; }
+  if (S.regrasCat[velho]){ S.regrasCat[novo] = S.regrasCat[velho]; delete S.regrasCat[velho]; }
+  if (UI.aberto === velho) UI.aberto = novo;
+  salvar();
+}
+function renomearItem(id, novo){
+  novo = (novo||"").trim(); if (!novo) return;
+  const f = fatura();
+  const l = f.lanc.find(x=>x.id===id);
+  if (!l) return;
+  l.g = novo;
+  if (S.regrasCat[novo]) l.cat = S.regrasCat[novo];
+  salvar();
+}
+function mudarCategoria(grupo, cat){
+  S.faturas.forEach(x => x.lanc.forEach(l => { if (l.g === grupo) l.cat = cat; }));
+  S.regrasCat[grupo] = cat;
+  salvar(); render();
+}
+
+/* ================= render ================= */
+const VERSAO = "2.3";
+const TEMAS = [
+  ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
+  ["claro",  "Claro",         "#F0F1F6"],
+  ["escuro", "Escuro",        "#0D0E13"],
+  ["quente", "Escuro quente", "#262624"]
+];
+const CORBARRA = {claro:"#F0F1F6", escuro:"#0D0E13", quente:"#262624"};
+function aplicarTema(){
+  const t = (S && S.tema) || "auto";
+  if (t === "auto") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  const sis = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  const efetivo = t === "auto" ? (sis ? "quente" : "claro") : t;
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", CORBARRA[efetivo] || "#F0F1F6");
+}
+
+function render(){
+  aplicarTema();
+  const y = window.scrollY;
+  const PAGINAS = {inicio:viewInicio, lista:viewLista, contas:viewContas, config:viewConfig};
+  document.getElementById("app").innerHTML = (PAGINAS[UI.view] || viewInicio)();
+  document.getElementById("modal").innerHTML = UI.sheet ? sheets[UI.sheet]() : "";
+  document.body.style.overflow = UI.sheet ? "hidden" : "";
+  window.scrollTo(0,y);
+  const inp = document.querySelector("[data-foco]");
+  if (inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+function header(){
+  if (!S.faturas.length) return `<div class="top"><div class="hero">
+    <div class="lbl">Divisor de fatura</div><div class="big">Comece aqui</div>
+    <div class="lbl" style="margin-top:10px">Vá em Configurar para criar seu primeiro cartão.</div></div></div>`;
+  const t = totais(), ac = acerto();
+  const nada = Math.abs(ac.liquido) < 0.005;
+  const titulo = nada ? "Nada a acertar" : (ac.liquido < 0 ? "Você tem a receber" : "Você transfere");
+  const larg = v => t.total ? Math.max(0, Math.abs(v)/Math.abs(t.total)*100) : 0;
+  const rots = rotulos();
+  const fut = previstoFuturo();
+  const stats = [
+    {b: brl(t.total), i: "fatura"},
+    {b: String(lancAtivos().length), i: "lançamentos"},
+    {b: t.nPend ? String(t.nPend) : "0", i: t.nPend ? "sem dono" : "tudo classificado"},
+  ];
+  if (fut.n) stats.push({b: brl(fut.v), i: fut.n + " parcelas a vencer"});
+  return `<div class="top">
+    <div class="selrow">
+      <select data-act="cartao" aria-label="Cartão">
+        <option value="todos"${S.cartaoAtivo==="todos"?" selected":""}>Todos os cartões</option>
+        ${S.cartoes.map(c=>`<option value="${c.id}"${S.cartaoAtivo===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}
+      </select>
+      <select data-act="rotulo" aria-label="Mês">
+        ${rots.map(r=>`<option value="${esc(r)}"${S.rotuloAtivo===r?" selected":""}>${esc(r)}</option>`).join("")}
+      </select>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${esc(titulo)}</div>
+      <div class="big num">${brl(Math.abs(ac.liquido))}</div>
+      <div class="bar">${S.pessoas.map(p=>`<span style="width:${larg(t.porPessoa[p.id])}%;background:${CORES[p.cor%8]}"></span>`).join("")}</div>
+      <div class="legend">${S.pessoas.map(p=>`<span><i class="dot" style="background:${CORES[p.cor%8]}"></i><em>${esc(curtoNome(p.nome))}</em> <b class="num">${brl(t.porPessoa[p.id]||0)}</b></span>`).join("")}</div>
+      ${ac.linhas.length>1 ? `<div class="acerto">${ac.linhas.map(l=>
+        `<div>${esc(l.txt)} <b class="num">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
+      ${selosStatus()}
+    </div>
+    <div class="stats">${stats.map(s=>`<div class="stat"><b class="num">${esc(s.b)}</b><i>${esc(s.i)}</i></div>`).join("")}</div>`;
+}
+
+function previstoFuturo(){
+  const hoje = S.rotuloAtivo;
+  let n = 0, v = 0;
+  S.faturas.filter(f => (S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo) && f.rotulo!==hoje)
+    .forEach(f => f.lanc.forEach(l => { if (l.auto){ n++; v += l.v; } }));
+  return {n, v};
+}
+
+const CORSTATUS = {aberta:"#9BF3DA", fechada:"#FFD79B", vence:"#FFB48C", vencida:"#FFAFAF"};
+function selosStatus(){
+  const fs = faturasAtivas();
+  const sel = fs.map(f => {
+    const c = S.cartoes.find(x=>x.id===f.cartaoId);
+    const st = statusFatura(c, f.comp);
+    return st ? {nome:c.nome, st} : null;
+  }).filter(Boolean);
+  if (!sel.length) return "";
+  const um = sel.length === 1;
+  return `<div class="selos">${sel.map(s=>`<span class="selo" style="color:${CORSTATUS[s.st.e]}">
+      ${um?"":esc(s.nome)+" · "}${esc(s.st.t)}</span>`).join("")}</div>`;
+}
+
+function filtroPessoas(){
+  const op = [{k:null,n:"Todos"}, ...S.pessoas.map(p=>({k:p.id,n:curtoNome(p.nome),c:CORES[p.cor%8]})), {k:"sem",n:"Sem dono"}];
+  return `<div class="fscroll">${op.map(o=>{
+    const on = UI.filtroP === o.k;
+    return `<button class="fchip" data-on="${on?1:0}" data-act="filtroP" data-v="${o.k==null?"":o.k}"
+      style="${on&&o.c?`background:${o.c};border-color:${o.c}`:""}">${o.c?`<i class="dot" style="background:${on?"#fff":o.c}"></i>`:""}${esc(o.n)}</button>`;
+  }).join("")}</div>`;
+}
+
+function chipsHTML(aloc, attrs){
+  return `<div class="chips">${S.pessoas.map(p=>{
+    const on = aloc.includes(p.id);
+    return `<button class="chip" data-on="${on?1:0}" ${attrs(p.id)}
+      style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(curtoNome(p.nome))}</button>`;
+  }).join("")}</div>`;
+}
+
+function agrupar(L, chave){
+  const m = {};
+  L.forEach(l=>{ const k = chave(l); (m[k] = m[k] || {k, itens:[], total:0}); m[k].itens.push(l); m[k].total += l.v; });
+  return Object.values(m).map(g=>{
+    const set = new Set(g.itens.map(i=>JSON.stringify([...alocDe(i.id)].sort())));
+    g.misto = set.size > 1;
+    g.aloc = g.misto ? [] : alocDe(g.itens[0].id);
+    return g;
+  }).sort((a,b)=>Math.abs(b.total)-Math.abs(a.total));
+}
+
+function tagsCartao(g){
+  if (!multiCartao()) return "";
+  const ns = [...new Set(g.itens.map(i=>i._f?nomeCartao(i._f):""))].filter(Boolean);
+  if (!ns.length) return "";
+  return ns.length<=2 ? ns.map(n=>`<span class="cardtag">${esc(n)}</span>`).join("")
+                      : `<span class="cardtag">${ns.length} cartões</span>`;
+}
+
+function cardGrupo(g, tipo){
+  const cor = g.aloc.length===1 ? CORES[pessoa(g.aloc[0]).cor%8] : null;
+  const exp = UI.aberto === g.k;
+  const editando = UI.editando === g.k && tipo === "grupo";
+  const catsGrupo = tipo === "grupo" ? [...new Set(g.itens.map(i=>i.cat||"Outros"))] : [g.k];
+  const catMista = catsGrupo.length > 1;
+  const cat = catsGrupo[0];
+  const cc = catMista ? "var(--mute)" : corCat(cat);
+  const estilo = cor
+    ? `border-color:${cor};background:color-mix(in srgb, ${cor} 9%, var(--card));box-shadow:inset 4px 0 0 ${cor}, var(--sh)`
+    : "";
+  return `<div class="row" style="${estilo}">
+    <div class="rowtop">
+      <div class="badge" style="background:${cc}">${catMista?"~":esc(inicialCat(cat))}</div>
+      <div style="min-width:0;flex:1">
+        ${editando
+          ? `<div class="editwrap"><input data-act="bufnome" data-foco value="${esc(g.k)}"><button class="ok" data-act="salvarnome" data-g="${esc(g.k)}">OK</button></div>`
+          : `<button class="nm" ${tipo==="grupo"?`data-act="editar" data-g="${esc(g.k)}"`:`data-act="vercat" data-c="${esc(g.k)}"`}>${esc(g.k)}${tipo==="grupo"?' <span style="opacity:.32;font-size:13px">✎</span>':' <span style="opacity:.32;font-size:13px">›</span>'}</button>`}
+        <div class="meta">
+          <button class="lnk" data-act="exp" data-g="${esc(g.k)}">${g.itens.length} ${g.itens.length===1?"lançamento":"lançamentos"} ${exp?"▴":"▾"}</button>
+          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}" style="color:${cc}">${catMista?catsGrupo.length+" categorias":esc(cat)}</button>`:""}
+          ${tagsCartao(g)}
+          ${g.misto?`<span class="tag">misto</span>`:""}
+          ${g.aloc.length>1?`<span class="tag">÷${g.aloc.length}</span>`:""}
+        </div>
+      </div>
+      <div class="val num">${brl(g.total)}</div>
+    </div>
+    ${chipsHTML(g.aloc, pid=>`data-act="tg" data-g="${esc(g.k)}" data-tipo="${tipo}" data-p="${pid}"`)}
+    ${exp?`<div class="sub">
+      ${tipo==="grupo"?`<div class="catsel"><span>Categoria</span>
+        <button class="catbtn" data-act="vercatgrupo" data-g="${esc(g.k)}" style="flex:1;justify-content:flex-start">
+          <i style="background:${cc}"></i>${catMista?"várias — tocar para unificar":esc(cat)}</button></div>`:""}
+      ${g.itens.map(itemHTML).join("")}</div>`:""}
+  </div>`;
+}
+
+function itemHTML(l, full){
+  const a = alocDe(l.id);
+  const editando = UI.editandoItem === l.id;
+  const duas = S.pessoas.length >= 3;
+  const tag = multiCartao() && l._f ? `<span class="cardtag">${esc(nomeCartao(l._f))}</span>` : "";
+  const botoes = `<div class="mini${duas?" mini-full":""}">${S.pessoas.map(p=>{
+      const on = a.includes(p.id);
+      return `<button data-act="tgi" data-i="${l.id}" data-p="${p.id}" data-on="${on?1:0}"
+        title="${esc(p.nome)}"
+        style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(sigla(p.nome))}</button>`;
+    }).join("")}</div>`;
+  const cl = l.cat || "Outros";
+  const ponto = `<button class="pin" data-act="vercatitem" data-i="${l.id}" title="${esc(cl)}"
+    style="background:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
+  const info = `<div class="t">
+      <button data-act="editaritem" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
+      <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
+    </div>`;
+  if (editando) return `<div class="it"><div class="t">
+      <div class="editwrap"><input data-act="bufnome" data-foco value="${esc(l.g)}">
+      <button class="ok" data-act="salvaritem" data-i="${l.id}">OK</button></div></div></div>`;
+  if (duas) return `<div class="it it2">
+    <div class="itop">${ponto}${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div></div>
+    ${botoes}</div>`;
+  return `<div class="it">${ponto}${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div>${botoes}</div>`;
+}
+
+function barraLista(){
+  const t = totais(), rots = rotulos();
+  return `<div class="top">
+    <div class="selrow">
+      <select data-act="cartao" aria-label="Cartão">
+        <option value="todos"${S.cartaoAtivo==="todos"?" selected":""}>Todos os cartões</option>
+        ${S.cartoes.map(c=>`<option value="${c.id}"${S.cartaoAtivo===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}
+      </select>
+      <select data-act="rotulo" aria-label="Mês">
+        ${rots.map(r=>`<option value="${esc(r)}"${S.rotuloAtivo===r?" selected":""}>${esc(r)}</option>`).join("")}
+      </select>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin:14px 2px 0">
+      <div class="big num" style="font-size:25px;font-weight:800;letter-spacing:-.04em">${brl(t.total)}</div>
+      <div style="font-size:13px;color:var(--mute)">${lancAtivos().length} lançamentos</div>
+      <div style="margin-left:auto;font-size:13px;font-weight:600;color:${t.nPend?"#C77A16":"#0A8A6E"}">
+        ${t.nPend ? t.nPend+" sem dono" : "completo"}</div>
+    </div></div>`;
+}
+
+function viewLista(){
+  const f = fatura();
+  if (!f) return barraLista() + `<div class="empty">Vá em <b>Ajustes</b> para criar sua primeira fatura.</div>` + navbar();
+  const L = visiveis();
+  let corpo;
+  if (UI.modo === "item"){
+    corpo = `<div class="row">${L.slice().sort((a,b)=>a.d<b.d?1:-1).map(l=>itemHTML(l,true)).join("") || `<div class="empty">Nada por aqui.</div>`}</div>`;
+  } else {
+    const tipo = UI.modo === "cat" ? "cat" : "grupo";
+    const gs = agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g));
+    corpo = gs.map(g=>cardGrupo(g,tipo)).join("") || `<div class="empty">Nada por aqui.</div>`;
+  }
+  return barraLista() + `<div class="stick">` + filtroPessoas().replace('class="fscroll"','class="fscroll" style="padding:0 0 10px"') + `
+    <div class="tog">
+      <button data-act="modo" data-v="grupo" data-on="${UI.modo==="grupo"?1:0}">Estabelecimento</button>
+      <button data-act="modo" data-v="item" data-on="${UI.modo==="item"?1:0}">Lançamento</button>
+      <button data-act="modo" data-v="cat" data-on="${UI.modo==="cat"?1:0}">Categoria</button>
+    </div></div>
+    <div class="body">
+    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
+    <label class="check"><input type="checkbox" data-act="sopend" ${UI.soPend?"checked":""}> Mostrar só o que falta</label>
+    ${corpo}
+    <p style="font-size:13px;color:var(--mute);line-height:1.6;margin:18px 0 8px">
+      Toque num nome para atribuir, toque de novo para desfazer. Dois ou mais nomes acesos dividem em partes iguais.
+      Toque no nome do estabelecimento (✎) para corrigi-lo. Escolhas no estabelecimento viram regra e voltam prontas nas próximas faturas.
+    </p>
+  </div>` + navbar();
+}
+
+const ICONES = {
+  inicio: '<svg viewBox="0 0 24 24"><path d="M4 19V9.8a2 2 0 0 1 .8-1.6l6-4.5a2 2 0 0 1 2.4 0l6 4.5a2 2 0 0 1 .8 1.6V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></svg>',
+  lista:  '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>',
+  contas: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-2.6-1.6L13.8 21l-2.6-1.6L8.6 21 6 19.4V4.5a1 1 0 0 1 1-1Z"/><path d="M9.2 11.6l1.8 1.8 3.8-4"/></svg>',
+  config: '<svg viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h2M11 16h8"/><circle cx="16" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>'
+};
+function navbar(){
+  const abas = [["inicio","Resumo"],["lista","Lançamentos"],["contas","Contas"],["config","Ajustes"]];
+  return `<div class="nav">${abas.map(([k,n])=>
+    `<button class="navb" data-act="nav" data-v="${k}" data-on="${UI.view===k?1:0}">${ICONES[k]}<span>${n}</span></button>`
+  ).join("")}</div>`;
+}
+
+/* --------- visão do mês: cartões + contas --------- */
+function faturasDoMes(m){
+  return S.faturas.filter(f => f.comp ? f.comp === m : f.rotulo === compLabel(m));
+}
+function itensDoMes(m){
+  const out = [];
+  faturasDoMes(m).forEach(f => f.lanc.forEach(l => out.push({
+    id:l.id, g:l.g, cat:l.cat||"Outros", v:l.v, aloc:alocDe(l.id).filter(id=>pessoa(id)),
+    fonte:"cartao", onde:nomeCartao(f), d:l.d, p:l.p, auto:l.auto
+  })));
+  contasDoMes(m).forEach(x => out.push({
+    id:x.c.id, g:x.c.nome, cat:x.c.cat||"Boletos", v:x.valor,
+    aloc:(x.c.pessoas||[]).filter(id=>pessoa(id)),
+    fonte:"conta", onde:x.pago?"conta paga":"conta em aberto", d:x.venc, p:null, pago:x.pago
+  }));
+  return out;
+}
+const chaveAcerto = (m, devedor, credor) => m + ":" + devedor + ">" + credor;
+const quitacao = (m, devedor, credor) => S.acertos[chaveAcerto(m, devedor, credor)] || null;
+
+function reduzirDev(dev, m){
+  const eu = S.euId; let pago = 0, receber = 0; const linhas = [];
+  Object.entries(dev).forEach(([pag, quem]) => {
+    Object.entries(quem).forEach(([id, v]) => {
+      if (pag !== eu && id !== eu) return;              // só o que envolve você
+      const q = m ? quitacao(m, id, pag) : null;
+      const quitado = !!(q && q.pago);
+      const recebe = pag === eu;
+      if (!quitado){ if (recebe) receber += v; else pago += v; }
+      linhas.push({
+        txt: recebe ? (pessoa(id)?curtoNome(pessoa(id).nome):"?") + " te deve"
+                    : "você paga a " + (pessoa(pag)?curtoNome(pessoa(pag).nome):"?"),
+        v, quitado, quando: q ? q.quando : null, valorPago: q ? q.valor : null,
+        chave: m ? chaveAcerto(m, id, pag) : null, recebe
+      });
+    });
+  });
+  linhas.sort((a,b)=> (a.quitado?1:0)-(b.quitado?1:0) || Math.abs(b.v)-Math.abs(a.v));
+  const aberto = linhas.filter(l => !l.quitado);
+  return {pago, receber, liquido: pago - receber, linhas,
+          nAbertos: aberto.length,
+          liquidoAberto: aberto.filter(l=>!l.recebe).reduce((a,l)=>a+l.v,0)
+                       - aberto.filter(l=>l.recebe).reduce((a,l)=>a+l.v,0)};
+}
+function acertoMes(m){
+  const dev = {};
+  const somar = (pag, a, v) => { if (!pag || !a.length) return;
+    a.forEach(id => { if (id === pag) return;
+      dev[pag] = dev[pag] || {}; dev[pag][id] = (dev[pag][id]||0) + v/a.length; }); };
+  faturasDoMes(m).forEach(f => {
+    const c = S.cartoes.find(x => x.id === f.cartaoId); if (!c) return;
+    f.lanc.forEach(l => somar(c.pagador, alocDe(l.id).filter(id=>pessoa(id)), l.v));
+  });
+  contasDoMes(m).forEach(x => somar(x.c.pagador, (x.c.pessoas||[]).filter(id=>pessoa(id)), x.valor));
+  return reduzirDev(dev, m);
+}
+function totaisMes(m){
+  const t = {porPessoa:{}, total:0, cartoes:0, contas:0, pend:0, nPend:0};
+  S.pessoas.forEach(p => t.porPessoa[p.id] = 0);
+  itensDoMes(m).forEach(it => {
+    t.total += it.v;
+    t[it.fonte === "conta" ? "contas" : "cartoes"] += it.v;
+    if (!it.aloc.length){ t.pend += it.v; t.nPend++; return; }
+    it.aloc.forEach(id => t.porPessoa[id] += it.v / it.aloc.length);
+  });
+  return t;
+}
+
+function dataVenc(c, comp){
+  if (!c || !c.vencimento || !comp) return null;
+  const [a, m] = comp.split("-").map(Number);
+  let va = a, vm = m;
+  if (c.fechamento && c.vencimento <= c.fechamento){ vm++; if (vm > 12){ vm = 1; va++; } }
+  return va + "-" + String(vm).padStart(2,"0") + "-" + String(Math.min(c.vencimento, diasNoMes(va, vm))).padStart(2,"0");
+}
+function faturasAPagar(m){
+  return faturasDoMes(m).filter(f => f.lanc.length).map(f => {
+    const c = S.cartoes.find(x => x.id === f.cartaoId);
+    const pg = S.fatPagas[f.id];
+    const venc = dataVenc(c, f.comp);
+    const dias = venc ? Math.round((new Date(venc+"T00:00") - new Date(hojeISO()+"T00:00"))/86400000) : null;
+    const total = f.lanc.reduce((a,l)=>a+l.v, 0);
+    return {f, c, venc, dias, total, valor: pg && pg.valor != null ? pg.valor : total,
+            pago: !!(pg && pg.pago), quando: pg ? pg.quando : null,
+            estado: (pg && pg.pago) ? "paga" : (dias == null ? "aberta" : (dias < 0 ? "vencida" : (dias <= 7 ? "perto" : "aberta")))};
+  }).sort((a,b) => String(a.venc) < String(b.venc) ? -1 : 1);
+}
+function resumoPagar(m){
+  const rc = resumoContas(m), fs = faturasAPagar(m);
+  const fTot = fs.reduce((a,x)=>a+x.valor,0);
+  const fPago = fs.filter(x=>x.pago).reduce((a,x)=>a+x.valor,0);
+  return {contas:rc, faturas:fs,
+          total: rc.total + fTot, pago: rc.pago + fPago, aberto: (rc.total - rc.pago) + (fTot - fPago),
+          nVencidas: rc.nVencidas + fs.filter(x=>x.estado==="vencida").length,
+          nItens: rc.lista.length + fs.length,
+          nPagos: rc.lista.filter(x=>x.pago).length + fs.filter(x=>x.pago).length};
+}
+
+/* ================= contas a pagar ================= */
+function viewContas(){
+  const m = S.mesContas;
+  const rp = resumoPagar(m);
+  const r = rp.contas;
+  const grupos = [
+    ["vencida", "Vencidas"], ["perto", "Vence em breve"], ["aberta", "A vencer"], ["paga", "Pagas"]
+  ].map(([k, n]) => [k, n, r.lista.filter(x => x.estado === k)]).filter(g => g[2].length);
+
+  return `<div class="top">
+    <div class="mesnav">
+      <button data-act="mesConta" data-v="-1" aria-label="Mês anterior">‹</button>
+      <div class="m">${esc(compLabel(m))}</div>
+      <button data-act="mesConta" data-v="1" aria-label="Próximo mês">›</button>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${rp.aberto > 0.005 ? "Falta pagar" : (rp.total > 0.005 ? "Tudo pago este mês" : "Nada cadastrado")}</div>
+      <div class="big num">${brl(rp.aberto)}</div>
+      <div class="bar">
+        <span style="width:${rp.total?Math.abs(rp.pago)/Math.abs(rp.total)*100:0}%;background:#4ADE80"></span>
+        <span style="width:${rp.total?Math.abs(rp.aberto)/Math.abs(rp.total)*100:0}%;background:#FBBF24"></span>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#4ADE80"></i><em>Pago</em> <b class="num">${brl(rp.pago)}</b></span>
+        <span><i class="dot" style="background:#FBBF24"></i><em>Em aberto</em> <b class="num">${brl(rp.aberto)}</b></span>
+      </div>
+      ${rp.nVencidas ? `<div class="selos"><span class="selo" style="color:#FFAFAF">
+        ${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</span></div>` : ""}
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${brl(rp.total)}</b><i>total a pagar</i></div>
+      <div class="stat"><b class="num">${brl(rp.faturas.reduce((a,x)=>a+x.valor,0))}</b><i>faturas</i></div>
+      <div class="stat"><b class="num">${brl(r.total)}</b><i>contas</i></div>
+      <div class="stat"><b class="num">${rp.nPagos}/${rp.nItens}</b><i>pagas</i></div>
+    </div>
+    <div class="body">
+      <div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Nova conta</button></div>
+      ${rp.faturas.length ? `<div class="sec"><h2>Faturas de cartão</h2></div>
+      <div class="row">${rp.faturas.map(x => linhaFatura(x)).join("")}</div>` : ""}
+      ${grupos.length ? grupos.map(([k, nome, itens]) => `
+        <div class="sec"><h2>${nome}</h2></div>
+        <div class="row">${itens.map(x => linhaConta(x)).join("")}</div>`).join("")
+        : (rp.faturas.length ? "" : `<div class="empty">Cadastre aluguel, luz, água, internet — o que não passa no cartão.<br>
+             Contas mensais aparecem sozinhas todo mês.</div>`)}
+    </div>` + navbar();
+}
+
+function linhaFatura(x){
+  const selo = {vencida:["pg-vencida", (-x.dias)+"d atrasada"],
+                perto:["pg-perto", x.dias===0?"vence hoje":"em "+x.dias+"d"],
+                paga:["pg-paga","paga"], aberta:["",""]}[x.estado];
+  return `<div class="conta">
+    <button class="mk" data-act="togglefat" data-i="${x.f.id}" data-pago="${x.pago?1:0}"
+      aria-label="${x.pago?"Desmarcar":"Marcar fatura como paga"}">${x.pago?"✓":""}</button>
+    <div class="badge" style="background:#4B29A8;width:38px;height:38px;border-radius:12px;font-size:14px">${esc(sigla(x.c?x.c.nome:"?"))}</div>
+    <button class="t" data-act="abrirfat" data-i="${x.f.id}" style="background:none;border:0;padding:0;text-align:left">
+      <b>${esc(x.c?x.c.nome:"Cartão")}${selo[0]?`<span class="pill ${selo[0]}">${esc(selo[1])}</span>`:""}</b>
+      <i>fatura ${esc(x.f.rotulo)} · ${x.f.lanc.length} lançamentos${x.venc?" · vence "+dia(x.venc):""}</i>
+    </button>
+    <div class="v"><b>${brl(x.valor)}</b></div>
+  </div>`;
+}
+
+function linhaConta(x){
+  const cat = x.c.cat || "Boletos";
+  const pes = (x.c.pessoas||[]).filter(id=>pessoa(id));
+  const selo = {vencida:["pg-vencida", (-x.dias)+"d atrasada"], perto:["pg-perto", x.dias===0?"vence hoje":"em "+x.dias+"d"],
+                paga:["pg-paga","paga"], aberta:["",""]}[x.estado];
+  return `<div class="conta">
+    <button class="mk" data-act="togglepago" data-i="${x.c.id}" data-pago="${x.pago?1:0}"
+      aria-label="${x.pago?"Desmarcar":"Marcar como paga"}">${x.pago?"✓":""}</button>
+    <button class="badge" data-act="vercatconta" data-i="${x.c.id}" title="${esc(cat)}"
+      style="background:${corCat(cat)};width:38px;height:38px;border-radius:12px;font-size:15px;border:0">${esc(inicialCat(cat))}</button>
+    <button class="t" data-act="sheet" data-v="editarConta" data-i="${x.c.id}" style="background:none;border:0;padding:0;text-align:left">
+      <b>${esc(x.c.nome)}${selo[0]?`<span class="pill ${selo[0]}">${esc(selo[1])}</span>`:""}</b>
+      <i>${esc(cat)} · ${dia(x.venc)}${x.c.tipo==="mensal"?" · mensal":""}${pes.length?" · "+pes.map(id=>sigla(pessoa(id).nome)).join("/"):""}${pes.length>1?" ÷"+pes.length:""}</i>
+    </button>
+    <div class="v"><b>${brl(x.valor)}</b></div>
+  </div>`;
+}
+
+/* ================= página inicial ================= */
+function viewInicio(){
+  const m = S.mesContas;
+  const t = totaisMes(m), ac = acertoMes(m), itens = itensDoMes(m);
+
+  const porCat = {};
+  itens.forEach(it => { porCat[it.cat] = (porCat[it.cat]||0) + it.v; });
+  const cats = Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const topo = UI.verTudoCat ? cats : cats.slice(0,6);
+  const maxCat = cats.length ? Math.abs(cats[0][1]) : 1;
+
+  const meses = {};
+  S.faturas.forEach(f => { const c = f.comp || ""; if (!c || c <= m) return;
+    f.lanc.forEach(l => { if (!l.auto) return;
+      meses[c] = meses[c] || {rot:f.rotulo, v:0, n:0}; meses[c].v += l.v; meses[c].n++; }); });
+  const prox = Object.entries(meses).sort((a,b)=>a[0]<b[0]?-1:1).slice(0,6).map(x=>x[1]);
+  const rp = resumoPagar(m);
+  const rc = rp.contas;
+  const liq = ac.liquidoAberto;
+  const nada = Math.abs(liq) < 0.005;
+  const tudoAcertado = ac.linhas.length && !ac.nAbertos;
+
+  return `<div class="top">
+    <div class="mesnav">
+      <button data-act="mesResumo" data-v="-1" aria-label="Mês anterior">‹</button>
+      <div class="m">${esc(compLabel(m))}</div>
+      <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${tudoAcertado ? "Tudo acertado no mês"
+        : (nada ? "Nada a acertar no mês" : (liq < 0 ? "Falta receber" : "Falta você transferir"))}</div>
+      <div class="big num">${brl(Math.abs(liq))}</div>
+      <div class="bar">${S.pessoas.map(p=>`<span style="width:${t.total?Math.max(0,Math.abs(t.porPessoa[p.id])/Math.abs(t.total)*100):0}%;background:${CORES[p.cor%8]}"></span>`).join("")}</div>
+      <div class="legend">${S.pessoas.map(p=>`<span><i class="dot" style="background:${CORES[p.cor%8]}"></i><em>${esc(curtoNome(p.nome))}</em> <b class="num">${brl(t.porPessoa[p.id]||0)}</b></span>`).join("")}</div>
+      ${ac.linhas.length ? `<div class="acerto">${ac.linhas.map(l=>`
+        <div style="display:flex;align-items:center;gap:10px;${l.quitado?"opacity:.5":""}">
+          <button class="mk" data-act="acerto" data-k="${esc(l.chave)}" data-pago="${l.quitado?1:0}"
+            style="width:28px;height:28px;font-size:13px"
+            aria-label="${l.quitado?"Desfazer":"Marcar como acertado"}">${l.quitado?"✓":""}</button>
+          <span style="flex:1;${l.quitado?"text-decoration:line-through":""}">${esc(l.txt)}</span>
+          <b class="num">${brl(l.quitado && l.valorPago!=null ? l.valorPago : l.v)}</b>
+        </div>`).join("")}</div>` : ""}
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${brl(t.total)}</b><i>gasto no mês</i></div>
+      <div class="stat"><b class="num">${brl(t.cartoes)}</b><i>cartões</i></div>
+      <div class="stat"><b class="num">${brl(t.contas)}</b><i>contas</i></div>
+      ${t.nPend?`<div class="stat"><b class="num">${t.nPend}</b><i>sem dono</i></div>`:""}
+    </div>
+    <div class="body">
+      ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
+      <div class="cta">
+        ${t.nPend?`<button class="pri" data-act="classificar">Classificar ${t.nPend}</button>`:""}
+        <button ${t.nPend?"":'class="pri"'} data-act="sheet" data-v="exportar">Exportar</button>
+      </div>
+
+      <div class="sec"><h2>Por pessoa</h2>
+        <button data-act="dica">toque para abrir</button></div>
+      <div class="pgrid">${S.pessoas.map(p=>{
+        const v = t.porPessoa[p.id]||0;
+        const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
+        return `<button class="pcard" data-act="verpessoa" data-p="${p.id}" style="text-align:left">
+          <div class="h"><i class="dot" style="background:${CORES[p.cor%8]}"></i>${esc(curtoNome(p.nome))}
+            <span style="margin-left:auto;opacity:.45">›</span></div>
+          <div class="v num">${brl(v)}</div>
+          <div class="p">${pc.toFixed(0)}% do mês</div></button>`;
+      }).join("")}</div>
+
+      <div class="sec"><h2>Por categoria</h2>
+        ${cats.length>6?`<button data-act="vertudocat">${UI.verTudoCat?"ver menos":"ver todas"}</button>`:""}</div>
+      <div class="row">${topo.length ? topo.map(([c,v])=>
+        barraCat(c, v, t.total, maxCat, `data-act="vercatmes" data-c="${esc(c)}"`)).join("")
+        : `<div class="empty" style="padding:22px">Nada lançado neste mês.</div>`}</div>
+
+      ${rp.nItens ? `<div class="sec"><h2>A pagar em ${esc(compLabel(m))}</h2>
+        <button data-act="nav" data-v="contas">abrir</button></div>
+      <div class="row"><button class="cbar" data-act="nav" data-v="contas" style="padding-top:2px">
+        <div class="t"><b>${rp.aberto>0.005 ? "Falta pagar" : "Tudo pago"}</b>
+          <div class="track"><span style="width:${rp.total?Math.abs(rp.pago)/Math.abs(rp.total)*100:0}%;background:#0A8A6E"></span></div></div>
+        <div class="v"><b class="num">${brl(rp.aberto)}</b><i>${rp.nPagos}/${rp.nItens} pagas</i></div>
+      </button>${rp.nVencidas?`<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+        ${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</div>`:""}</div>` : ""}
+
+      ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
+      <div class="row">${prox.map(x=>`<div class="mrow">
+        <div class="m">${esc(x.rot)}<div class="c">${x.n} parcelas</div></div>
+        <div class="val num" style="font-size:15.5px">${brl(x.v)}</div></div>`).join("")}</div>` : ""}
+    </div>` + navbar();
+}
+
+function barraCat(c, v, total, max, attrs){
+  const pc = total ? Math.abs(v)/Math.abs(total)*100 : 0;
+  return `<button class="cbar" ${attrs||""}>
+    <div class="badge" style="background:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
+    <div class="t"><b>${esc(c)}</b>
+      <div class="track"><span style="width:${Math.max(2,Math.abs(v)/(max||1)*100).toFixed(1)}%;background:${corCat(c)}"></span></div></div>
+    <div class="v"><b class="num">${brl(v)}</b><i>${pc.toFixed(0)}%</i></div>
+  </button>`;
+}
+
+/* ================= configurações ================= */
+function viewConfig(){
+  return `<div class="top"><div class="hero" style="margin:0">
+    <div class="lbl">Ajustes</div>
+    <div class="big" style="font-size:25px">Pessoas, cartões e categorias</div></div></div>
+  <div class="body" style="padding-top:6px">
+    <h2>Pessoas</h2>
+    <button class="btn" data-act="addp">+ Adicionar pessoa</button>
+    ${S.pessoas.map(p=>`<div class="row">
+      <div style="display:flex;align-items:center;gap:11px">
+        <i class="dot" style="background:${CORES[p.cor%8]};width:16px;height:16px;border-radius:4px"></i>
+        <input value="${esc(p.nome)}" data-act="renome" data-i="${p.id}" style="border:0;padding:6px 0;font-weight:600;font-size:17px;background:none">
+      </div>
+      <div style="display:flex;gap:7px;margin-top:10px">
+        ${S.euId===p.id?`<span class="tag">sou eu</span>`:`<button class="mini2" data-act="soueu" data-i="${p.id}">sou eu</button>`}
+        ${S.pessoas.length>1?`<button class="mini2" data-act="delp" data-i="${p.id}">remover</button>`:""}
+      </div></div>`).join("")}
+
+    <h2>Cartões e faturas</h2>
+    <button class="btn" data-act="addc">+ Adicionar cartão</button>
+    ${S.cartoes.map(c=>{
+      const fs = S.faturas.filter(f=>f.cartaoId===c.id);
+      return `<div class="row">
+        <input value="${esc(c.nome)}" data-act="renomec" data-i="${c.id}" style="border:0;padding:6px 0;font-weight:700;font-size:18px;background:none">
+        <label class="f">Quem paga a fatura</label>
+        <select data-act="pagador" data-i="${c.id}">${S.pessoas.map(p=>`<option value="${p.id}"${c.pagador===p.id?" selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><label class="f">Fecha no dia</label>
+            <input type="number" min="1" max="31" inputmode="numeric" data-act="fechamento" data-i="${c.id}"
+              value="${c.fechamento||""}" placeholder="—"></div>
+          <div style="flex:1"><label class="f">Vence no dia</label>
+            <input type="number" min="1" max="31" inputmode="numeric" data-act="vencimento" data-i="${c.id}"
+              value="${c.vencimento||""}" placeholder="—"></div>
+        </div>
+        <p style="font-size:12.5px;color:var(--mute);margin:6px 0 0;line-height:1.5">
+          ${c.fechamento ? "As faturas deste cartão são criadas sozinhas e mostram se estão abertas ou fechadas."
+            : "Sem dia de fechamento, as faturas continuam sendo criadas à mão. Deixe vazio para débito e PIX."}</p>
+        <div class="sub">
+          <button class="mini2" data-act="sheet" data-v="novaFatura" data-c="${c.id}"
+            style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">+ Nova fatura neste cartão</button>
+          ${fs.length ? fs.slice().sort((a,b)=>String(a.comp||a.rotulo)<String(b.comp||b.rotulo)?1:-1).map(x=>{
+            const st = statusFatura(c, x.comp);
+            return `<div class="it" style="align-items:center">
+            <div class="t"><b style="font-size:15px;font-weight:600">${esc(x.rotulo)}</b>
+              <i>${x.lanc.length} lançamentos${st?" · <span style=\"color:"+CORSTATUS[st.e]+";filter:brightness(.7)\">"+esc(st.t)+"</span>":""}</i></div>
+            <div style="display:flex;gap:6px">
+              <button class="mini2" data-act="sheet" data-v="mudarMes" data-f="${x.id}">mês</button>
+              <button class="mini2" data-act="colar" data-i="${x.id}">colar</button>
+              <button class="mini2" data-act="abrir" data-i="${x.id}">abrir</button>
+              <button class="mini2" data-act="delf" data-i="${x.id}">apagar</button>
+            </div></div>`;}).join("")
+          : `<div style="font-size:13px;color:var(--mute);padding:6px 0">Nenhuma fatura ainda.</div>`}
+        </div>
+        ${S.cartoes.length>1?`<button class="btn dgr" data-act="delc" data-i="${c.id}" style="margin-top:12px">Apagar cartão</button>`:""}
+      </div>`;
+    }).join("")}
+
+    <h2>Categorias</h2>
+    <button class="btn" data-act="sheet" data-v="addCat">+ Adicionar categoria</button>
+    ${S.cats.map(c=>{
+      const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0);
+      return `<div class="row"><div class="rowtop">
+        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
+        <input value="${esc(c)}" data-act="renomecat" data-i="${esc(c)}"
+          style="border:0;padding:6px 0;font-weight:600;font-size:16px;background:none;flex:1">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="tag" data-act="vercat" data-c="${esc(c)}">${n} ›</button>
+          ${c==="Outros"?"":`<button class="mini2" data-act="delcat" data-i="${esc(c)}">apagar</button>`}
+        </div></div></div>`;
+    }).join("")}
+    <p style="font-size:13px;color:var(--mute);line-height:1.6;margin-top:10px">
+      Renomear aqui atualiza todos os lançamentos. Apagar joga o conteúdo em Outros.</p>
+
+    <h2>Parcelas futuras</h2>
+    ${(()=>{ const pv = previsaoParcelas();
+      return pv.n
+        ? `<div class="row"><div style="font-size:15px">${pv.n} parcelas ainda não lançadas nos meses seguintes,
+             somando <b class="num">${brl(pv.v)}</b>.</div>
+           <div style="font-size:13px;color:var(--mute);margin-top:6px">
+             Gerar cria essas parcelas nas faturas futuras, já com o mesmo dono e categoria.</div></div>
+           <button class="btn pri" data-act="gerarparc">Gerar ${pv.n} parcelas futuras</button>`
+        : `<div class="row"><div style="font-size:15px">Todas as parcelas já estão lançadas nos meses seguintes.</div></div>`;
+    })()}
+    <button class="btn dgr" data-act="limparauto">Apagar parcelas previstas</button>
+
+    <h2>Regras salvas</h2>
+    <div class="row"><div style="font-size:15px">${Object.keys(S.regras).length} estabelecimento(s) com dono definido.</div>
+    <div style="font-size:13px;color:var(--mute);margin-top:6px">${Object.keys(S.regrasCat).length} com categoria ajustada à mão.</div></div>
+    <button class="btn dgr" data-act="limparRegras">Apagar todas as regras</button>
+
+    <h2>Aplicativo</h2>
+    ${(()=>{
+      const tema = S.tema || "auto";
+      const nLanc = S.faturas.reduce((a,f)=>a+f.lanc.length,0);
+      const nAuto = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.auto).length,0);
+      const bytes = (()=>{ try { return JSON.stringify(S).length; } catch(e){ return 0; } })();
+      const tam = bytes > 1024*1024 ? (bytes/1048576).toFixed(1)+" MB" : Math.round(bytes/1024)+" KB";
+      return `
+      <div class="row">
+        <label class="f" style="margin-top:0">Aparência</label>
+        <div class="seg">
+          ${TEMAS.map(([k,n,c])=>
+            `<button data-act="tema" data-v="${k}" data-on="${tema===k?1:0}">
+               <i class="sw" style="background:${c}"></i>${n}</button>`).join("")}
+        </div>
+        <p style="font-size:12.5px;color:var(--mute);margin:9px 0 0;line-height:1.5">
+          Automático segue o celular e usa o escuro quente à noite.
+          Escuro é quase preto; escuro quente é um cinza acinzentado mais suave.</p>
+      </div>
+
+      <div class="row">
+        <div class="kv"><span>Lançamentos</span><b class="num">${nLanc}</b></div>
+        <div class="kv"><span>Parcelas previstas</span><b class="num">${nAuto}</b></div>
+        <div class="kv"><span>Faturas</span><b class="num">${S.faturas.length}</b></div>
+        <div class="kv"><span>Cartões</span><b class="num">${S.cartoes.length}</b></div>
+        <div class="kv"><span>Pessoas</span><b class="num">${S.pessoas.length}</b></div>
+        <div class="kv"><span>Categorias</span><b class="num">${S.cats.length}</b></div>
+        <div class="kv"><span>Regras salvas</span><b class="num">${Object.keys(S.regras).length + Object.keys(S.regrasCat).length}</b></div>
+        <div class="kv"><span>Espaço ocupado</span><b class="num">${tam}</b></div>
+        <div class="kv"><span>Versão</span><b class="num">${VERSAO}</b></div>
+      </div>
+
+      <label class="f">Backup</label>
+      <button class="btn" data-act="backup">Baixar backup (.json)</button>
+      <button class="btn" data-act="compartilharbackup">Compartilhar backup</button>
+      <button class="btn" data-act="restaurar">Restaurar backup</button>
+      <input type="file" id="filein" accept="application/json" style="display:none">
+      <p style="font-size:12.5px;color:var(--mute);line-height:1.6;margin:10px 0 0">
+        Tudo fica guardado só neste aparelho — nada é enviado para servidor nenhum.
+        Faça backup antes de reinstalar o app ou trocar de celular.</p>
+
+      <label class="f">Zona de risco</label>
+      <button class="btn dgr" data-act="apagartudo">Apagar todos os dados</button>`;
+    })()}
+  </div>` + navbar();
+}
+
+/* ================= folhas ================= */
+const sheets = {};
+
+sheets.exportar = () => {
+  const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual", contas:true});
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Exportar gastos</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Cada linha traz o valor já dividido e a categoria, pronto para somar.</p>
+    <label class="f">Incluir quem</label>
+    ${S.pessoas.map(p=>`<label class="check" style="margin-bottom:8px">
+      <input type="checkbox" data-act="xsel" data-i="${p.id}" ${t.sel.includes(p.id)?"checked":""}>
+      <i class="dot" style="background:${CORES[p.cor%8]}"></i> ${esc(p.nome)}</label>`).join("")}
+    <label class="check"><input type="checkbox" data-act="xpend" ${t.pend?"checked":""}> Lançamentos sem dono</label>
+    <label class="check"><input type="checkbox" data-act="xcontas" ${t.contas?"checked":""}> Contas de ${esc(compLabel(S.mesContas))}</label>
+    <label class="f">Quais faturas</label>
+    <select data-act="xescopo">
+      <option value="atual"${t.escopo==="atual"?" selected":""}>Só a fatura aberta</option>
+      <option value="todas"${t.escopo==="todas"?" selected":""}>Todas as faturas</option></select>
+    <label class="f">Como enviar</label>
+    <button class="btn pri" data-act="xshare">Compartilhar (Drive, WhatsApp…)</button>
+    <button class="btn" data-act="xsheets">Copiar para colar no Sheets</button>
+    <button class="btn" data-act="xcsv">Baixar arquivo .csv</button>
+    <button class="btn" data-act="xtexto">Copiar resumo em texto</button>
+    <button class="btn" data-act="fechar" style="margin-top:18px">Fechar</button>
+  </div></div>`;
+};
+
+sheets.addCat = () => {
+  const t = UI.tmp || (UI.tmp = {q:""});
+  const q = (t.q||"").trim();
+  const norm = s => semAcento(s).trim();
+  const achados = S.cats.filter(c => !q || norm(c).includes(norm(q)));
+  const existe = S.cats.some(c => norm(c) === norm(q));
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Adicionar categoria</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px">Digite para ver se já existe algo parecido.</p>
+    <div class="srch"><input data-act="catq" data-foco value="${esc(t.q||"")}" placeholder="Nome da categoria"></div>
+    ${q ? (existe
+      ? `<div class="warn">Já existe uma categoria chamada "${esc(q)}".</div>`
+      : `<button class="btn pri" data-act="catcriar">Criar "${esc(q)}"</button>`) : ""}
+    <label class="f">${q ? "Parecidas que já existem" : "Categorias atuais"}</label>
+    ${achados.length ? achados.map(c=>{
+      const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0);
+      return `<div class="row"><div class="rowtop"><div class="nm" style="font-size:15px">${esc(c)}</div>
+        <span class="tag">${n}</span></div></div>`;
+    }).join("") : `<div style="font-size:14px;color:var(--mute);padding:8px 2px">Nenhuma parecida.</div>`}
+    <button class="btn" data-act="fechar" style="margin-top:14px">Fechar</button>
+  </div></div>`;
+};
+
+sheets.verCat = () => {
+  const t = UI.tmp || (UI.tmp = {cat:"", escopo:"atual"});
+  let todos = [];
+  if (t.escopo === "mes") todos = itensDoMes(S.mesContas);
+  else {
+    const fs = t.escopo==="todas" ? S.faturas : faturasAtivas();
+    fs.forEach(f=>f.lanc.forEach(l=>todos.push(Object.assign({_f:f}, l))));
+  }
+  const daCat = todos.filter(l=>(l.cat||"Outros")===t.cat);
+  const noMes = t.escopo === "mes";
+  const totalGeral = todos.reduce((a,l)=>a+l.v,0);
+  const totalCat = daCat.reduce((a,l)=>a+l.v,0);
+  const pct = totalGeral ? Math.abs(totalCat)/Math.abs(totalGeral)*100 : 0;
+  const porPessoa = {};
+  daCat.forEach(l=>{
+    const a = noMes ? (l.aloc||[]) : alocDe(l.id).filter(id=>pessoa(id));
+    if (!a.length){ porPessoa["_"] = (porPessoa["_"]||0) + l.v; return; }
+    a.forEach(id=>{ porPessoa[id] = (porPessoa[id]||0) + l.v/a.length; });
+  });
+  const porEstab = {};
+  daCat.forEach(l=>{ porEstab[l.g] = (porEstab[l.g]||0) + l.v; });
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div class="badge" style="background:${corCat(t.cat)}">${esc(inicialCat(t.cat))}</div>
+      <h3 style="margin:0">${esc(t.cat)}</h3></div>
+    <select data-act="vcescopo" style="margin:10px 0 14px">
+      <option value="mes"${t.escopo==="mes"?" selected":""}>${esc(compLabel(S.mesContas))} · cartões e contas</option>
+      <option value="atual"${t.escopo==="atual"?" selected":""}>Fatura aberta</option>
+      <option value="todas"${t.escopo==="todas"?" selected":""}>Todas as faturas</option></select>
+    <div class="row">
+      <div class="rowtop"><div class="nm">Total da categoria</div><div class="val num">${brl(totalCat)}</div></div>
+      <div class="pct"><span style="width:${Math.min(100,pct).toFixed(1)}%;background:${corCat(t.cat)}"></span></div>
+      <div style="font-size:14px;color:var(--mute)">
+        ${pct.toFixed(1).replace(".",",")}% de ${brl(totalGeral)} · ${daCat.length} lançamentos</div>
+    </div>
+    <label class="f">Por pessoa</label>
+    ${S.pessoas.filter(p=>porPessoa[p.id]).map(p=>{
+      const v = porPessoa[p.id], pp = totalCat ? Math.abs(v)/Math.abs(totalCat)*100 : 0;
+      return `<div class="row"><div class="rowtop">
+        <div style="display:flex;align-items:center;gap:9px"><i class="dot" style="background:${CORES[p.cor%8]}"></i>
+        <span style="font-weight:600">${esc(curtoNome(p.nome))}</span></div>
+        <div class="val num" style="font-size:16px">${brl(v)}</div></div>
+        <div class="pct"><span style="width:${Math.min(100,pp).toFixed(1)}%;background:${CORES[p.cor%8]}"></span></div>
+        <div style="font-size:13px;color:var(--mute)">${pp.toFixed(1).replace(".",",")}% da categoria</div></div>`;
+    }).join("") || `<div style="font-size:14px;color:var(--mute);padding:6px 2px">Nada atribuído.</div>`}
+    ${porPessoa["_"] ? `<div class="row"><div class="rowtop"><div style="font-weight:600;color:var(--mute)">Sem dono</div>
+      <div class="val num" style="font-size:16px">${brl(porPessoa["_"])}</div></div></div>` : ""}
+    <label class="f">Estabelecimentos</label>
+    <div class="row">${Object.entries(porEstab).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).map(([g,v])=>
+      `<div class="it"><div class="t"><b style="font-size:15px">${esc(g)}</b></div>
+       <div class="val num" style="font-size:15px">${brl(v)}</div></div>`).join("")}</div>
+    <label class="f">Lançamentos</label>
+    <div class="row">${daCat.slice().sort((a,b)=>a.d<b.d?1:-1).map(l=>{
+      const a = noMes ? (l.aloc||[]) : alocDe(l.id).filter(id=>pessoa(id));
+      const orig = noMes ? l.onde : (multiCartao()&&l._f ? nomeCartao(l._f) : "");
+      return `<div class="it"><div class="t"><b style="font-size:14px">${esc(l.g)}</b>
+        <i>${dia(l.d)}${orig?" · "+esc(orig):""}${a.length?" · "+a.map(id=>sigla(pessoa(id).nome)).join("/"):" · sem dono"}</i></div>
+        <div class="val num" style="font-size:14px">${brl(l.v)}</div></div>`;
+    }).join("")}</div>
+    <button class="btn" data-act="fechar" style="margin-top:14px">Fechar</button>
+  </div></div>`;
+};
+
+sheets.acertar = () => {
+  const t = UI.tmp || {};
+  if (!t.chave) return "";
+  if (t.valor === undefined) t.valor = paraCampo(t.v);
+  if (t.quando === undefined) t.quando = hojeISO();
+  const pv = num(String(t.valor).replace(/[R$\s]/g, ""));
+  const receber = !!t.recebe;
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${receber ? "Recebeu o acerto?" : "Você já pagou?"}</h3>
+    <p style="font-size:15px;font-weight:700;margin:0">${esc(t.quem||"")}</p>
+    <p style="font-size:14px;color:var(--mute);margin:2px 0 12px">
+      ${esc(compLabel(S.mesContas))} · devido ${brl(t.v)}</p>
+    <label class="f">Quanto ${receber ? "você recebeu" : "você pagou"}</label>
+    <input data-act="acv" inputmode="decimal" value="${esc(t.valor)}">
+    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+      ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
+    <label class="f">Quando</label>
+    <input data-act="acq" type="date" value="${esc(t.quando)}">
+    <button class="btn pri" data-act="acok">Confirmar</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.pagarFatura = () => {
+  const t = UI.tmp || {};
+  const f = S.faturas.find(x => x.id === t.id); if (!f) return "";
+  const c = S.cartoes.find(x => x.id === f.cartaoId);
+  const tot = f.lanc.reduce((a,l)=>a+l.v, 0);
+  if (t.valor === undefined) t.valor = paraCampo(tot);
+  if (t.quando === undefined) t.quando = hojeISO();
+  const pv = num(String(t.valor).replace(/[R$\s]/g, ""));
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Pagar fatura</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px">
+      ${esc(c?c.nome:"")} · ${esc(f.rotulo)} · ${f.lanc.length} lançamentos</p>
+    <label class="f">Valor pago</label>
+    <input data-act="acv" inputmode="decimal" value="${esc(t.valor)}">
+    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+      ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
+    <label class="f">Quando</label>
+    <input data-act="acq" type="date" value="${esc(t.quando)}">
+    <button class="btn pri" data-act="fatok">Marcar como paga</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.verPessoa = () => {
+  const t = UI.tmp || {};
+  const p = pessoa(t.p); if (!p) return "";
+  const m = S.mesContas;
+  const tot = totaisMes(m);
+  const meus = itensDoMes(m).filter(it => it.aloc.includes(p.id))
+    .map(it => Object.assign({}, it, {parte: it.v / it.aloc.length}));
+  const soma = meus.reduce((a,x)=>a+x.parte, 0);
+  const pcMes = tot.total ? Math.abs(soma)/Math.abs(tot.total)*100 : 0;
+  const soDele = meus.filter(x=>x.aloc.length===1).reduce((a,x)=>a+x.parte,0);
+  const dividido = soma - soDele;
+  const emCartao = meus.filter(x=>x.fonte==="cartao").reduce((a,x)=>a+x.parte,0);
+  const emConta = soma - emCartao;
+
+  const porCat = {}; meus.forEach(x => porCat[x.cat] = (porCat[x.cat]||0) + x.parte);
+  const cats = Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const maxc = cats.length ? Math.abs(cats[0][1]) : 1;
+  const porEst = {}; meus.forEach(x => porEst[x.g] = (porEst[x.g]||0) + x.parte);
+  const ests = Object.entries(porEst).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0, t.tudoEst ? 999 : 8);
+
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <div class="badge" style="background:${CORES[p.cor%8]}">${esc(sigla(p.nome))}</div>
+      <div><h3 style="margin:0">${esc(curtoNome(p.nome))}</h3>
+        <div style="font-size:13px;color:var(--mute)">${esc(compLabel(m))}</div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="rowtop"><div class="nm" style="font-size:15px">Parte no mês</div>
+        <div class="val num">${brl(soma)}</div></div>
+      <div class="pct"><span style="width:${Math.min(100,pcMes).toFixed(1)}%;background:${CORES[p.cor%8]}"></span></div>
+      <div style="font-size:13.5px;color:var(--mute)">
+        ${pcMes.toFixed(1).replace(".",",")}% de ${brl(tot.total)} gastos no mês · ${meus.length} itens</div>
+    </div>
+    <div class="stats" style="padding:2px 0 4px">
+      <div class="stat"><b class="num">${brl(soDele)}</b><i>individuais</i></div>
+      <div class="stat"><b class="num">${brl(dividido)}</b><i>em dividido</i></div>
+      <div class="stat"><b class="num">${brl(emCartao)}</b><i>em cartões</i></div>
+      <div class="stat"><b class="num">${brl(emConta)}</b><i>em contas</i></div>
+    </div>
+    <label class="f">Por categoria</label>
+    <div class="row">${cats.length ? cats.map(([c,v]) =>
+      barraCat(c, v, soma, maxc, `data-act="vercatmes" data-c="${esc(c)}"`)).join("")
+      : `<div class="empty" style="padding:22px">Nada atribuído a ${esc(curtoNome(p.nome))} neste mês.</div>`}</div>
+    ${ests.length ? `<label class="f">Maiores gastos</label>
+    <div class="row">${ests.map(([g,v])=>`<div class="it">
+      <div class="t"><b style="font-size:14.5px">${esc(g)}</b></div>
+      <div class="val num" style="font-size:14.5px">${brl(v)}</div></div>`).join("")}
+      ${Object.keys(porEst).length>8 && !t.tudoEst ? `<button class="lnk" data-act="tudoest" style="margin-top:10px">
+        ver os ${Object.keys(porEst).length} estabelecimentos</button>` : ""}</div>` : ""}
+    <button class="btn pri" data-act="filtrarpessoa" data-p="${p.id}">Ver lançamentos de ${esc(curtoNome(p.nome))}</button>
+    <button class="btn" data-act="fechar">Fechar</button>
+  </div></div>`;
+};
+
+sheets.escolherCat = () => {
+  const t = UI.tmp || (UI.tmp = {});
+  const q = (t.q || "").trim();
+  const norm = s => semAcento(s).trim();
+  const achados = S.cats.filter(c => !q || norm(c).includes(norm(q)));
+  const existe = S.cats.some(c => norm(c) === norm(q));
+  const conta = c => S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0)
+                   + S.contas.filter(x=>(x.cat||"Boletos")===c).length;
+  const titulo = {grupo:"Categoria do estabelecimento", item:"Categoria do lançamento", conta:"Categoria da conta"}[t.alvo] || "Categoria";
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${titulo}</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 6px">${esc(t.nome||"")}</p>
+    ${t.alvo==="grupo" ? `<p style="font-size:12.5px;color:var(--mute);margin:0 0 12px">
+      Vale para todos os lançamentos deste estabelecimento e vira regra para as próximas faturas.</p>`
+     : (t.alvo==="item" ? `<p style="font-size:12.5px;color:var(--mute);margin:0 0 12px">
+      Muda só este lançamento. O estabelecimento continua na categoria dele.</p>` : `<div style="height:8px"></div>`)}
+    <div class="srch"><input data-act="ecq" data-foco value="${esc(t.q||"")}" placeholder="Buscar categoria"></div>
+    ${q && !existe ? `<button class="btn pri" data-act="eccriar">Criar "${esc(q)}" e usar</button>` : ""}
+    <div class="row">${achados.length ? achados.map(c=>`
+      <button class="catopt" data-act="ecusar" data-c="${esc(c)}">
+        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
+        <b>${esc(c)}</b>
+        ${c===t.atual?`<span class="pill pg-paga">atual</span>`:`<span class="tag">${conta(c)}</span>`}
+      </button>`).join("") : `<div class="empty" style="padding:22px">Nenhuma categoria com esse nome.</div>`}</div>
+    <button class="btn" data-act="fechar">Fechar</button>
+  </div></div>`;
+};
+
+sheets.editarConta = () => {
+  const t = UI.tmp || (UI.tmp = {});
+  const nova = !t.id;
+  const c = nova ? null : S.contas.find(x => x.id === t.id);
+  if (t.f === undefined){
+    t.f = c ? JSON.parse(JSON.stringify(c))
+            : {nome:"", valor:"", dia:10, tipo:"mensal", data:hojeISO(), cat:"Boletos",
+               pagador:S.euId, pessoas:[S.euId], desde:S.mesContas};
+    if (c) t.f.valor = paraCampo(c.valor);
+  }
+  const f = t.f;
+  const previa = num(String(f.valor).replace(/[R$\s]/g, ""));
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${nova ? "Nova conta" : "Editar conta"}</h3>
+    <label class="f">Nome</label>
+    <input data-act="cf" data-k="nome" value="${esc(f.nome)}" placeholder="Aluguel, luz, internet…">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1.3"><label class="f">Valor</label>
+        <input data-act="cf" data-k="valor" inputmode="decimal" value="${esc(f.valor)}" placeholder="0,00">
+        <div id="previaValor" style="font-size:12.5px;color:${isNaN(previa)?"var(--mute)":"#0A8A6E"};margin-top:5px;font-weight:600">
+          ${isNaN(previa) ? "digite o valor" : brl(previa)}</div></div>
+      <div style="flex:1"><label class="f">${f.tipo==="mensal"?"Dia do vencimento":"Data"}</label>
+        ${f.tipo==="mensal"
+          ? `<input data-act="cf" data-k="dia" type="number" min="1" max="31" inputmode="numeric" value="${esc(f.dia)}">`
+          : `<input data-act="cf" data-k="data" type="date" value="${esc(f.data)}">`}</div>
+    </div>
+    <label class="f">Repetição</label>
+    <div class="seg"><button data-act="cftipo" data-v="mensal" data-on="${f.tipo==="mensal"?1:0}">Todo mês</button>
+      <button data-act="cftipo" data-v="avulsa" data-on="${f.tipo==="avulsa"?1:0}">Uma vez só</button></div>
+    <label class="f">Categoria</label>
+    <button class="catbtn" data-act="vercatform" style="width:100%;justify-content:flex-start;padding:14px">
+      <i style="background:${corCat(f.cat)}"></i>${esc(f.cat)}</button>
+    <label class="f">Quem paga</label>
+    <select data-act="cf" data-k="pagador">${S.pessoas.map(p=>`<option value="${p.id}"${f.pagador===p.id?" selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+    <label class="f">Dividida entre</label>
+    <div class="chips">${S.pessoas.map(p=>{
+      const on = (f.pessoas||[]).includes(p.id);
+      return `<button class="chip" data-act="cfpessoa" data-p="${p.id}" data-on="${on?1:0}"
+        style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(curtoNome(p.nome))}</button>`;
+    }).join("")}</div>
+    <button class="btn pri" data-act="cfsalvar">${nova ? "Criar conta" : "Salvar"}</button>
+    ${nova ? "" : `<button class="btn dgr" data-act="cfapagar">Apagar conta</button>`}
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.pagarConta = () => {
+  const t = UI.tmp || {};
+  const c = S.contas.find(x => x.id === t.id);
+  if (!c) return "";
+  const m = S.mesContas;
+  if (t.valor === undefined) t.valor = paraCampo(c.valor);
+  if (t.quando === undefined) t.quando = hojeISO();
+  const previa = num(String(t.valor).replace(/[R$\s]/g, ""));
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Pagar ${esc(c.nome)}</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px">
+      ${esc(compLabel(m))} · vence ${dia(vencDe(c, m))}</p>
+    <label class="f">Valor pago</label>
+    <input data-act="pgv" inputmode="decimal" value="${esc(t.valor)}">
+    <div id="previaPago" style="font-size:13.5px;color:${isNaN(previa)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+      ${isNaN(previa) ? "digite o valor" : brl(previa)}</div>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 0 0">
+      Ajuste se veio diferente do previsto — luz e água variam todo mês.</p>
+    <label class="f">Quando</label>
+    <input data-act="pgq" type="date" value="${esc(t.quando)}">
+    <button class="btn pri" data-act="pgok">Marcar como paga</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.mudarMes = () => {
+  const t = UI.tmp || {};
+  const f = S.faturas.find(x=>x.id===t.fid);
+  if (!f) return "";
+  const c = S.cartoes.find(x=>x.id===f.cartaoId);
+  const hoje = new Date();
+  const anos = [hoje.getFullYear()-1, hoje.getFullYear(), hoje.getFullYear()+1, hoje.getFullYear()+2];
+  const [ca, cm] = (f.comp || (hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,"0"))).split("-").map(Number);
+  const mes = t.mes || cm, ano = t.ano || ca;
+  const comp = ano + "-" + String(mes).padStart(2,"0");
+  const st = statusFatura(c, comp);
+  const auto = S.faturas.filter(x=>x.cartaoId===f.cartaoId).reduce((a,x)=>a+x.lanc.filter(l=>l.auto).length,0);
+  const conflito = S.faturas.some(x=>x.id!==f.id && x.cartaoId===f.cartaoId && x.comp===comp && faturaReal(x));
+  const aVista = f.lanc.filter(l=>!l.p).map(l=>l.d).filter(d=>/^\d{4}-/.test(d)).sort();
+  const datas = aVista.length ? aVista : f.lanc.map(l=>l.d).filter(d=>/^\d{4}-/.test(d)).sort();
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Mês da fatura</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 4px">${esc(c?c.nome:"")} · ${f.lanc.length} lançamentos</p>
+    ${datas.length?`<p style="font-size:13px;color:var(--mute);margin:0 0 12px">
+      Compras à vista de ${dia(datas[0])} a ${dia(datas[datas.length-1])}.
+      No cartão de crédito, a fatura costuma levar o nome do mês em que vence.</p>`:""}
+    <div style="display:flex;gap:10px">
+      <div style="flex:2"><label class="f">Mês</label>
+        <select data-act="mmMes">${MESES_NOME.map((n,i)=>`<option value="${i+1}"${mes===i+1?" selected":""}>${n}</option>`).join("")}</select></div>
+      <div style="flex:1"><label class="f">Ano</label>
+        <select data-act="mmAno">${anos.map(a=>`<option value="${a}"${ano===a?" selected":""}>${a}</option>`).join("")}</select></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div class="nm" style="font-size:16px">${esc(compLabel(comp))}</div>
+      <div style="font-size:13.5px;color:var(--mute);margin-top:5px">
+        ${st ? esc(st.t) : "Sem dia de fechamento definido neste cartão."}</div>
+    </div>
+    ${conflito?`<div class="warn">Já existe uma fatura de ${esc(compLabel(comp))} nesse cartão.</div>`:""}
+    ${auto?`<div class="warn">As ${auto} parcelas previstas deste cartão serão refeitas a partir do novo mês.
+      Os ${f.lanc.filter(l=>!l.auto).length} lançamentos desta fatura, com dono e categoria, ficam como estão.</div>`
+     :`<div class="row" style="background:#E8F4EF;border-color:#B7DCCE"><div style="font-size:13.5px">
+        Os ${f.lanc.length} lançamentos, com dono e categoria, continuam exatamente como estão. Muda só o mês.</div></div>`}
+    <button class="btn pri" data-act="mmSalvar" ${conflito?"disabled style=\"opacity:.5\"":""}>Mudar para ${esc(compLabel(comp))}</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.novaFatura = () => {
+  const t = UI.tmp || (UI.tmp = {cartao:S.cartoes[0]?S.cartoes[0].id:"", rotulo:""});
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Nova fatura</h3>
+    <label class="f">Cartão</label>
+    <select data-act="nfcartao">${S.cartoes.map(c=>`<option value="${c.id}"${t.cartao===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}</select>
+    <label class="f">Nome da fatura</label>
+    <input data-act="nfrotulo" value="${esc(t.rotulo)}" placeholder="Agosto/26">
+    <button class="btn pri" data-act="nfcriar">Criar e colar lançamentos</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.importar = () => {
+  const t = UI.tmp || (UI.tmp = {txt:"", prev:null});
+  if (!t.prev) return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Colar lançamentos</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px;line-height:1.55">
+      Funciona com o texto do app do banco e com uma linha por gasto:<br><b>03/07 | Padaria | 35,98 | 1/3</b></p>
+    <textarea data-act="imptxt" placeholder="5 de agosto&#10;Padaria&#10;R$ 32,40">${esc(t.txt)}</textarea>
+    <button class="btn pri" data-act="impler">Ler lançamentos</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Confira antes de importar</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px">${t.prev.length} lançamentos lidos.</p>
+    ${t.prev.map((x,i)=>`<div class="pv" style="${x.dup?"opacity:.5;background:#F4F5F7":""}">
+      <input data-act="pv" data-k="d" data-i="${i}" value="${esc(x.d)}">
+      <input data-act="pv" data-k="g" data-i="${i}" value="${esc(x.g)}">
+      <input data-act="pv" data-k="v" data-i="${i}" value="${esc(x.v)}" class="num">
+      <input data-act="pv" data-k="p" data-i="${i}" value="${esc(x.p||"")}">
+      <button class="mini2" data-act="pvdel" data-i="${i}" style="padding:10px 8px">✕</button>
+    </div>${x.dup?`<div style="font-size:12px;color:var(--mute);margin:-4px 0 8px 4px">
+      já existe nesta fatura ·
+      <button class="lnk" data-act="pvdup" data-i="${i}">importar mesmo assim</button></div>`:""}`).join("")}
+    <button class="btn pri" data-act="impconfirma">Importar ${t.prev.length} lançamentos</button>
+    <button class="btn" data-act="impvoltar">Voltar</button>
+  </div></div>`;
+};
+
+/* ================= leitor ================= */
+const MESES = {janeiro:1,fevereiro:2,"março":3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+const RUIDO = /^(cart[aã]o virtual adicional|carteiras digitais adicional|adicional|image labels.*|[<>»«\-–—]+)$/i;
+const RE_VAL = /(-|−)?\s*R\$\s*([\d.]+,\d{2})/;
+const RE_PARC1 = /parcela\s+(\d+)\s+de\s+(\d+)/i;
+const RE_PARC2 = /(\d{2})\s*\/\s*(\d{2})\s*$/;
+function num(s){
+  const x = String(s == null ? "" : s).trim().replace(/[^\d.,\-]/g, "");
+  if (!x || x === "-") return NaN;
+  const sep = Math.max(x.lastIndexOf(","), x.lastIndexOf("."));
+  if (sep < 0) return parseFloat(x);
+  const dec = x.slice(sep + 1);
+  // 1 ou 2 dígitos depois do último separador = casa decimal; o resto é separador de milhar
+  if (/^\d{1,2}$/.test(dec))
+    return parseFloat(x.slice(0, sep).replace(/[.,]/g, "") + "." + dec);
+  return parseFloat(x.replace(/[.,]/g, ""));
+}
+function previa(id, txt){
+  const el = document.getElementById(id); if (!el) return;
+  const n2 = num(String(txt).replace(/[R$\s]/g, ""));
+  el.textContent = isNaN(n2) ? "digite o valor" : brl(n2);
+  el.style.color = isNaN(n2) ? "var(--mute)" : "#0A8A6E";
+}
+const paraCampo = v => (v == null || v === "" || isNaN(v)) ? "" : Number(v).toFixed(2).replace(".", ",");
+const parcNoNome = s => { const m = s.match(RE_PARC2); return m ? +m[1]+"/"+ +m[2] : ""; };
+const limpaNome = s => s.replace(RE_PARC2,"").replace(/[>›»<‹«]/g,"").replace(/\s{2,}/g," ").trim();
+
+function lerColado(txt){
+  const linhas = txt.split(/\r?\n/).map(s=>s.trim()).filter(s=>s && !RUIDO.test(s));
+  if (linhas.filter(l=>/[|;]/.test(l)).length > linhas.length*0.5){
+    return linhas.map(l=>{
+      const c = l.split(/[|;]/).map(s=>s.trim());
+      return {d:c[0]||"", g:c[1]||"", v:(c[2]||"").replace(/R\$\s*/,""), p:c[3]||""};
+    }).filter(x=>x.g);
+  }
+  let dataAtual = ""; const nomes = [], valores = [];
+  for (const l of linhas){
+    let m = l.match(/^(\d{1,2})\s+de\s+([a-zç]+)/i);
+    if (m && MESES[m[2].toLowerCase()]){ dataAtual = String(m[1]).padStart(2,"0")+"/"+String(MESES[m[2].toLowerCase()]).padStart(2,"0"); continue; }
+    m = l.match(/^(\d{1,2})\/(\d{1,2})(\/\d{2,4})?$/);
+    if (m){ dataAtual = m[1].padStart(2,"0")+"/"+m[2].padStart(2,"0"); continue; }
+    const v = l.match(RE_VAL);
+    const resto = v ? l.replace(RE_VAL,"").replace(RE_PARC1,"").replace(/[>›»]/g,"").trim() : "";
+    const pm = l.match(RE_PARC1);
+    if (v && resto.length > 2){
+      nomes.push({d:dataAtual, g:limpaNome(resto), p:pm?pm[1]+"/"+pm[2]:parcNoNome(resto)});
+      valores.push({v:(v[1]?"-":"")+v[2], p:pm?pm[1]+"/"+pm[2]:""});
+    } else if (v){
+      valores.push({v:(v[1]?"-":"")+v[2], p:pm?pm[1]+"/"+pm[2]:""});
+    } else {
+      if (pm && valores.length){ valores[valores.length-1].p = pm[1]+"/"+pm[2]; continue; }
+      nomes.push({d:dataAtual, g:limpaNome(l), p:parcNoNome(l)});
+    }
+  }
+  return nomes.map((n,i)=>({d:n.d, g:n.g, v:valores[i]?valores[i].v:"", p:n.p || (valores[i]?valores[i].p:"") || ""}));
+}
+
+/* ================= exportação ================= */
+function linhasExport(t){
+  const fs = t.escopo==="todas" ? S.faturas : faturasAtivas();
+  const out = [];
+  fs.forEach(f=>{
+    const c = cartaoDe(f);
+    f.lanc.forEach(l=>{
+      const a = alocDe(l.id).filter(id=>pessoa(id));
+      if (!a.length){
+        if (t.pend) out.push({f:f.rotulo,c:c?c.nome:"",d:dia(l.d),g:l.g,cat:l.cat||"Outros",p:l.p||"",tot:l.v,div:1,quem:"(sem dono)",val:l.v});
+        return;
+      }
+      a.forEach(id=>{ if (t.sel.includes(id))
+        out.push({f:f.rotulo,c:c?c.nome:"",d:dia(l.d),g:l.g,cat:l.cat||"Outros",p:l.p||"",tot:l.v,div:a.length,quem:pessoa(id).nome,val:l.v/a.length}); });
+    });
+  });
+  return out;
+}
+const CAB = ["fatura","cartao","data","estabelecimento","categoria","parcela","valor_total","dividido_entre","pessoa","valor_da_pessoa"];
+function linhasContas(t){
+  if (!t.contas) return [];
+  const out = [];
+  contasDoMes(S.mesContas).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id));
+    if (!a.length) return;
+    a.forEach(id=>{ if (!t.sel.includes(id)) return;
+      out.push({f:compLabel(S.mesContas), c:"Conta"+(x.pago?" (paga)":" (em aberto)"), d:dia(x.venc),
+                g:x.c.nome, cat:x.c.cat||"Boletos", p:"", tot:x.valor, div:a.length,
+                quem:pessoa(id).nome, val:x.valor/a.length}); });
+  });
+  return out;
+}
+const campos = o => [o.f,o.c,o.d,o.g,o.cat,o.p,o.tot.toFixed(2).replace(".",","),o.div,o.quem,o.val.toFixed(2).replace(".",",")];
+
+const todasLinhas = t => linhasExport(t).concat(linhasContas(t));
+function gerarCSV(t){
+  return "\uFEFF" + CAB.join(";") + "\n" +
+    todasLinhas(t).map(o=>campos(o).map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+}
+function gerarTSV(t){
+  return CAB.join("\t") + "\n" + todasLinhas(t).map(o=>campos(o).join("\t")).join("\n");
+}
+function gerarTexto(t){
+  const L = todasLinhas(t), out = [];
+  out.push(t.escopo==="todas" ? "Todas as faturas"
+    : (S.rotuloAtivo + (S.cartaoAtivo==="todos" ? " · todos os cartões" : " · " + (S.cartoes.find(c=>c.id===S.cartaoAtivo)||{}).nome)), "");
+  [...new Set(L.map(o=>o.quem))].forEach(nome=>{
+    const meus = L.filter(o=>o.quem===nome), porCat = {};
+    meus.forEach(o=>{ porCat[o.cat] = (porCat[o.cat]||0) + o.val; });
+    out.push(nome.toUpperCase());
+    Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).forEach(([c,v])=>out.push("  "+c+" — "+brl(v)));
+    out.push("  total: " + brl(meus.reduce((a,o)=>a+o.val,0)), "");
+  });
+  if (t.escopo==="atual"){
+    const tt = totais(), ac = acerto();
+    out.push("Fatura: " + brl(tt.total));
+    ac.linhas.forEach(l=>out.push("  " + l.txt + ": " + brl(l.v)));
+  }
+  return out.join("\n");
+}
+function nomeArquivo(t, ext){
+  const base = t.escopo==="todas" ? "todas" : (S.rotuloAtivo.replace(/\W+/g,"-").toLowerCase());
+  return "gastos-" + base + "." + ext;
+}
+function nomeBackup(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  return "divisor-backup-" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + ".json";
+}
+function baixar(nome, conteudo, tipo){
+  const u = URL.createObjectURL(new Blob([conteudo],{type:tipo}));
+  const a = document.createElement("a");
+  a.href = u; a.download = nome; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(u); a.remove(); }, 800);
+}
+async function copiar(txt, msg){
+  try { await navigator.clipboard.writeText(txt); alert(msg); }
+  catch(e){ prompt("Copie o conteúdo:", txt); }
+}
+
+/* ================= eventos ================= */
+document.addEventListener("click", ev => {
+  const box = ev.target.closest("[data-stop]");
+  const el = ev.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act, i = el.dataset.i, v = el.dataset.v, pid = el.dataset.p, g = el.dataset.g;
+  if (act === "fechar"){ UI.sheet = null; UI.tmp = null; return render(); }
+
+  switch(act){
+    case "nav": UI.view = v; UI.editando = UI.editandoItem = null; window.scrollTo(0,0); return render();
+    case "classificar": UI.view = "lista"; UI.soPend = true; UI.filtroP = null;
+      window.scrollTo(0,0); return render();
+    case "vertudocat": UI.verTudoCat = !UI.verTudoCat; return render();
+    case "mesResumo": S.mesContas = mesSoma(S.mesContas, +v);
+      if (S.faturas.some(f=>f.comp===S.mesContas)) S.rotuloAtivo = compLabel(S.mesContas);
+      salvar(); window.scrollTo(0,0); return render();
+    case "verpessoa": UI.sheet = "verPessoa"; UI.tmp = {p: pid}; return render();
+    case "acerto": {
+      const k = el.dataset.k;
+      if (S.acertos[k]){ delete S.acertos[k]; salvar(); return render(); }
+      const linha = acertoMes(S.mesContas).linhas.find(l => l.chave === k);
+      if (!linha) return;
+      UI.sheet = "acertar";
+      UI.tmp = {chave:k, v:linha.v, recebe:linha.recebe, quem:linha.txt};
+      return render();
+    }
+    case "acok": {
+      const t = UI.tmp;
+      const v2 = num(String(t.valor).replace(/[R$\s]/g,""));
+      S.acertos[t.chave] = {pago:true, valor: isNaN(v2) ? t.v : v2, quando: t.quando};
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "togglefat": {
+      if (S.fatPagas[i]){ delete S.fatPagas[i]; salvar(); return render(); }
+      UI.sheet = "pagarFatura"; UI.tmp = {id:i}; return render();
+    }
+    case "fatok": {
+      const t = UI.tmp, f = S.faturas.find(x=>x.id===t.id); if (!f) return;
+      const v2 = num(String(t.valor).replace(/[R$\s]/g,""));
+      S.fatPagas[f.id] = {pago:true, valor: isNaN(v2) ? f.lanc.reduce((a,l)=>a+l.v,0) : v2, quando:t.quando};
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "abrirfat": {
+      const f = S.faturas.find(x=>x.id===i); if (!f) return;
+      S.ativa = f.id; S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo;
+      UI.view = "lista"; salvar(); window.scrollTo(0,0); return render();
+    }
+    case "tudoest": UI.tmp.tudoEst = true; return render();
+    case "dica": return;
+    case "vercatmes": UI.sheet = "verCat"; UI.tmp = {cat: el.dataset.c, escopo:"mes"}; return render();
+    case "filtrarpessoa": UI.view = "lista"; UI.filtroP = pid; UI.soPend = false;
+      UI.sheet = null; UI.tmp = null; window.scrollTo(0,0); return render();
+    case "sheet":
+      UI.sheet = v; UI.tmp = null;
+      if (v === "novaFatura" && el.dataset.c) UI.tmp = {cartao: el.dataset.c, rotulo: ""};
+      if (v === "mudarMes") UI.tmp = {fid: el.dataset.f};
+      if (v === "editarConta") UI.tmp = el.dataset.i ? {id: el.dataset.i} : {};
+      return render();
+    case "vercat": UI.sheet = "verCat"; UI.tmp = {cat: el.dataset.c, escopo: "atual"}; return render();
+    case "catcriar": {
+      const nome = ((UI.tmp&&UI.tmp.q)||"").trim(); if (!nome) return;
+      if (S.cats.some(c=>semAcento(c)===semAcento(nome))) return alert("Essa categoria já existe.");
+      S.cats.push(nome); salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "mmSalvar": {
+      const t = UI.tmp, f = S.faturas.find(x=>x.id===t.fid);
+      if (!f) return;
+      const hoje = new Date();
+      const [ca, cm] = (f.comp || (hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,"0"))).split("-").map(Number);
+      const comp = (t.ano||ca) + "-" + String(t.mes||cm).padStart(2,"0");
+      const antes = f.comp;
+      const tinhaAuto = S.faturas.some(x=>x.cartaoId===f.cartaoId && x.lanc.some(l=>l.auto));
+      if (antes !== comp) limparAuto(f.cartaoId, f.id);
+      const outra = S.faturas.find(x=>x.id!==f.id && x.cartaoId===f.cartaoId && x.comp===comp);
+      if (outra){
+        if (faturaReal(outra)){ if (antes !== comp && tinhaAuto) propagarTudo(f.cartaoId); salvar();
+          return alert("Já existe uma fatura desse mês nesse cartão."); }
+        S.faturas = S.faturas.filter(x=>x.id!==outra.id);
+      }
+      f.comp = comp; f.rotulo = compLabel(comp);
+      const n = (antes !== comp && tinhaAuto) ? propagarTudo(f.cartaoId) : 0;
+      S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo; S.ativa = f.id;
+      salvar(); UI.sheet = null; UI.tmp = null; render();
+      return alert("Fatura agora é " + f.rotulo + "." + (n ? "\n" + n + " parcelas futuras refeitas." : ""));
+    }
+    case "colar": S.ativa = i; UI.sheet = "importar"; UI.tmp = null; return render();
+    case "delc": {
+      const n = S.faturas.filter(f=>f.cartaoId===i).length;
+      if (!confirm(n ? `Apagar esse cartão e suas ${n} fatura(s)?` : "Apagar esse cartão?")) return;
+      S.faturas.filter(f=>f.cartaoId===i).forEach(f=>f.lanc.forEach(l=>delete S.aloc[l.id]));
+      S.faturas = S.faturas.filter(f=>f.cartaoId!==i);
+      S.cartoes = S.cartoes.filter(c=>c.id!==i);
+      if (S.cartaoAtivo===i) S.cartaoAtivo = S.cartoes[0]?S.cartoes[0].id:"todos";
+      if (!rotulos().includes(S.rotuloAtivo)) S.rotuloAtivo = rotulos()[0]||"";
+      salvar(); return render();
+    }
+    case "modo": UI.modo = v; UI.aberto = null; UI.editando = null; return render();
+    case "filtroP": UI.filtroP = v || null; window.scrollTo(0,0); return render();
+    case "exp": UI.aberto = (UI.aberto === g) ? null : g; return render();
+
+    case "editar": UI.editando = g; UI.buffer = g; return render();
+    case "salvarnome": renomearGrupo(g, UI.buffer); UI.editando = null; return render();
+    case "editaritem": UI.editandoItem = i; UI.buffer = ""; return render();
+    case "salvaritem": renomearItem(i, UI.buffer); UI.editandoItem = null; return render();
+
+    case "tg": {
+      const L = visiveis();
+      const ids = (el.dataset.tipo === "cat")
+        ? L.filter(l=>(l.cat||"Outros")===g).map(l=>l.id)
+        : L.filter(l=>l.g===g).map(l=>l.id);
+      return togglePessoa(ids, pid, el.dataset.tipo === "cat" ? null : g);
+    }
+    case "tgi": return togglePessoa(irmaosSerie(i), pid, null);
+
+    case "addp": { const n = prompt("Nome da pessoa:"); if (!n) return;
+      S.pessoas.push({id:uid("p"),nome:n.trim(),cor:S.pessoas.length}); salvar(); return render(); }
+    case "delp": {
+      if (!confirm("Remover essa pessoa? As atribuições dela serão desfeitas.")) return;
+      S.pessoas = S.pessoas.filter(p=>p.id!==i);
+      Object.keys(S.aloc).forEach(k=>{ S.aloc[k]=S.aloc[k].filter(x=>x!==i); if(!S.aloc[k].length) delete S.aloc[k]; });
+      Object.keys(S.regras).forEach(k=>{ S.regras[k]=S.regras[k].filter(x=>x!==i); if(!S.regras[k].length) delete S.regras[k]; });
+      S.cartoes.forEach(c=>{ if(c.pagador===i) c.pagador=S.pessoas[0].id; });
+      if (S.euId===i) S.euId = S.pessoas[0].id;
+      if (UI.filtroP===i) UI.filtroP = null;
+      salvar(); return render();
+    }
+    case "soueu": S.euId = i; salvar(); return render();
+    case "addc": { const n = prompt("Nome do cartão:"); if (!n) return;
+      S.cartoes.push({id:uid("c"),nome:n.trim(),pagador:S.pessoas[0].id}); salvar(); return render(); }
+    case "abrir": {
+      const f = S.faturas.find(x=>x.id===i); if (!f) return;
+      S.ativa = i; S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo;
+      UI.view = "inicio"; salvar(); window.scrollTo(0,0); return render();
+    }
+    case "delf": {
+      if (!confirm("Apagar essa fatura e seus lançamentos?")) return;
+      const f = S.faturas.find(x=>x.id===i);
+      if (f) f.lanc.forEach(l=>delete S.aloc[l.id]);
+      S.faturas = S.faturas.filter(x=>x.id!==i);
+      if (S.ativa===i) S.ativa = S.faturas[0]?S.faturas[0].id:null;
+      if (!rotulos().includes(S.rotuloAtivo)) S.rotuloAtivo = rotulos()[0]||"";
+      salvar(); return render();
+    }
+    case "addcat": {
+      const n = prompt("Nome da categoria:"); if (!n || !n.trim()) return;
+      const nome = n.trim();
+      if (S.cats.includes(nome)) return alert("Essa categoria já existe.");
+      S.cats.push(nome); salvar(); return render();
+    }
+    case "delcat": {
+      const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===i).length,0);
+      if (!confirm(n ? `Apagar "${i}"? Os ${n} lançamentos vão para Outros.` : `Apagar "${i}"?`)) return;
+      S.faturas.forEach(f=>f.lanc.forEach(l=>{ if (l.cat===i) l.cat = "Outros"; }));
+      Object.keys(S.regrasCat).forEach(k=>{ if (S.regrasCat[k]===i) delete S.regrasCat[k]; });
+      S.cats = S.cats.filter(c=>c!==i);
+      if (!S.cats.includes("Outros")) S.cats.push("Outros");
+      salvar(); return render();
+    }
+    case "gerarparc": {
+      const n = gerarTodasParcelas();
+      render(); return alert(n + " parcelas futuras criadas.");
+    }
+    case "limparauto": {
+      const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.auto).length,0);
+      if (!n) return alert("Não há parcelas previstas para apagar.");
+      if (!confirm(`Apagar as ${n} parcelas previstas? As parcelas que vieram da fatura de verdade continuam.`)) return;
+      S.faturas.forEach(f=>{ f.lanc.filter(l=>l.auto).forEach(l=>delete S.aloc[l.id]);
+                             f.lanc = f.lanc.filter(l=>!l.auto); });
+      S.faturas = S.faturas.filter(f=>f.lanc.length || !f.comp || f.comp===compAtual(S.cartoes.find(c=>c.id===f.cartaoId)));
+      if (!rotulos().includes(S.rotuloAtivo)) S.rotuloAtivo = rotulos()[0]||"";
+      salvar(); return render();
+    }
+    case "limparRegras":
+      if (!confirm("Apagar todas as regras de dono e categoria?")) return;
+      S.regras = {}; S.regrasCat = {}; salvar(); return render();
+    case "tema": S.tema = v; salvar(); return render();
+
+    case "vercatgrupo": {
+      const g = el.dataset.g;
+      const at = [...new Set(lancAtivos().filter(l=>l.g===g).map(l=>l.cat||"Outros"))];
+      UI.voltar = UI.sheet; UI.voltarTmp = UI.tmp;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"grupo", id:g, nome:g, atual: at.length===1?at[0]:null, q:""};
+      return render();
+    }
+    case "vercatitem": {
+      const l = S.faturas.flatMap(f=>f.lanc).find(x=>x.id===i); if (!l) return;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"item", id:i, nome:l.g, atual:l.cat||"Outros", q:""};
+      return render();
+    }
+    case "vercatconta": {
+      const c = S.contas.find(x=>x.id===i); if (!c) return;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"conta", id:i, nome:c.nome, atual:c.cat||"Boletos", q:""};
+      return render();
+    }
+    case "vercatform": {
+      UI.voltar = "editarConta"; UI.voltarTmp = UI.tmp;
+      UI.sheet = "escolherCat";
+      UI.tmp = {alvo:"form", nome: UI.voltarTmp.f.nome || "Nova conta", atual: UI.voltarTmp.f.cat, q:""};
+      return render();
+    }
+    case "eccriar": {
+      const nome = ((UI.tmp&&UI.tmp.q)||"").trim(); if (!nome) return;
+      if (S.cats.some(c=>semAcento(c)===semAcento(nome))) return alert("Essa categoria já existe.");
+      S.cats.push(nome); salvar();
+      return aplicarCat(nome);
+    }
+    case "ecusar": return aplicarCat(el.dataset.c);
+    case "mesConta": S.mesContas = mesSoma(S.mesContas, +v); salvar(); window.scrollTo(0,0); return render();
+    case "togglepago": {
+      const k = chavePg(i, S.mesContas);
+      if (S.pagos[k] && S.pagos[k].pago){ delete S.pagos[k]; salvar(); return render(); }
+      UI.sheet = "pagarConta"; UI.tmp = {id:i}; return render();
+    }
+    case "pgok": {
+      const t = UI.tmp, c = S.contas.find(x=>x.id===t.id);
+      if (!c) return;
+      const v2 = num(String(t.valor).replace(/[R$\s]/g,""));
+      S.pagos[chavePg(c.id, S.mesContas)] = {pago:true, valor: isNaN(v2)?c.valor:v2, quando:t.quando};
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "cftipo": UI.tmp.f.tipo = v; return render();
+    case "cfpessoa": {
+      const f = UI.tmp.f, s = new Set(f.pessoas||[]);
+      if (s.has(pid)) s.delete(pid); else s.add(pid);
+      f.pessoas = [...s]; return render();
+    }
+    case "cfsalvar": {
+      const f = UI.tmp.f;
+      if (!f.nome.trim()) return alert("Dê um nome à conta.");
+      const v2 = num(String(f.valor).replace(/[R$\s]/g,""));
+      const obj = {nome:f.nome.trim(), valor: isNaN(v2)?0:v2, dia:+f.dia||1, tipo:f.tipo,
+                   data:f.data, cat:f.cat, pagador:f.pagador, pessoas:f.pessoas||[],
+                   desde:f.desde || S.mesContas, ate:f.ate||null};
+      if (UI.tmp.id){ Object.assign(S.contas.find(x=>x.id===UI.tmp.id), obj); }
+      else S.contas.push(Object.assign({id:uid("ct")}, obj));
+      salvar(); UI.sheet=null; UI.tmp=null; UI.view="contas"; return render();
+    }
+    case "cfapagar": {
+      const id = UI.tmp.id;
+      if (!confirm("Apagar essa conta e todo o histórico de pagamento dela?")) return;
+      S.contas = S.contas.filter(x=>x.id!==id);
+      Object.keys(S.pagos).forEach(k=>{ if (k.split(":")[0]===id) delete S.pagos[k]; });
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "backup": baixar(nomeBackup(), JSON.stringify(S), "application/json"); return;
+    case "compartilharbackup": {
+      const nome = nomeBackup();
+      const file = new File([JSON.stringify(S)], nome, {type:"application/json"});
+      if (navigator.canShare && navigator.canShare({files:[file]}))
+        navigator.share({files:[file], title:nome}).catch(()=>{});
+      else { baixar(nome, JSON.stringify(S), "application/json");
+             alert("Este navegador não abre o compartilhamento. Baixei o arquivo na pasta Downloads."); }
+      return;
+    }
+    case "apagartudo": {
+      if (!confirm("Apagar TUDO: lançamentos, faturas, cartões, pessoas, categorias e regras?")) return;
+      if (!confirm("Isso não tem volta. Você baixou um backup? Toque em OK só se tiver certeza.")) return;
+      const tema = S.tema;
+      S = inicial(); S.tema = tema; S.faturas = []; S.cartoes = []; S.ativa = null;
+      S.cartaoAtivo = "todos"; S.rotuloAtivo = "";
+      salvar(); UI = {view:"config", modo:"grupo", soPend:false, filtroP:null, aberto:null,
+                      sheet:null, tmp:null, editando:null, editandoItem:null, buffer:""};
+      window.scrollTo(0,0); return render();
+    }
+    case "restaurar": return document.getElementById("filein").click();
+
+    case "nfcriar": {
+      const t = UI.tmp || {};
+      const cid = t.cartao||S.cartoes[0].id;
+      const comp = compDeRotulo((t.rotulo||"").trim());
+      if (comp && S.faturas.some(f=>f.cartaoId===cid && f.comp===comp))
+        return alert("Já existe uma fatura desse mês nesse cartão.");
+      const nova = {id:uid("f"), cartaoId:cid, comp:comp||null,
+                    rotulo: comp ? compLabel(comp) : ((t.rotulo||"").trim()||"Nova fatura"), lanc:[]};
+      S.faturas.unshift(nova); S.ativa = nova.id;
+      S.cartaoAtivo = nova.cartaoId; S.rotuloAtivo = nova.rotulo; salvar();
+      UI.sheet = "importar"; UI.tmp = null; return render();
+    }
+    case "impler": {
+      const prev = lerColado((UI.tmp&&UI.tmp.txt)||"");
+      if (!prev.length) return alert("Não identifiquei lançamentos nesse texto.");
+      const f = S.faturas.find(x=>x.id===S.ativa) || fatura();
+      prev.forEach(x=>{
+        const parc = (x.p||"").trim();
+        x.dup = !!(f && parc && f.lanc.some(l => l.p===parc && semAcento(l.g)===semAcento(x.g) && !l.auto));
+      });
+      UI.tmp.prev = prev; return render();
+    }
+    case "pvdup": UI.tmp.prev[+i].dup = !UI.tmp.prev[+i].dup; return render();
+    case "impvoltar": UI.tmp.prev = null; return render();
+    case "pvdel": UI.tmp.prev.splice(+i,1); return render();
+    case "impconfirma": {
+      const f = S.faturas.find(x=>x.id===S.ativa) || fatura(); let n = 0;
+      let ign = 0, ger = 0;
+      UI.tmp.prev.forEach(x=>{
+        const val = num(String(x.v).replace(/[R$\s]/g,""));
+        if (!x.g || isNaN(val)) return;
+        if (x.dup){ ign++; return; }
+        const parc = (x.p||"").trim()||null;
+        // se já existe uma parcela prevista igual, ela vira a real em vez de duplicar
+        const prev = parc && f.lanc.find(l=>l.auto && l.p===parc && semAcento(l.g)===semAcento(x.g));
+        if (prev){ prev.auto = false; prev.v = val; if (x.d) prev.d = x.d; n++; return; }
+        const id = uid("l");
+        const novo = {id, d:x.d||"", r:x.g, g:x.g, v:val, p:parc,
+                      cat:S.regrasCat[x.g] || categorizar(x.g)};
+        f.lanc.push(novo);
+        if (S.regras[x.g]) S.aloc[id] = S.regras[x.g].slice();
+        ger += propagar(novo, f);
+        n++;
+      });
+      S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo;
+      salvar(); UI.sheet=null; UI.tmp=null; UI.view="lista"; UI.soPend=false; window.scrollTo(0,0); render();
+      return alert(n + " lançamentos importados." +
+        (ger ? "\n" + ger + " parcelas futuras criadas." : "") +
+        (ign ? "\n" + ign + " ignorados por já estarem previstos." : ""));
+    }
+
+    case "xcsv": { const t=UI.tmp; if(!valida(t))return; baixar(nomeArquivo(t,"csv"), gerarCSV(t), "text/csv;charset=utf-8"); UI.sheet=null; return render(); }
+    case "xsheets": { const t=UI.tmp; if(!valida(t))return;
+      return copiar(gerarTSV(t), "Copiado. Abra o Google Sheets, toque numa célula e cole — vai separar em colunas sozinho."); }
+    case "xtexto": { const t=UI.tmp; if(!valida(t))return; return copiar(gerarTexto(t), "Resumo copiado."); }
+    case "xshare": {
+      const t = UI.tmp; if (!valida(t)) return;
+      const nome = nomeArquivo(t,"csv");
+      const file = new File([gerarCSV(t)], nome, {type:"text/csv"});
+      if (navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:nome})
+          .then(()=>{ UI.sheet=null; UI.tmp=null; render(); })
+          .catch(()=>{});
+      } else {
+        baixar(nome, gerarCSV(t), "text/csv;charset=utf-8");
+        alert("Este navegador não abre o compartilhamento. Baixei o arquivo — envie para o Drive pela pasta Downloads.");
+      }
+      return;
+    }
+  }
+});
+function aplicarCat(cat){
+  const t = UI.tmp;
+  if (t.alvo === "grupo"){
+    S.faturas.forEach(f => f.lanc.forEach(l => { if (l.g === t.id) l.cat = cat; }));
+    S.regrasCat[t.id] = cat;
+  } else if (t.alvo === "item"){
+    const l = S.faturas.flatMap(f=>f.lanc).find(x=>x.id===t.id);
+    if (l) l.cat = cat;
+  } else if (t.alvo === "conta"){
+    const c = S.contas.find(x=>x.id===t.id);
+    if (c) c.cat = cat;
+  } else if (t.alvo === "form"){
+    UI.sheet = UI.voltar; UI.tmp = UI.voltarTmp; UI.voltar = UI.voltarTmp = null;
+    UI.tmp.f.cat = cat;
+    return render();
+  }
+  salvar();
+  UI.sheet = UI.voltar || null; UI.tmp = UI.voltarTmp || null;
+  UI.voltar = UI.voltarTmp = null;
+  return render();
+}
+
+function valida(t){
+  if (!t.sel.length && !t.pend){ alert("Escolha pelo menos uma pessoa."); return false; }
+  return true;
+}
+
+document.addEventListener("change", ev => {
+  if (ev.target.id === "filein"){
+    const file = ev.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => { try {
+      const d = JSON.parse(r.result);
+      if (!d.pessoas || !d.faturas) throw 0;
+      const temaAtual = S.tema;
+      S = d; S.regrasCat = S.regrasCat||{}; S.cats = (d.cats&&d.cats.length)?d.cats:DEFAULT_CATS.slice();
+      if (!S.tema) S.tema = temaAtual;
+      S.faturas.forEach(f=>f.lanc.forEach(l=>{ if(!l.cat) l.cat = categorizar(l.g);
+        if(!S.cats.includes(l.cat)) S.cats.push(l.cat); }));
+      salvar(); render(); alert("Backup restaurado.");
+    } catch(e){ alert("Esse arquivo não é um backup válido."); } };
+    return r.readAsText(file);
+  }
+  const el = ev.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, i = el.dataset.i;
+  switch(act){
+    case "cartao": {
+      S.cartaoAtivo = el.value;
+      const rs = rotulos();
+      if (!rs.includes(S.rotuloAtivo)) S.rotuloAtivo = rs[0]||"";
+      UI.aberto=null; salvar(); window.scrollTo(0,0); return render();
+    }
+    case "rotulo": S.rotuloAtivo = el.value; UI.aberto=null; salvar(); window.scrollTo(0,0); return render();
+    case "vcescopo": UI.tmp.escopo = el.value; return render();
+    case "mmMes": UI.tmp.mes = +el.value; return render();
+    case "mmAno": UI.tmp.ano = +el.value; return render();
+    case "sopend": UI.soPend = el.checked; return render();
+    case "cat": return mudarCategoria(el.dataset.g, el.value);
+    case "cfcat": UI.tmp.f.cat = el.value; return render();
+    case "pagador": { const c=S.cartoes.find(x=>x.id===i); if(c) c.pagador=el.value; salvar(); return render(); }
+    case "renome": { const p=pessoa(i); if(p&&el.value.trim()) p.nome=el.value.trim(); salvar(); return render(); }
+    case "fechamento": case "vencimento": {
+      const c = S.cartoes.find(x=>x.id===i); if (!c) return;
+      const v = parseInt(el.value,10);
+      c[act] = (v>=1 && v<=31) ? v : null;
+      if (act==="fechamento" && c.fechamento){
+        const comp = compAtual(c);
+        if (!S.faturas.some(f=>f.cartaoId===c.id && f.comp===comp)) garantirFatura(c.id, comp);
+      }
+      salvar(); return render();
+    }
+    case "renomecat": {
+      const novo = el.value.trim(); if (!novo || novo === i) return;
+      if (S.cats.includes(novo)) { el.value = i; return alert("Já existe uma categoria com esse nome."); }
+      S.cats = S.cats.map(c => c===i ? novo : c);
+      S.faturas.forEach(f=>f.lanc.forEach(l=>{ if (l.cat===i) l.cat = novo; }));
+      Object.keys(S.regrasCat).forEach(k=>{ if (S.regrasCat[k]===i) S.regrasCat[k] = novo; });
+      salvar(); return render();
+    }
+    case "renomec": { const c=S.cartoes.find(x=>x.id===i); if(c&&el.value.trim()) c.nome=el.value.trim(); salvar(); return render(); }
+    case "xsel": { const t=UI.tmp; t.sel = el.checked ? [...new Set([...t.sel,i])] : t.sel.filter(x=>x!==i); return; }
+    case "xpend": UI.tmp.pend = el.checked; return;
+    case "xcontas": UI.tmp.contas = el.checked; return;
+    case "xescopo": UI.tmp.escopo = el.value; return;
+    case "nfcartao": UI.tmp.cartao = el.value; return;
+    case "cf": UI.tmp.f[el.dataset.k] = el.value; return render();
+    case "acq": UI.tmp.quando = el.value; return;
+  }
+});
+
+document.addEventListener("input", ev => {
+  const el = ev.target.closest("[data-act]"); if (!el) return;
+  const a = el.dataset.act;
+  if (a === "bufnome"){ UI.buffer = el.value; return; }
+  if (a === "catq"){ UI.tmp = UI.tmp||{}; UI.tmp.q = el.value; render(); return; }
+  if (a === "imptxt"){ UI.tmp = UI.tmp||{}; UI.tmp.txt = el.value; return; }
+  if (a === "nfrotulo"){ UI.tmp = UI.tmp||{}; UI.tmp.rotulo = el.value; return; }
+  if (a === "pv"){ UI.tmp.prev[+el.dataset.i][el.dataset.k] = el.value; return; }
+  if (a === "cf"){
+    UI.tmp.f[el.dataset.k] = el.value;
+    if (el.dataset.k === "valor") previa("previaValor", el.value);
+    return;
+  }
+  if (a === "ecq"){ UI.tmp.q = el.value; render(); return; }
+  if (a === "pgv"){ UI.tmp.valor = el.value; previa("previaPago", el.value); return; }
+  if (a === "acv"){ UI.tmp.valor = el.value; previa("previaAcerto", el.value); return; }
+  if (a === "acq"){ UI.tmp.quando = el.value; return; }
+  if (a === "pgq"){ UI.tmp.quando = el.value; return; }
+});
+
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Enter") return;
+  const el = ev.target.closest("[data-act='bufnome']"); if (!el) return;
+  ev.preventDefault();
+  if (UI.editando){ renomearGrupo(UI.editando, UI.buffer); UI.editando = null; }
+  else if (UI.editandoItem){ renomearItem(UI.editandoItem, UI.buffer); UI.editandoItem = null; }
+  render();
+});
+
+migrar();
+aplicarTema();
+if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", () => { if (!S.tema || S.tema==="auto") aplicarTema(); });
+render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>
