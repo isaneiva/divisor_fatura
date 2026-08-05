@@ -748,7 +748,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.3";
+const VERSAO = "2.4";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -1787,10 +1787,20 @@ sheets.importar = () => {
   const t = UI.tmp || (UI.tmp = {txt:"", prev:null});
   if (!t.prev) return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <h3>Colar lançamentos</h3>
-    <p style="font-size:14px;color:var(--mute);margin:0 0 12px;line-height:1.55">
-      Funciona com o texto do app do banco e com uma linha por gasto:<br><b>03/07 | Padaria | 35,98 | 1/3</b></p>
-    <textarea data-act="imptxt" placeholder="5 de agosto&#10;Padaria&#10;R$ 32,40">${esc(t.txt)}</textarea>
-    <button class="btn pri" data-act="impler">Ler lançamentos</button>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 14px;line-height:1.55">
+      Envie os prints da fatura ou o PDF e o app lê sozinho.</p>
+    <button class="btn pri" data-act="enviararq" ${t.lendo?'disabled style="opacity:.55"':""}>
+      ${t.lendo ? "Lendo…" : "Enviar prints ou PDF"}</button>
+    <input type="file" id="filefatura" accept="image/*,application/pdf" multiple style="display:none">
+    ${(t.arquivos||[]).length ? `<div class="row" style="margin-top:10px">${t.arquivos.map((a,i)=>`
+      <div class="it"><div class="t"><b style="font-size:13.5px">${esc(a.nome)}</b>
+        <i id="arq${i}">${esc(a.estado)}</i></div></div>`).join("")}</div>` : ""}
+    <p style="font-size:12.5px;color:var(--mute);margin:12px 0 0;line-height:1.5">
+      A leitura acontece dentro do celular — nenhuma imagem sai do aparelho.
+      Da primeira vez o app baixa o leitor, então precisa de internet só nessa hora.</p>
+    <label class="f" style="margin-top:20px">Ou cole o texto</label>
+    <textarea data-act="imptxt" placeholder="5 de agosto&#10;Padaria&#10;R$ 32,40">${esc(t.txt||"")}</textarea>
+    <button class="btn" data-act="impler">Ler o texto colado</button>
     <button class="btn" data-act="fechar">Cancelar</button>
   </div></div>`;
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
@@ -1809,6 +1819,91 @@ sheets.importar = () => {
     <button class="btn" data-act="impvoltar">Voltar</button>
   </div></div>`;
 };
+
+/* ================= leitura de prints e PDFs ================= */
+const PDFJS_SRC    = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js";
+const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js";
+const TESS_SRC     = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+const TESS_LANG    = "https://tessdata.projectnaptha.com/4.0.0_fast";
+let workerOCR = null;
+
+function carregarScript(src){
+  return new Promise((ok, erro) => {
+    if (document.querySelector('script[data-src="' + src + '"]')) return ok();
+    const s = document.createElement("script");
+    s.src = src; s.dataset.src = src;
+    s.onload = () => ok();
+    s.onerror = () => erro(new Error("sem conexão para baixar o leitor"));
+    document.head.appendChild(s);
+  });
+}
+
+async function textoDoPDF(file, aviso){
+  await carregarScript(PDFJS_SRC);
+  const lib = window.pdfjsLib;
+  if (!lib) throw new Error("leitor de PDF não carregou");
+  lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const doc = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
+  let txt = "";
+  for (let i = 1; i <= doc.numPages; i++){
+    aviso("página " + i + "/" + doc.numPages);
+    const pg = await doc.getPage(i), c = await pg.getTextContent();
+    let ly = null, linha = [];
+    c.items.forEach(it => {
+      const y = Math.round(it.transform[5]);
+      if (ly !== null && Math.abs(y - ly) > 3){ txt += linha.join(" ") + "\n"; linha = []; }
+      ly = y; linha.push(it.str);
+    });
+    txt += linha.join(" ") + "\n";
+  }
+  return txt;
+}
+
+async function textoDaImagem(file, aviso){
+  await carregarScript(TESS_SRC);
+  if (!window.Tesseract) throw new Error("leitor de imagem não carregou");
+  if (!workerOCR){
+    aviso("preparando o leitor…");
+    workerOCR = await window.Tesseract.createWorker("por", 1, {langPath: TESS_LANG});
+  }
+  aviso("lendo…");
+  const { data } = await workerOCR.recognize(file);
+  return data.text;
+}
+
+async function lerArquivos(lista){
+  const arqs = [...lista].sort((a,b) => a.name.localeCompare(b.name, "pt-BR", {numeric:true}));
+  UI.tmp = UI.tmp || {};
+  UI.tmp.arquivos = arqs.map(f => ({nome:f.name, estado:"na fila"}));
+  UI.tmp.lendo = true;
+  render();
+  const aviso = i => msg => { const el = document.getElementById("arq" + i); if (el) el.textContent = msg; };
+  let juntos = "";
+  for (let i = 0; i < arqs.length; i++){
+    const f = arqs[i];
+    try {
+      aviso(i)("abrindo…");
+      const t = (/pdf$/i.test(f.type) || /\.pdf$/i.test(f.name))
+        ? await textoDoPDF(f, aviso(i)) : await textoDaImagem(f, aviso(i));
+      juntos += t + "\n";
+      UI.tmp.arquivos[i].estado = "✓ lido";
+      aviso(i)("✓ lido");
+    } catch(e){
+      UI.tmp.arquivos[i].estado = "✕ " + (e.message || "não consegui ler");
+      aviso(i)(UI.tmp.arquivos[i].estado);
+    }
+  }
+  if (workerOCR){ try { await workerOCR.terminate(); } catch(e){} workerOCR = null; }
+  UI.tmp.lendo = false;
+  UI.tmp.txt = ((UI.tmp.txt || "") + "\n" + juntos).trim();
+  const prev = lerColado(UI.tmp.txt);
+  if (!prev.length){ render(); return alert("Li os arquivos, mas não identifiquei lançamentos. Confira o texto na caixa abaixo."); }
+  const fat = S.faturas.find(x => x.id === S.ativa) || fatura();
+  prev.forEach(x => { const parc = (x.p||"").trim();
+    x.dup = !!(fat && parc && fat.lanc.some(l => l.p===parc && semAcento(l.g)===semAcento(x.g) && !l.auto)); });
+  UI.tmp.prev = prev;
+  render();
+}
 
 /* ================= leitor ================= */
 const MESES = {janeiro:1,fevereiro:2,"março":3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
@@ -2236,7 +2331,8 @@ document.addEventListener("click", ev => {
       UI.tmp.prev = prev; return render();
     }
     case "pvdup": UI.tmp.prev[+i].dup = !UI.tmp.prev[+i].dup; return render();
-    case "impvoltar": UI.tmp.prev = null; return render();
+    case "enviararq": { const sel = document.getElementById("filefatura"); if (sel) sel.click(); return; }
+    case "impvoltar": UI.tmp.prev = null; UI.tmp.arquivos = null; return render();
     case "pvdel": UI.tmp.prev.splice(+i,1); return render();
     case "impconfirma": {
       const f = S.faturas.find(x=>x.id===S.ativa) || fatura(); let n = 0;
@@ -2312,6 +2408,12 @@ function valida(t){
 }
 
 document.addEventListener("change", ev => {
+  if (ev.target.id === "filefatura"){
+    const arq = ev.target.files;
+    if (arq && arq.length) lerArquivos(arq);
+    ev.target.value = "";
+    return;
+  }
   if (ev.target.id === "filein"){
     const file = ev.target.files[0]; if (!file) return;
     const r = new FileReader();
