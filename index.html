@@ -299,8 +299,12 @@ function curtoNome(n){
   if (w.length <= 1) return w[0] || "";
   return TITULOS.test(semAcento(w[0])) ? w[0] + " " + w[1] : w[0];
 }
-const sigla = n => { const w = curtoNome(n).split(/\s+/);
-  return w.length>=2 ? (w[0][0]+w[1][0]).toUpperCase() : w[0].slice(0,3); };
+function sigla(n){
+  const w = String(n||"").trim().split(/\s+/).filter(Boolean);
+  if (!w.length) return "?";
+  if (w.length === 1) return w[0].slice(0,2).toUpperCase();
+  return (w[0][0] + w[w.length-1][0]).toUpperCase();
+}
 
 const rotulos = () => [...new Set(S.faturas
   .filter(f => S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo)
@@ -902,7 +906,10 @@ sheets.mudarMes = () => {
         ${st ? esc(st.t) : "Sem dia de fechamento definido neste cartão."}</div>
     </div>
     ${conflito?`<div class="warn">Já existe uma fatura de ${esc(compLabel(comp))} nesse cartão.</div>`:""}
-    ${auto?`<div class="warn">As ${auto} parcelas previstas deste cartão serão refeitas a partir do novo mês.</div>`:""}
+    ${auto?`<div class="warn">As ${auto} parcelas previstas deste cartão serão refeitas a partir do novo mês.
+      Os ${f.lanc.filter(l=>!l.auto).length} lançamentos desta fatura, com dono e categoria, ficam como estão.</div>`
+     :`<div class="row" style="background:#E8F4EF;border-color:#B7DCCE"><div style="font-size:13.5px">
+        Os ${f.lanc.length} lançamentos, com dono e categoria, continuam exatamente como estão. Muda só o mês.</div></div>`}
     <button class="btn pri" data-act="mmSalvar" ${conflito?"disabled style=\"opacity:.5\"":""}>Mudar para ${esc(compLabel(comp))}</button>
     <button class="btn" data-act="fechar">Cancelar</button>
   </div></div>`;
@@ -1077,18 +1084,19 @@ document.addEventListener("click", ev => {
       const [ca, cm] = (f.comp || (hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,"0"))).split("-").map(Number);
       const comp = (t.ano||ca) + "-" + String(t.mes||cm).padStart(2,"0");
       const antes = f.comp;
+      const tinhaAuto = S.faturas.some(x=>x.cartaoId===f.cartaoId && x.lanc.some(l=>l.auto));
       if (antes !== comp) limparAuto(f.cartaoId, f.id);
       const outra = S.faturas.find(x=>x.id!==f.id && x.cartaoId===f.cartaoId && x.comp===comp);
       if (outra){
-        if (faturaReal(outra)){ if (antes !== comp) propagarTudo(f.cartaoId); salvar();
+        if (faturaReal(outra)){ if (antes !== comp && tinhaAuto) propagarTudo(f.cartaoId); salvar();
           return alert("Já existe uma fatura desse mês nesse cartão."); }
         S.faturas = S.faturas.filter(x=>x.id!==outra.id);
       }
       f.comp = comp; f.rotulo = compLabel(comp);
-      const n = antes !== comp ? propagarTudo(f.cartaoId) : 0;
+      const n = (antes !== comp && tinhaAuto) ? propagarTudo(f.cartaoId) : 0;
       S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo; S.ativa = f.id;
       salvar(); UI.sheet = null; UI.tmp = null; render();
-      return alert("Fatura agora é " + f.rotulo + (n ? ".\n" + n + " parcelas futuras refeitas." : "."));
+      return alert("Fatura agora é " + f.rotulo + "." + (n ? "\n" + n + " parcelas futuras refeitas." : ""));
     }
     case "colar": S.ativa = i; UI.sheet = "importar"; UI.tmp = null; return render();
     case "delc": {
