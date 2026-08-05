@@ -490,6 +490,74 @@ function visiveis(){
   return L;
 }
 
+// mês do resumo: segue o rótulo da fatura quando ele é um mês reconhecível
+const mesResumo = () => compDeRotulo(S.rotuloAtivo) || S.mesContas;
+
+function fecharAcerto(dev){
+  const eu = S.euId; let pago = 0, receber = 0; const linhas = [];
+  Object.entries(dev).forEach(([pag, quem])=>{
+    if (pag === eu) Object.entries(quem).forEach(([id,v])=>{ receber += v;
+      linhas.push({txt:(pessoa(id)?curtoNome(pessoa(id).nome):"?")+" te deve", v}); });
+    else if (quem[eu]){ pago += quem[eu];
+      linhas.push({txt:"você paga a "+(pessoa(pag)?curtoNome(pessoa(pag).nome):"?"), v:quem[eu]}); }
+  });
+  return {pago, receber, liquido: pago - receber, linhas};
+}
+function devDosCartoes(){
+  const dev = {};
+  faturasAtivas().forEach(f=>{
+    const c = S.cartoes.find(x=>x.id===f.cartaoId); if (!c) return;
+    f.lanc.forEach(l=>{
+      const a = alocDe(l.id).filter(id=>pessoa(id)); if (!a.length) return;
+      a.forEach(id=>{ if (id===c.pagador) return;
+        dev[c.pagador] = dev[c.pagador]||{};
+        dev[c.pagador][id] = (dev[c.pagador][id]||0) + l.v/a.length; });
+    });
+  });
+  return dev;
+}
+function devDasContas(m){
+  const dev = {};
+  contasDoMes(m).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id)); if (!a.length) return;
+    a.forEach(id=>{ if (id===x.c.pagador || !x.c.pagador) return;
+      dev[x.c.pagador] = dev[x.c.pagador]||{};
+      dev[x.c.pagador][id] = (dev[x.c.pagador][id]||0) + x.valor/a.length; });
+  });
+  return dev;
+}
+function acertoGeral(){
+  const dev = devDosCartoes();
+  const dc = devDasContas(mesResumo());
+  Object.entries(dc).forEach(([pag,quem])=>{ dev[pag]=dev[pag]||{};
+    Object.entries(quem).forEach(([id,v])=>{ dev[pag][id]=(dev[pag][id]||0)+v; }); });
+  return fecharAcerto(dev);
+}
+
+// para onde foi o dinheiro, por categoria — opcionalmente a fatia de uma pessoa
+function gastosResumo(pid){
+  const m = mesResumo(), out = {};
+  let total = 0, nCart = 0, nCont = 0, semDono = 0;
+  lancAtivos().forEach(l=>{
+    const a = alocDe(l.id).filter(id=>pessoa(id));
+    let v;
+    if (pid){ if (!a.includes(pid)) return; v = l.v/a.length; }
+    else { v = l.v; if (!a.length) semDono += l.v; }
+    const c = l.cat||"Outros";
+    out[c] = (out[c]||0)+v; total += v; nCart++;
+  });
+  contasDoMes(m).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id));
+    let v;
+    if (pid){ if (!a.includes(pid)) return; v = x.valor/a.length; }
+    else { v = x.valor; if (!a.length) semDono += x.valor; }
+    const c = x.c.cat||"Boletos";
+    out[c] = (out[c]||0)+v; total += v; nCont++;
+  });
+  return {itens: Object.entries(out).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])),
+          total, nCart, nCont, semDono};
+}
+
 function acerto(){
   const dev = {};   // dev[pagador][pessoa] = quanto pessoa deve ao pagador
   faturasAtivas().forEach(f=>{
@@ -505,19 +573,7 @@ function acerto(){
       });
     });
   });
-  const eu = S.euId;
-  let pago = 0, receber = 0;
-  const linhas = [];
-  Object.entries(dev).forEach(([pag, quem])=>{
-    if (pag === eu){
-      Object.entries(quem).forEach(([id,v])=>{ receber += v;
-        linhas.push({txt: (pessoa(id)?curtoNome(pessoa(id).nome):"?") + " te deve", v}); });
-    } else if (quem[eu]){
-      pago += quem[eu];
-      linhas.push({txt: "você paga a " + (pessoa(pag)?curtoNome(pessoa(pag).nome):"?"), v: quem[eu]});
-    }
-  });
-  return {pago, receber, liquido: pago - receber, linhas};
+  return fecharAcerto(dev);
 }
 
 /* --------- parcelas futuras --------- */
@@ -692,7 +748,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.0";
+const VERSAO = "2.2";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -944,6 +1000,58 @@ function navbar(){
   ).join("")}</div>`;
 }
 
+/* --------- visão do mês: cartões + contas --------- */
+function faturasDoMes(m){
+  return S.faturas.filter(f => f.comp ? f.comp === m : f.rotulo === compLabel(m));
+}
+function itensDoMes(m){
+  const out = [];
+  faturasDoMes(m).forEach(f => f.lanc.forEach(l => out.push({
+    id:l.id, g:l.g, cat:l.cat||"Outros", v:l.v, aloc:alocDe(l.id).filter(id=>pessoa(id)),
+    fonte:"cartao", onde:nomeCartao(f), d:l.d, p:l.p, auto:l.auto
+  })));
+  contasDoMes(m).forEach(x => out.push({
+    id:x.c.id, g:x.c.nome, cat:x.c.cat||"Boletos", v:x.valor,
+    aloc:(x.c.pessoas||[]).filter(id=>pessoa(id)),
+    fonte:"conta", onde:x.pago?"conta paga":"conta em aberto", d:x.venc, p:null, pago:x.pago
+  }));
+  return out;
+}
+function reduzirDev(dev){
+  const eu = S.euId; let pago = 0, receber = 0; const linhas = [];
+  Object.entries(dev).forEach(([pag, quem]) => {
+    if (pag === eu) Object.entries(quem).forEach(([id,v]) => { receber += v;
+      linhas.push({txt:(pessoa(id)?curtoNome(pessoa(id).nome):"?")+" te deve", v}); });
+    else if (quem[eu]){ pago += quem[eu];
+      linhas.push({txt:"você paga a "+(pessoa(pag)?curtoNome(pessoa(pag).nome):"?"), v:quem[eu]}); }
+  });
+  linhas.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  return {pago, receber, liquido: pago - receber, linhas};
+}
+function acertoMes(m){
+  const dev = {};
+  const somar = (pag, a, v) => { if (!pag || !a.length) return;
+    a.forEach(id => { if (id === pag) return;
+      dev[pag] = dev[pag] || {}; dev[pag][id] = (dev[pag][id]||0) + v/a.length; }); };
+  faturasDoMes(m).forEach(f => {
+    const c = S.cartoes.find(x => x.id === f.cartaoId); if (!c) return;
+    f.lanc.forEach(l => somar(c.pagador, alocDe(l.id).filter(id=>pessoa(id)), l.v));
+  });
+  contasDoMes(m).forEach(x => somar(x.c.pagador, (x.c.pessoas||[]).filter(id=>pessoa(id)), x.valor));
+  return reduzirDev(dev);
+}
+function totaisMes(m){
+  const t = {porPessoa:{}, total:0, cartoes:0, contas:0, pend:0, nPend:0};
+  S.pessoas.forEach(p => t.porPessoa[p.id] = 0);
+  itensDoMes(m).forEach(it => {
+    t.total += it.v;
+    t[it.fonte === "conta" ? "contas" : "cartoes"] += it.v;
+    if (!it.aloc.length){ t.pend += it.v; t.nPend++; return; }
+    it.aloc.forEach(id => t.porPessoa[id] += it.v / it.aloc.length);
+  });
+  return t;
+}
+
 /* ================= contas a pagar ================= */
 function viewContas(){
   const m = S.mesContas;
@@ -1009,72 +1117,92 @@ function linhaConta(x){
 
 /* ================= página inicial ================= */
 function viewInicio(){
-  if (!S.faturas.length) return header() + navbar();
-  const t = totais(), L = lancAtivos();
+  const m = S.mesContas;
+  const t = totaisMes(m), ac = acertoMes(m), itens = itensDoMes(m);
+
   const porCat = {};
-  L.forEach(l => { const c = l.cat||"Outros"; porCat[c] = (porCat[c]||0) + l.v; });
+  itens.forEach(it => { porCat[it.cat] = (porCat[it.cat]||0) + it.v; });
   const cats = Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
   const topo = UI.verTudoCat ? cats : cats.slice(0,6);
   const maxCat = cats.length ? Math.abs(cats[0][1]) : 1;
 
-  // próximos meses com parcelas previstas
   const meses = {};
-  S.faturas.filter(f => (S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo) && f.rotulo!==S.rotuloAtivo)
-    .forEach(f => f.lanc.forEach(l => { if (l.auto){
-      const k = f.comp || f.rotulo;
-      meses[k] = meses[k] || {rot:f.rotulo, v:0, n:0};
-      meses[k].v += l.v; meses[k].n++;
-    }}));
-  const prox = Object.entries(meses).sort((a,b)=>a[0]<b[0]?-1:1).map(x=>x[1]);
+  S.faturas.forEach(f => { const c = f.comp || ""; if (!c || c <= m) return;
+    f.lanc.forEach(l => { if (!l.auto) return;
+      meses[c] = meses[c] || {rot:f.rotulo, v:0, n:0}; meses[c].v += l.v; meses[c].n++; }); });
+  const prox = Object.entries(meses).sort((a,b)=>a[0]<b[0]?-1:1).slice(0,6).map(x=>x[1]);
+  const rc = resumoContas(m);
+  const nada = Math.abs(ac.liquido) < 0.005;
 
-  return header() + `<div class="body">
-    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
-
-    <div class="cta">
-      ${t.nPend?`<button class="pri" data-act="classificar">Classificar ${t.nPend} pendentes</button>`:""}
-      <button ${t.nPend?"":'class="pri"'} data-act="sheet" data-v="exportar">Exportar</button>
+  return `<div class="top">
+    <div class="mesnav">
+      <button data-act="mesResumo" data-v="-1" aria-label="Mês anterior">‹</button>
+      <div class="m">${esc(compLabel(m))}</div>
+      <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${nada ? "Nada a acertar no mês" : (ac.liquido < 0 ? "Você tem a receber" : "Você transfere")}</div>
+      <div class="big num">${brl(Math.abs(ac.liquido))}</div>
+      <div class="bar">${S.pessoas.map(p=>`<span style="width:${t.total?Math.max(0,Math.abs(t.porPessoa[p.id])/Math.abs(t.total)*100):0}%;background:${CORES[p.cor%8]}"></span>`).join("")}</div>
+      <div class="legend">${S.pessoas.map(p=>`<span><i class="dot" style="background:${CORES[p.cor%8]}"></i><em>${esc(curtoNome(p.nome))}</em> <b class="num">${brl(t.porPessoa[p.id]||0)}</b></span>`).join("")}</div>
+      ${ac.linhas.length ? `<div class="acerto">${ac.linhas.map(l=>
+        `<div>${esc(l.txt)} <b class="num">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
     </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${brl(t.total)}</b><i>gasto no mês</i></div>
+      <div class="stat"><b class="num">${brl(t.cartoes)}</b><i>cartões</i></div>
+      <div class="stat"><b class="num">${brl(t.contas)}</b><i>contas</i></div>
+      ${t.nPend?`<div class="stat"><b class="num">${t.nPend}</b><i>sem dono</i></div>`:""}
+    </div>
+    <div class="body">
+      ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
+      <div class="cta">
+        ${t.nPend?`<button class="pri" data-act="classificar">Classificar ${t.nPend}</button>`:""}
+        <button ${t.nPend?"":'class="pri"'} data-act="sheet" data-v="exportar">Exportar</button>
+      </div>
 
-    <div class="sec"><h2>Onde foi o dinheiro</h2>
-      ${cats.length>6?`<button data-act="vertudocat">${UI.verTudoCat?"ver menos":"ver todas"}</button>`:""}</div>
-    <div class="row">${topo.length ? topo.map(([c,v])=>{
-      const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
-      return `<button class="cbar" data-act="vercat" data-c="${esc(c)}">
-        <div class="badge" style="background:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
-        <div class="t"><b>${esc(c)}</b>
-          <div class="track"><span style="width:${Math.max(2,Math.abs(v)/maxCat*100).toFixed(1)}%;background:${corCat(c)}"></span></div></div>
-        <div class="v"><b class="num">${brl(v)}</b><i>${pc.toFixed(0)}%</i></div>
-      </button>`;
-    }).join("") : `<div class="empty" style="padding:20px">Nada lançado ainda.</div>`}</div>
+      <div class="sec"><h2>Por pessoa</h2>
+        <button data-act="dica">toque para abrir</button></div>
+      <div class="pgrid">${S.pessoas.map(p=>{
+        const v = t.porPessoa[p.id]||0;
+        const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
+        return `<button class="pcard" data-act="verpessoa" data-p="${p.id}" style="text-align:left">
+          <div class="h"><i class="dot" style="background:${CORES[p.cor%8]}"></i>${esc(curtoNome(p.nome))}
+            <span style="margin-left:auto;opacity:.45">›</span></div>
+          <div class="v num">${brl(v)}</div>
+          <div class="p">${pc.toFixed(0)}% do mês</div></button>`;
+      }).join("")}</div>
 
-    <div class="sec"><h2>Por pessoa</h2></div>
-    <div class="pgrid">${S.pessoas.map(p=>{
-      const v = t.porPessoa[p.id]||0;
-      const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
-      return `<button class="pcard" data-act="filtrarpessoa" data-p="${p.id}" style="text-align:left">
-        <div class="h"><i class="dot" style="background:${CORES[p.cor%8]}"></i>${esc(curtoNome(p.nome))}</div>
-        <div class="v num">${brl(v)}</div>
-        <div class="p">${pc.toFixed(0)}% da fatura</div></button>`;
-    }).join("")}</div>
+      <div class="sec"><h2>Por categoria</h2>
+        ${cats.length>6?`<button data-act="vertudocat">${UI.verTudoCat?"ver menos":"ver todas"}</button>`:""}</div>
+      <div class="row">${topo.length ? topo.map(([c,v])=>
+        barraCat(c, v, t.total, maxCat, `data-act="vercatmes" data-c="${esc(c)}"`)).join("")
+        : `<div class="empty" style="padding:22px">Nada lançado neste mês.</div>`}</div>
 
-    ${(()=>{ const r = resumoContas(S.mesContas);
-      if (!r.lista.length) return "";
-      return `<div class="sec"><h2>Contas de ${esc(compLabel(S.mesContas))}</h2>
+      ${rc.lista.length ? `<div class="sec"><h2>Contas de ${esc(compLabel(m))}</h2>
         <button data-act="nav" data-v="contas">abrir</button></div>
       <div class="row"><button class="cbar" data-act="nav" data-v="contas" style="padding-top:2px">
-        <div class="t"><b>${r.aberto>0.005 ? "Falta pagar" : "Tudo pago"}</b>
-          <div class="track"><span style="width:${r.total?Math.abs(r.pago)/Math.abs(r.total)*100:0}%;background:#0A8A6E"></span></div>
-        </div>
-        <div class="v"><b class="num">${brl(r.aberto)}</b><i>${r.lista.filter(x=>x.pago).length}/${r.lista.length} pagas</i></div>
-      </button>${r.nVencidas?`<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
-        ${r.nVencidas} ${r.nVencidas===1?"conta vencida":"contas vencidas"}</div>`:""}</div>`;
-    })()}
+        <div class="t"><b>${rc.aberto>0.005 ? "Falta pagar" : "Tudo pago"}</b>
+          <div class="track"><span style="width:${rc.total?Math.abs(rc.pago)/Math.abs(rc.total)*100:0}%;background:#0A8A6E"></span></div></div>
+        <div class="v"><b class="num">${brl(rc.aberto)}</b><i>${rc.lista.filter(x=>x.pago).length}/${rc.lista.length} pagas</i></div>
+      </button>${rc.nVencidas?`<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+        ${rc.nVencidas} ${rc.nVencidas===1?"conta vencida":"contas vencidas"}</div>`:""}</div>` : ""}
 
-    ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
-    <div class="row">${prox.map(m=>`<div class="mrow">
-      <div class="m">${esc(m.rot)}<div class="c">${m.n} parcelas</div></div>
-      <div class="val num" style="font-size:15.5px">${brl(m.v)}</div></div>`).join("")}</div>` : ""}
-  </div>` + navbar();
+      ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
+      <div class="row">${prox.map(x=>`<div class="mrow">
+        <div class="m">${esc(x.rot)}<div class="c">${x.n} parcelas</div></div>
+        <div class="val num" style="font-size:15.5px">${brl(x.v)}</div></div>`).join("")}</div>` : ""}
+    </div>` + navbar();
+}
+
+function barraCat(c, v, total, max, attrs){
+  const pc = total ? Math.abs(v)/Math.abs(total)*100 : 0;
+  return `<button class="cbar" ${attrs||""}>
+    <div class="badge" style="background:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
+    <div class="t"><b>${esc(c)}</b>
+      <div class="track"><span style="width:${Math.max(2,Math.abs(v)/(max||1)*100).toFixed(1)}%;background:${corCat(c)}"></span></div></div>
+    <div class="v"><b class="num">${brl(v)}</b><i>${pc.toFixed(0)}%</i></div>
+  </button>`;
 }
 
 /* ================= configurações ================= */
@@ -1266,16 +1394,20 @@ sheets.addCat = () => {
 
 sheets.verCat = () => {
   const t = UI.tmp || (UI.tmp = {cat:"", escopo:"atual"});
-  const fs = t.escopo==="todas" ? S.faturas : faturasAtivas();
-  const todos = [];
-  fs.forEach(f=>f.lanc.forEach(l=>todos.push(Object.assign({_f:f}, l))));
+  let todos = [];
+  if (t.escopo === "mes") todos = itensDoMes(S.mesContas);
+  else {
+    const fs = t.escopo==="todas" ? S.faturas : faturasAtivas();
+    fs.forEach(f=>f.lanc.forEach(l=>todos.push(Object.assign({_f:f}, l))));
+  }
   const daCat = todos.filter(l=>(l.cat||"Outros")===t.cat);
+  const noMes = t.escopo === "mes";
   const totalGeral = todos.reduce((a,l)=>a+l.v,0);
   const totalCat = daCat.reduce((a,l)=>a+l.v,0);
   const pct = totalGeral ? Math.abs(totalCat)/Math.abs(totalGeral)*100 : 0;
   const porPessoa = {};
   daCat.forEach(l=>{
-    const a = alocDe(l.id).filter(id=>pessoa(id));
+    const a = noMes ? (l.aloc||[]) : alocDe(l.id).filter(id=>pessoa(id));
     if (!a.length){ porPessoa["_"] = (porPessoa["_"]||0) + l.v; return; }
     a.forEach(id=>{ porPessoa[id] = (porPessoa[id]||0) + l.v/a.length; });
   });
@@ -1286,6 +1418,7 @@ sheets.verCat = () => {
       <div class="badge" style="background:${corCat(t.cat)}">${esc(inicialCat(t.cat))}</div>
       <h3 style="margin:0">${esc(t.cat)}</h3></div>
     <select data-act="vcescopo" style="margin:10px 0 14px">
+      <option value="mes"${t.escopo==="mes"?" selected":""}>${esc(compLabel(S.mesContas))} · cartões e contas</option>
       <option value="atual"${t.escopo==="atual"?" selected":""}>Fatura aberta</option>
       <option value="todas"${t.escopo==="todas"?" selected":""}>Todas as faturas</option></select>
     <div class="row">
@@ -1312,12 +1445,67 @@ sheets.verCat = () => {
        <div class="val num" style="font-size:15px">${brl(v)}</div></div>`).join("")}</div>
     <label class="f">Lançamentos</label>
     <div class="row">${daCat.slice().sort((a,b)=>a.d<b.d?1:-1).map(l=>{
-      const a = alocDe(l.id).filter(id=>pessoa(id));
+      const a = noMes ? (l.aloc||[]) : alocDe(l.id).filter(id=>pessoa(id));
+      const orig = noMes ? l.onde : (multiCartao()&&l._f ? nomeCartao(l._f) : "");
       return `<div class="it"><div class="t"><b style="font-size:14px">${esc(l.g)}</b>
-        <i>${dia(l.d)}${multiCartao()&&l._f?" · "+esc(nomeCartao(l._f)):""}${a.length?" · "+a.map(id=>sigla(pessoa(id).nome)).join("/"):" · sem dono"}</i></div>
+        <i>${dia(l.d)}${orig?" · "+esc(orig):""}${a.length?" · "+a.map(id=>sigla(pessoa(id).nome)).join("/"):" · sem dono"}</i></div>
         <div class="val num" style="font-size:14px">${brl(l.v)}</div></div>`;
     }).join("")}</div>
     <button class="btn" data-act="fechar" style="margin-top:14px">Fechar</button>
+  </div></div>`;
+};
+
+sheets.verPessoa = () => {
+  const t = UI.tmp || {};
+  const p = pessoa(t.p); if (!p) return "";
+  const m = S.mesContas;
+  const tot = totaisMes(m);
+  const meus = itensDoMes(m).filter(it => it.aloc.includes(p.id))
+    .map(it => Object.assign({}, it, {parte: it.v / it.aloc.length}));
+  const soma = meus.reduce((a,x)=>a+x.parte, 0);
+  const pcMes = tot.total ? Math.abs(soma)/Math.abs(tot.total)*100 : 0;
+  const soDele = meus.filter(x=>x.aloc.length===1).reduce((a,x)=>a+x.parte,0);
+  const dividido = soma - soDele;
+  const emCartao = meus.filter(x=>x.fonte==="cartao").reduce((a,x)=>a+x.parte,0);
+  const emConta = soma - emCartao;
+
+  const porCat = {}; meus.forEach(x => porCat[x.cat] = (porCat[x.cat]||0) + x.parte);
+  const cats = Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const maxc = cats.length ? Math.abs(cats[0][1]) : 1;
+  const porEst = {}; meus.forEach(x => porEst[x.g] = (porEst[x.g]||0) + x.parte);
+  const ests = Object.entries(porEst).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0, t.tudoEst ? 999 : 8);
+
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <div class="badge" style="background:${CORES[p.cor%8]}">${esc(sigla(p.nome))}</div>
+      <div><h3 style="margin:0">${esc(curtoNome(p.nome))}</h3>
+        <div style="font-size:13px;color:var(--mute)">${esc(compLabel(m))}</div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="rowtop"><div class="nm" style="font-size:15px">Parte no mês</div>
+        <div class="val num">${brl(soma)}</div></div>
+      <div class="pct"><span style="width:${Math.min(100,pcMes).toFixed(1)}%;background:${CORES[p.cor%8]}"></span></div>
+      <div style="font-size:13.5px;color:var(--mute)">
+        ${pcMes.toFixed(1).replace(".",",")}% de ${brl(tot.total)} gastos no mês · ${meus.length} itens</div>
+    </div>
+    <div class="stats" style="padding:2px 0 4px">
+      <div class="stat"><b class="num">${brl(soDele)}</b><i>individuais</i></div>
+      <div class="stat"><b class="num">${brl(dividido)}</b><i>em dividido</i></div>
+      <div class="stat"><b class="num">${brl(emCartao)}</b><i>em cartões</i></div>
+      <div class="stat"><b class="num">${brl(emConta)}</b><i>em contas</i></div>
+    </div>
+    <label class="f">Por categoria</label>
+    <div class="row">${cats.length ? cats.map(([c,v]) =>
+      barraCat(c, v, soma, maxc, `data-act="vercatmes" data-c="${esc(c)}"`)).join("")
+      : `<div class="empty" style="padding:22px">Nada atribuído a ${esc(curtoNome(p.nome))} neste mês.</div>`}</div>
+    ${ests.length ? `<label class="f">Maiores gastos</label>
+    <div class="row">${ests.map(([g,v])=>`<div class="it">
+      <div class="t"><b style="font-size:14.5px">${esc(g)}</b></div>
+      <div class="val num" style="font-size:14.5px">${brl(v)}</div></div>`).join("")}
+      ${Object.keys(porEst).length>8 && !t.tudoEst ? `<button class="lnk" data-act="tudoest" style="margin-top:10px">
+        ver os ${Object.keys(porEst).length} estabelecimentos</button>` : ""}</div>` : ""}
+    <button class="btn pri" data-act="filtrarpessoa" data-p="${p.id}">Ver lançamentos de ${esc(curtoNome(p.nome))}</button>
+    <button class="btn" data-act="fechar">Fechar</button>
   </div></div>`;
 };
 
@@ -1652,8 +1840,15 @@ document.addEventListener("click", ev => {
     case "classificar": UI.view = "lista"; UI.soPend = true; UI.filtroP = null;
       window.scrollTo(0,0); return render();
     case "vertudocat": UI.verTudoCat = !UI.verTudoCat; return render();
+    case "mesResumo": S.mesContas = mesSoma(S.mesContas, +v);
+      if (S.faturas.some(f=>f.comp===S.mesContas)) S.rotuloAtivo = compLabel(S.mesContas);
+      salvar(); window.scrollTo(0,0); return render();
+    case "verpessoa": UI.sheet = "verPessoa"; UI.tmp = {p: pid}; return render();
+    case "tudoest": UI.tmp.tudoEst = true; return render();
+    case "dica": return;
+    case "vercatmes": UI.sheet = "verCat"; UI.tmp = {cat: el.dataset.c, escopo:"mes"}; return render();
     case "filtrarpessoa": UI.view = "lista"; UI.filtroP = pid; UI.soPend = false;
-      window.scrollTo(0,0); return render();
+      UI.sheet = null; UI.tmp = null; window.scrollTo(0,0); return render();
     case "sheet":
       UI.sheet = v; UI.tmp = null;
       if (v === "novaFatura" && el.dataset.c) UI.tmp = {cartao: el.dataset.c, rotulo: ""};
