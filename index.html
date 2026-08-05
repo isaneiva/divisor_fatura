@@ -10,114 +10,183 @@
 <link rel="apple-touch-icon" href="./icon-192.png">
 <title>Divisor de Fatura</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{
-  --paper:#EBEDF1; --card:#fff; --ink:#14161C; --mute:#6B6F79; --line:#D8DBE2; --pend:#C4C8D1;
-  --r:14px;
+  --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
+  --hero1:#6A34C9; --hero2:#3F1F8C; --heroink:#fff; --heromute:#C9C2EA;
+  --r:22px; --r2:16px;
+  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0D0E13; --card:#181A21; --ink:#F1F2F6; --mute:#8B8F9A; --line:#262933; --soft:#20232C;
+         --sh:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -14px rgba(0,0,0,.7); }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  background:var(--paper);color:var(--ink);font-size:16px;line-height:1.4;
-  padding-bottom:calc(96px + env(safe-area-inset-bottom));
-  -webkit-text-size-adjust:100%;
-}
-.num{font-family:ui-monospace,"Roboto Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
-button{font-family:inherit;cursor:pointer;font-size:inherit}
-button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #6A34C9;outline-offset:2px}
+body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:16px;line-height:1.42;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.disp,.big,.nm,h2,h3,.stat b,.badge,.tog button,.foot button,.btn{
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-optical-sizing:auto}
+button{font-family:inherit;cursor:pointer;font-size:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--hero1);outline-offset:2px}
 
-/* ---------- cabeçalho ---------- */
-.hd{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;padding:calc(11px + env(safe-area-inset-top)) 16px 12px}
-.hdtop{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.eyebrow{font-size:12px;letter-spacing:.1em;font-weight:700;color:#9BA1AE;text-transform:uppercase}
-.hd select{background:#262A33;color:#fff;border:1px solid #3A3F4B;border-radius:10px;padding:11px 12px;font-size:15px;font-weight:600;max-width:100%}
-.sml{font-size:14px;color:#A7ACB8}
-.big{font-size:29px;font-weight:700;line-height:1.05;letter-spacing:-.025em;margin:2px 0 0}
-.bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#3A3E48;margin-top:11px}
-.bar>span{transition:width .3s cubic-bezier(.4,0,.2,1)}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:11px;font-size:14px;color:#C3C8D2}
-.legend b{color:#fff;font-weight:600}
+/* ---------- topo ---------- */
+.top{padding:calc(12px + env(safe-area-inset-top)) 14px 0}
+.selrow{display:flex;gap:8px}
+.selrow select{flex:1;min-width:0;background:var(--card);color:var(--ink);border:1px solid var(--line);
+  border-radius:99px;padding:12px 16px;font-size:14.5px;font-weight:600;box-shadow:var(--sh);
+  appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+
+/* ---------- cartão-herói ---------- */
+.hero{margin:12px 14px 0;border-radius:var(--r);padding:20px 20px 18px;color:var(--heroink);
+  background:radial-gradient(120% 130% at 88% 8%, #8B5CF6 0%, var(--hero1) 38%, var(--hero2) 100%);
+  box-shadow:0 12px 30px -14px rgba(74,32,150,.75);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%)}
+.hero .lbl{font-size:13px;color:var(--heromute);position:relative}
+.hero .big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.045em;margin-top:5px;position:relative}
+.bar{display:flex;height:9px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18);margin-top:15px;position:relative}
+.bar>span{transition:width .35s cubic-bezier(.4,0,.2,1)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:13px;font-size:13.5px;color:var(--heromute);position:relative}
 .legend span{display:flex;align-items:center;gap:7px;min-width:0}
 .legend em{font-style:normal;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acerto{margin-top:10px;padding-top:9px;border-top:1px solid #2C313B;font-size:13px;color:#C3C8D2}
-.acerto div{margin-top:4px}
-.selrow{display:flex;gap:8px;align-items:center;margin-top:2px}
-.selrow select{flex:1;min-width:0}
-.dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:middle}
-.status{margin-top:9px;font-size:13.5px}
+.legend b{color:#fff;font-weight:600}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto}
+.acerto{margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:var(--heromute);position:relative}
+.acerto div{margin-top:5px}
+.acerto b{color:#fff}
+.selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;position:relative}
+.selo{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
 
-/* ---------- filtros ---------- */
-.fscroll{display:flex;gap:7px;overflow-x:auto;padding:11px 14px 2px;scrollbar-width:none}
+/* ---------- faixa de números ---------- */
+.stats{display:flex;gap:9px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
+.stats::-webkit-scrollbar{display:none}
+.stat{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
+  padding:11px 15px;box-shadow:var(--sh);min-width:104px}
+.stat b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.035em}
+.stat i{font-style:normal;font-size:11.5px;color:var(--mute)}
+
+/* ---------- filtros e abas ---------- */
+.fscroll{display:flex;gap:7px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
 .fscroll::-webkit-scrollbar{display:none}
-.fchip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap}
-.fchip[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fchip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:10px 15px;
+  font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap;display:flex;align-items:center;gap:7px;box-shadow:var(--sh)}
+.fchip[data-on="1"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stick{position:sticky;top:0;z-index:15;background:var(--bg);padding:12px 14px 8px;
+  box-shadow:0 10px 12px -10px rgba(0,0,0,.10)}
+.tog{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;box-shadow:var(--sh)}
+.tog button{flex:1;border:0;background:transparent;padding:11px 2px;border-radius:99px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.tog button[data-on="1"]{background:var(--ink);color:var(--bg)}
+.check{display:flex;align-items:center;gap:11px;font-size:14.5px;color:var(--mute);margin:12px 2px 14px;padding:0 2px}
+.check input{width:21px;height:21px;margin:0;accent-color:var(--hero1)}
 
-.body{padding:12px 12px 0}
-.tog{display:flex;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:4px;margin-bottom:12px}
-.tog button{flex:1;border:0;background:transparent;padding:12px 2px;border-radius:10px;font-size:14px;font-weight:600;color:var(--mute)}
-.tog button[data-on="1"]{background:var(--ink);color:#fff}
-.check{display:flex;align-items:center;gap:11px;font-size:15px;color:var(--mute);margin-bottom:14px;padding:4px 2px}
-.check input{width:22px;height:22px;margin:0;accent-color:#6A34C9}
-
+.body{padding:0 14px}
 /* ---------- linhas ---------- */
-.row{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:9px}
-.rowtop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.nm{font-weight:600;font-size:17px;letter-spacing:-.01em;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left;color:inherit;width:100%}
-.val{font-weight:700;font-size:18px;white-space:nowrap}
-.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px}
-.lnk{border:1px solid var(--line);background:#fff;padding:5px 11px;border-radius:99px;font-size:12.5px;color:var(--mute);font-weight:600}
-.tag{font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;background:#E7E9ED;color:var(--mute);white-space:nowrap}
+.row{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:9px;box-shadow:var(--sh)}
+.rowtop{display:flex;gap:12px;align-items:flex-start}
+.badge{width:42px;height:42px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.nm{font-weight:600;font-size:16.5px;letter-spacing:-.025em;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left;width:100%}
+.val{font-weight:700;font-size:17px;white-space:nowrap;margin-left:auto}
+.meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px}
+.lnk{border:1px solid var(--line);background:var(--soft);padding:5px 11px;border-radius:99px;font-size:12px;color:var(--mute);font-weight:600}
+.tag{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap;border:0}
+.cardtag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap}
+.hero .cardtag{background:rgba(255,255,255,.14);color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
-.chip{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:12px 8px;font-size:14.5px;font-weight:600;color:var(--mute);flex:1 1 0;min-width:74px;min-height:46px}
-.chip[data-on="1"]{color:#fff}
+.chip{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;padding:12px 8px;font-size:14px;
+  font-weight:600;color:var(--mute);flex:1 1 0;min-width:74px;min-height:46px}
+.chip[data-on="1"]{color:#fff;border-color:transparent}
 .editwrap{display:flex;gap:8px;align-items:center}
-.editwrap input{flex:1;font-size:17px;font-weight:600;padding:10px;border:2px solid #6A34C9;border-radius:10px}
-.ok{background:#6A34C9;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:700}
+.editwrap input{flex:1;font-size:16px;font-weight:600;padding:11px;border:2px solid var(--hero1);border-radius:12px}
+.ok{background:var(--hero1);color:#fff;border:0;border-radius:12px;padding:13px 17px;font-weight:700}
 
-.sub{border-top:1px dashed var(--line);margin-top:14px;padding-top:10px}
-.catsel{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-.catsel span{font-size:13px;color:var(--mute);font-weight:600;flex:0 0 auto}
-.catsel select{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink)}
+.sub{border-top:1px solid var(--line);margin-top:14px;padding-top:11px}
+.catsel{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.catsel span{font-size:12.5px;color:var(--mute);font-weight:600;flex:0 0 auto}
+.catsel select{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;font-size:14.5px;background:var(--soft);color:var(--ink)}
 .it{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .it:last-child{border-bottom:0}
-.it .t{flex:1;min-width:0}
-.it .t button{display:block;font-size:15px;font-weight:500;background:none;border:0;padding:0;text-align:left;color:inherit;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.it .t i{font-style:normal;font-size:12.5px;color:var(--mute)}
-.mini{display:flex;gap:5px;flex-shrink:0}
-.mini button{min-width:46px;height:42px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--mute);font-size:12px;font-weight:700;padding:0 4px;overflow:hidden}
-.mini button[data-on="1"]{color:#fff}
 .it2{display:block}
 .itop{display:flex;align-items:center;gap:10px}
+.it .t{flex:1;min-width:0}
+.it .t button{display:block;font-size:14.5px;font-weight:550;background:none;border:0;padding:0;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it .t i{font-style:normal;font-size:12px;color:var(--mute)}
+.pin{width:8px;height:8px;border-radius:99px;flex:0 0 auto}
+.mini{display:flex;gap:5px;flex-shrink:0}
 .mini-full{margin-top:10px}
+.mini button{min-width:46px;height:40px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);
+  color:var(--mute);font-size:12px;font-weight:700;padding:0 4px;overflow:hidden}
 .mini-full button{flex:1;min-width:0}
-.cardtag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#2C313B;color:#C3C8D2;white-space:nowrap}
-.row .cardtag{background:#EDEFF3;color:#5C616B}
-.pct{height:9px;border-radius:99px;background:#DFE2E8;overflow:hidden;margin:10px 0 6px}
-.pct>span{display:block;height:100%;background:#6A34C9}
-.srch{position:sticky;top:0;background:var(--paper);padding-bottom:10px;z-index:2}
+.mini button[data-on="1"]{color:#fff;border-color:transparent}
+.pct{height:9px;border-radius:99px;background:var(--soft);overflow:hidden;margin:11px 0 6px}
+.pct>span{display:block;height:100%;background:var(--hero1);border-radius:99px}
 
-/* ---------- rodapé ---------- */
-.foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding:12px calc(12px) calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px}
-.foot button{flex:1;border-radius:13px;padding:17px 6px;font-size:16px;font-weight:600;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
-.foot button.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* ---------- barra de navegação ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;
+  background:color-mix(in srgb, var(--card) 88%, transparent);backdrop-filter:blur(16px);
+  border-top:1px solid var(--line)}
+.navb{flex:1;border:0;background:transparent;border-radius:16px;padding:9px 4px 7px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:11px;font-weight:600}
+.navb svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.navb[data-on="1"]{color:var(--ink);background:var(--soft)}
+.navb[data-on="1"] svg{stroke-width:2.3}
 
-h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:26px 0 10px;font-weight:700}
-h2:first-child{margin-top:6px}
-label.f{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px;font-weight:600}
-input,select,textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:11px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+/* ---------- página inicial ---------- */
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
+.sec h2{margin:0}
+.sec button{border:0;background:none;font-size:13px;font-weight:600;color:var(--hero1)}
+.cbar{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
+.cbar+.cbar{border-top:1px solid var(--line)}
+.cbar .t{flex:1;min-width:0}
+.cbar .t b{display:block;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.cbar .track{height:7px;border-radius:99px;background:var(--soft);margin-top:7px;overflow:hidden}
+.cbar .track span{display:block;height:100%;border-radius:99px}
+.cbar .v{text-align:right;flex:0 0 auto}
+.cbar .v b{display:block;font-size:14.5px;font-weight:700}
+.cbar .v i{font-style:normal;font-size:11.5px;color:var(--mute)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;box-shadow:var(--sh)}
+.pcard .h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--mute)}
+.pcard .v{font-size:19px;font-weight:700;letter-spacing:-.035em;margin-top:8px}
+.pcard .p{font-size:11.5px;color:var(--mute);margin-top:2px}
+.mrow{display:flex;align-items:center;gap:12px;padding:12px 0}
+.mrow+.mrow{border-top:1px solid var(--line)}
+.mrow .m{flex:1;font-size:14.5px;font-weight:600}
+.mrow .c{font-size:12px;color:var(--mute)}
+.cta{display:flex;gap:9px;margin-top:16px}
+.cta button{flex:1;border-radius:99px;padding:16px 8px;font-size:15px;font-weight:700;
+  border:1px solid var(--line);background:var(--card);box-shadow:var(--sh)}
+.cta button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:26px 0 10px;font-weight:700}
+h2:first-child{margin-top:8px}
+label.f{display:block;font-size:12.5px;color:var(--mute);margin:12px 0 5px;font-weight:600}
+input,select,textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font-size:16px;
+  font-family:inherit;background:var(--card);color:var(--ink)}
 textarea{min-height:170px;font-family:ui-monospace,monospace;font-size:14px}
-.btn{width:100%;padding:17px;border-radius:13px;border:1.5px solid var(--line);background:#fff;font-size:16px;font-weight:600;margin-top:10px;color:var(--ink)}
-.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
-.btn.dgr{color:#B0234A;border-color:#F0C9D3}
-.mini2{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--mute)}
+.btn{width:100%;padding:16px;border-radius:99px;border:1px solid var(--line);background:var(--card);
+  font-size:15.5px;font-weight:650;margin-top:10px;box-shadow:var(--sh)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.dgr{color:#D2475F;border-color:transparent;background:var(--soft);box-shadow:none}
+.mini2{border:1px solid var(--line);background:var(--soft);border-radius:99px;padding:9px 13px;font-size:12.5px;font-weight:600;color:var(--mute)}
 
-.sheet{position:fixed;inset:0;z-index:40;background:rgba(15,17,22,.6);display:flex;align-items:flex-end}
-.sheetbox{background:var(--paper);width:100%;max-height:93vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 16px calc(24px + env(safe-area-inset-bottom))}
-.sheetbox h3{margin:0 0 6px;font-size:21px;letter-spacing:-.02em}
-.warn{background:#FFF4D6;border:1px solid #E8CE86;border-radius:12px;padding:13px;font-size:14px;margin-bottom:12px;white-space:pre-wrap}
-.pv{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;display:grid;grid-template-columns:78px 1fr 92px 58px 40px;gap:6px;align-items:center}
-.pv input{padding:9px;font-size:14px;border-radius:8px}
-.empty{text-align:center;color:var(--mute);font-size:15px;padding:44px 18px;line-height:1.6}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(8,9,13,.6);display:flex;align-items:flex-end;backdrop-filter:blur(3px)}
+.sheetbox{background:var(--bg);width:100%;max-height:93vh;overflow:auto;border-radius:26px 26px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom))}
+.sheetbox::before{content:"";display:block;width:42px;height:5px;border-radius:99px;background:var(--line);margin:0 auto 16px}
+.sheetbox h3{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.04em}
+.warn{background:#FFF4D6;border:1px solid #E8CE86;color:#4A3A10;border-radius:14px;padding:13px;font-size:13.5px;margin-bottom:12px;white-space:pre-wrap}
+@media (prefers-color-scheme: dark){ .warn{background:#33290D;border-color:#5C4A17;color:#F0DFB4} }
+.pv{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;
+  display:grid;grid-template-columns:76px 1fr 90px 56px 40px;gap:6px;align-items:center}
+.pv input{padding:9px;font-size:13.5px;border-radius:9px;background:var(--soft)}
+.empty{text-align:center;color:var(--mute);font-size:15px;padding:46px 18px;line-height:1.6}
+.srch{position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:2}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -175,6 +244,20 @@ function categorizar(nome){
 
 /* ================= estado ================= */
 const CORES = ["#6A34C9","#0A7568","#AC5F08","#B0234A","#1E5FB4","#4E7A0C","#8A3FA0","#0F6E8C"];
+const CORCAT = {
+  "Alimentação/bebidas":"#E0632B", "Mercado":"#1E7A3C", "Saúde":"#C0334D", "Cuidados pessoais":"#B0348A",
+  "Transporte":"#1E5FB4", "Boletos":"#585D69", "Streamings":"#7B34C9", "Assinaturas":"#0F6E8C",
+  "Compras online":"#A85C0A", "Entretenimento":"#C43D6B", "Lazer":"#0A8A6E", "Pets":"#6B7A0C",
+  "Pix parcelado":"#2B6FA8", "Presentes":"#9A2FB0", "Taxas":"#8A6A1E", "Outros":"#6B6F79"
+};
+const PALETA = ["#E0632B","#1E7A3C","#C0334D","#B0348A","#1E5FB4","#7B34C9","#0F6E8C","#A85C0A","#0A8A6E","#6B7A0C"];
+function corCat(c){
+  if (CORCAT[c]) return CORCAT[c];
+  let s = 0; for (const ch of String(c)) s = (s*31 + ch.charCodeAt(0)) >>> 0;
+  return PALETA[s % PALETA.length];
+}
+const inicialCat = c => (String(c||"?").trim()[0]||"?").toUpperCase();
+
 const CORESBG = ["#EFE8FC","#DDF1ED","#FBEDDB","#FCE6EB","#E5EEFB","#ECF3E0","#F7E9FB","#E2EFF5"];
 const uid = p => p + Math.random().toString(36).slice(2,8);
 
@@ -231,7 +314,7 @@ function migrar(){
   if (mudou || mudouEscopo || !DB.read()) DB.write(S);
 }
 
-let UI = {view:"lista", modo:"grupo", soPend:false, filtroP:null, aberto:null,
+let UI = {view:"inicio", modo:"grupo", soPend:false, filtroP:null, aberto:null,
           sheet:null, tmp:null, editando:null, editandoItem:null, buffer:""};
 
 /* ================= utilidades ================= */
@@ -494,7 +577,8 @@ function mudarCategoria(grupo, cat){
 /* ================= render ================= */
 function render(){
   const y = window.scrollY;
-  document.getElementById("app").innerHTML = UI.view==="config" ? viewConfig() : viewLista();
+  const PAGINAS = {inicio:viewInicio, lista:viewLista, config:viewConfig};
+  document.getElementById("app").innerHTML = (PAGINAS[UI.view] || viewInicio)();
   document.getElementById("modal").innerHTML = UI.sheet ? sheets[UI.sheet]() : "";
   document.body.style.overflow = UI.sheet ? "hidden" : "";
   window.scrollTo(0,y);
@@ -503,38 +587,52 @@ function render(){
 }
 
 function header(){
-  if (!S.faturas.length) return `<div class="hd"><div class="eyebrow">Divisor de fatura</div>
-    <div class="sml" style="margin-top:10px">Nenhuma fatura cadastrada.</div></div>`;
+  if (!S.faturas.length) return `<div class="top"><div class="hero">
+    <div class="lbl">Divisor de fatura</div><div class="big">Comece aqui</div>
+    <div class="lbl" style="margin-top:10px">Vá em Configurar para criar seu primeiro cartão.</div></div></div>`;
   const t = totais(), ac = acerto();
-  const negativo = ac.liquido < 0;
-  const titulo = Math.abs(ac.liquido) < 0.005 ? "Nada a acertar"
-               : (negativo ? "Você tem a receber" : "Você transfere");
+  const nada = Math.abs(ac.liquido) < 0.005;
+  const titulo = nada ? "Nada a acertar" : (ac.liquido < 0 ? "Você tem a receber" : "Você transfere");
   const larg = v => t.total ? Math.max(0, Math.abs(v)/Math.abs(t.total)*100) : 0;
   const rots = rotulos();
-  return `<div class="hd">
+  const fut = previstoFuturo();
+  const stats = [
+    {b: brl(t.total), i: "fatura"},
+    {b: String(lancAtivos().length), i: "lançamentos"},
+    {b: t.nPend ? String(t.nPend) : "0", i: t.nPend ? "sem dono" : "tudo classificado"},
+  ];
+  if (fut.n) stats.push({b: brl(fut.v), i: fut.n + " parcelas a vencer"});
+  return `<div class="top">
     <div class="selrow">
-      <select data-act="cartao">
+      <select data-act="cartao" aria-label="Cartão">
         <option value="todos"${S.cartaoAtivo==="todos"?" selected":""}>Todos os cartões</option>
         ${S.cartoes.map(c=>`<option value="${c.id}"${S.cartaoAtivo===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}
       </select>
-      <select data-act="rotulo">
+      <select data-act="rotulo" aria-label="Mês">
         ${rots.map(r=>`<option value="${esc(r)}"${S.rotuloAtivo===r?" selected":""}>${esc(r)}</option>`).join("")}
       </select>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${esc(titulo)}</div>
+      <div class="big num">${brl(Math.abs(ac.liquido))}</div>
+      <div class="bar">${S.pessoas.map(p=>`<span style="width:${larg(t.porPessoa[p.id])}%;background:${CORES[p.cor%8]}"></span>`).join("")}</div>
+      <div class="legend">${S.pessoas.map(p=>`<span><i class="dot" style="background:${CORES[p.cor%8]}"></i><em>${esc(curtoNome(p.nome))}</em> <b class="num">${brl(t.porPessoa[p.id]||0)}</b></span>`).join("")}</div>
+      ${ac.linhas.length>1 ? `<div class="acerto">${ac.linhas.map(l=>
+        `<div>${esc(l.txt)} <b class="num">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
+      ${selosStatus()}
     </div>
-    <div class="sml" style="margin-top:11px;font-size:13.5px">${esc(titulo)}</div>
-    <div class="big num">${brl(Math.abs(ac.liquido))}</div>
-    <div class="bar">${S.pessoas.map(p=>`<span style="width:${larg(t.porPessoa[p.id])}%;background:${CORES[p.cor%8]}"></span>`).join("")}</div>
-    <div class="legend">${S.pessoas.map(p=>`<span><i class="dot" style="background:${CORES[p.cor%8]}"></i><em>${esc(curtoNome(p.nome))}</em> <b class="num">${brl(t.porPessoa[p.id]||0)}</b></span>`).join("")}</div>
-    ${ac.linhas.length>1 ? `<div class="acerto">${ac.linhas.map(l=>
-      `<div>${esc(l.txt)} <b class="num" style="color:#fff">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
-    ${selosStatus()}
-    <div class="status" style="color:${t.nPend?"#FFC46B":"#7FE0C6"}">
-      ${t.nPend ? t.nPend+" sem dono · fatura "+brl(t.total) : "Tudo classificado · fatura "+brl(t.total)}
-    </div>
-  </div>`;
+    <div class="stats">${stats.map(s=>`<div class="stat"><b class="num">${esc(s.b)}</b><i>${esc(s.i)}</i></div>`).join("")}</div>`;
 }
 
-const CORSTATUS = {aberta:"#7FE0C6", fechada:"#FFC46B", vence:"#FF9F6B", vencida:"#FF8A8A"};
+function previstoFuturo(){
+  const hoje = S.rotuloAtivo;
+  let n = 0, v = 0;
+  S.faturas.filter(f => (S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo) && f.rotulo!==hoje)
+    .forEach(f => f.lanc.forEach(l => { if (l.auto){ n++; v += l.v; } }));
+  return {n, v};
+}
+
+const CORSTATUS = {aberta:"#9BF3DA", fechada:"#FFD79B", vence:"#FFB48C", vencida:"#FFAFAF"};
 function selosStatus(){
   const fs = faturasAtivas();
   const sel = fs.map(f => {
@@ -544,8 +642,7 @@ function selosStatus(){
   }).filter(Boolean);
   if (!sel.length) return "";
   const um = sel.length === 1;
-  return `<div class="status" style="margin-top:11px;display:flex;flex-wrap:wrap;gap:6px">
-    ${sel.map(s=>`<span class="cardtag" style="color:${CORSTATUS[s.st.e]};background:#22262F">
+  return `<div class="selos">${sel.map(s=>`<span class="selo" style="color:${CORSTATUS[s.st.e]}">
       ${um?"":esc(s.nome)+" · "}${esc(s.st.t)}</span>`).join("")}</div>`;
 }
 
@@ -587,19 +684,23 @@ function tagsCartao(g){
 
 function cardGrupo(g, tipo){
   const cor = g.aloc.length===1 ? CORES[pessoa(g.aloc[0]).cor%8] : null;
-  const bg  = g.aloc.length===1 ? CORESBG[pessoa(g.aloc[0]).cor%8] : null;
   const exp = UI.aberto === g.k;
   const editando = UI.editando === g.k && tipo === "grupo";
-  const cat = tipo === "grupo" ? (g.itens[0].cat || "Outros") : null;
-  return `<div class="row" style="${cor?`border-color:${cor};background:${bg}`:""}">
+  const cat = tipo === "grupo" ? (g.itens[0].cat || "Outros") : g.k;
+  const cc = corCat(cat);
+  const estilo = cor
+    ? `border-color:${cor};background:color-mix(in srgb, ${cor} 9%, var(--card));box-shadow:inset 4px 0 0 ${cor}, var(--sh)`
+    : "";
+  return `<div class="row" style="${estilo}">
     <div class="rowtop">
+      <div class="badge" style="background:${cc}">${esc(inicialCat(cat))}</div>
       <div style="min-width:0;flex:1">
         ${editando
           ? `<div class="editwrap"><input data-act="bufnome" data-foco value="${esc(g.k)}"><button class="ok" data-act="salvarnome" data-g="${esc(g.k)}">OK</button></div>`
-          : `<button class="nm" ${tipo==="grupo"?`data-act="editar" data-g="${esc(g.k)}"`:`data-act="vercat" data-c="${esc(g.k)}"`}>${esc(g.k)}${tipo==="grupo"?' <span style="opacity:.35;font-size:14px">✎</span>':' <span style="opacity:.35;font-size:14px">›</span>'}</button>`}
+          : `<button class="nm" ${tipo==="grupo"?`data-act="editar" data-g="${esc(g.k)}"`:`data-act="vercat" data-c="${esc(g.k)}"`}>${esc(g.k)}${tipo==="grupo"?' <span style="opacity:.32;font-size:13px">✎</span>':' <span style="opacity:.32;font-size:13px">›</span>'}</button>`}
         <div class="meta">
           <button class="lnk" data-act="exp" data-g="${esc(g.k)}">${g.itens.length} ${g.itens.length===1?"lançamento":"lançamentos"} ${exp?"▴":"▾"}</button>
-          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}">${esc(cat)}</button>`:""}
+          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}" style="color:${cc}">${esc(cat)}</button>`:""}
           ${tagsCartao(g)}
           ${g.misto?`<span class="tag">misto</span>`:""}
           ${g.aloc.length>1?`<span class="tag">÷${g.aloc.length}</span>`:""}
@@ -626,6 +727,7 @@ function itemHTML(l, full){
         title="${esc(p.nome)}"
         style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(sigla(p.nome))}</button>`;
     }).join("")}</div>`;
+  const ponto = `<i class="pin" style="background:${corCat(l.cat||"Outros")}"></i>`;
   const info = `<div class="t">
       <button data-act="editaritem" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
       <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
@@ -634,14 +736,34 @@ function itemHTML(l, full){
       <div class="editwrap"><input data-act="bufnome" data-foco value="${esc(l.g)}">
       <button class="ok" data-act="salvaritem" data-i="${l.id}">OK</button></div></div></div>`;
   if (duas) return `<div class="it it2">
-    <div class="itop">${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div></div>
+    <div class="itop">${ponto}${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div></div>
     ${botoes}</div>`;
-  return `<div class="it">${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div>${botoes}</div>`;
+  return `<div class="it">${ponto}${info}${tag}<div class="val num" style="font-size:15px">${brl(l.v)}</div>${botoes}</div>`;
+}
+
+function barraLista(){
+  const t = totais(), rots = rotulos();
+  return `<div class="top">
+    <div class="selrow">
+      <select data-act="cartao" aria-label="Cartão">
+        <option value="todos"${S.cartaoAtivo==="todos"?" selected":""}>Todos os cartões</option>
+        ${S.cartoes.map(c=>`<option value="${c.id}"${S.cartaoAtivo===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}
+      </select>
+      <select data-act="rotulo" aria-label="Mês">
+        ${rots.map(r=>`<option value="${esc(r)}"${S.rotuloAtivo===r?" selected":""}>${esc(r)}</option>`).join("")}
+      </select>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin:14px 2px 0">
+      <div class="big num" style="font-size:25px;font-weight:800;letter-spacing:-.04em">${brl(t.total)}</div>
+      <div style="font-size:13px;color:var(--mute)">${lancAtivos().length} lançamentos</div>
+      <div style="margin-left:auto;font-size:13px;font-weight:600;color:${t.nPend?"#C77A16":"#0A8A6E"}">
+        ${t.nPend ? t.nPend+" sem dono" : "completo"}</div>
+    </div></div>`;
 }
 
 function viewLista(){
   const f = fatura();
-  if (!f) return header() + `<div class="empty">Vá em <b>Configurar</b> para criar sua primeira fatura.</div>` + footer();
+  if (!f) return barraLista() + `<div class="empty">Vá em <b>Ajustes</b> para criar sua primeira fatura.</div>` + navbar();
   const L = visiveis();
   let corpo;
   if (UI.modo === "item"){
@@ -651,33 +773,98 @@ function viewLista(){
     const gs = agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g));
     corpo = gs.map(g=>cardGrupo(g,tipo)).join("") || `<div class="empty">Nada por aqui.</div>`;
   }
-  return header() + filtroPessoas() + `<div class="body">
-    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
+  return barraLista() + `<div class="stick">` + filtroPessoas().replace('class="fscroll"','class="fscroll" style="padding:0 0 10px"') + `
     <div class="tog">
       <button data-act="modo" data-v="grupo" data-on="${UI.modo==="grupo"?1:0}">Estabelecimento</button>
       <button data-act="modo" data-v="item" data-on="${UI.modo==="item"?1:0}">Lançamento</button>
       <button data-act="modo" data-v="cat" data-on="${UI.modo==="cat"?1:0}">Categoria</button>
-    </div>
+    </div></div>
+    <div class="body">
+    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
     <label class="check"><input type="checkbox" data-act="sopend" ${UI.soPend?"checked":""}> Mostrar só o que falta</label>
     ${corpo}
-    <p style="font-size:13.5px;color:var(--mute);line-height:1.6;margin:18px 0 8px">
+    <p style="font-size:13px;color:var(--mute);line-height:1.6;margin:18px 0 8px">
       Toque num nome para atribuir, toque de novo para desfazer. Dois ou mais nomes acesos dividem em partes iguais.
       Toque no nome do estabelecimento (✎) para corrigi-lo. Escolhas no estabelecimento viram regra e voltam prontas nas próximas faturas.
     </p>
-  </div>` + footer();
+  </div>` + navbar();
 }
 
-function footer(){
-  return `<div class="foot">
-    <button data-act="ir" data-v="${UI.view==="config"?"lista":"config"}">${UI.view==="config"?"Voltar":"Configurar"}</button>
-    <button class="pri" data-act="sheet" data-v="exportar">Exportar</button>
-  </div>`;
+const ICONES = {
+  inicio: '<svg viewBox="0 0 24 24"><path d="M4 19V9.8a2 2 0 0 1 .8-1.6l6-4.5a2 2 0 0 1 2.4 0l6 4.5a2 2 0 0 1 .8 1.6V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></svg>',
+  lista:  '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>',
+  config: '<svg viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h2M11 16h8"/><circle cx="16" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>'
+};
+function navbar(){
+  const abas = [["inicio","Resumo"],["lista","Lançamentos"],["config","Ajustes"]];
+  return `<div class="nav">${abas.map(([k,n])=>
+    `<button class="navb" data-act="nav" data-v="${k}" data-on="${UI.view===k?1:0}">${ICONES[k]}<span>${n}</span></button>`
+  ).join("")}</div>`;
+}
+
+/* ================= página inicial ================= */
+function viewInicio(){
+  if (!S.faturas.length) return header() + navbar();
+  const t = totais(), L = lancAtivos();
+  const porCat = {};
+  L.forEach(l => { const c = l.cat||"Outros"; porCat[c] = (porCat[c]||0) + l.v; });
+  const cats = Object.entries(porCat).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const topo = UI.verTudoCat ? cats : cats.slice(0,6);
+  const maxCat = cats.length ? Math.abs(cats[0][1]) : 1;
+
+  // próximos meses com parcelas previstas
+  const meses = {};
+  S.faturas.filter(f => (S.cartaoAtivo==="todos" || f.cartaoId===S.cartaoAtivo) && f.rotulo!==S.rotuloAtivo)
+    .forEach(f => f.lanc.forEach(l => { if (l.auto){
+      const k = f.comp || f.rotulo;
+      meses[k] = meses[k] || {rot:f.rotulo, v:0, n:0};
+      meses[k].v += l.v; meses[k].n++;
+    }}));
+  const prox = Object.entries(meses).sort((a,b)=>a[0]<b[0]?-1:1).map(x=>x[1]);
+
+  return header() + `<div class="body">
+    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
+
+    <div class="cta">
+      ${t.nPend?`<button class="pri" data-act="classificar">Classificar ${t.nPend} pendentes</button>`:""}
+      <button ${t.nPend?"":'class="pri"'} data-act="sheet" data-v="exportar">Exportar</button>
+    </div>
+
+    <div class="sec"><h2>Onde foi o dinheiro</h2>
+      ${cats.length>6?`<button data-act="vertudocat">${UI.verTudoCat?"ver menos":"ver todas"}</button>`:""}</div>
+    <div class="row">${topo.length ? topo.map(([c,v])=>{
+      const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
+      return `<button class="cbar" data-act="vercat" data-c="${esc(c)}">
+        <div class="badge" style="background:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
+        <div class="t"><b>${esc(c)}</b>
+          <div class="track"><span style="width:${Math.max(2,Math.abs(v)/maxCat*100).toFixed(1)}%;background:${corCat(c)}"></span></div></div>
+        <div class="v"><b class="num">${brl(v)}</b><i>${pc.toFixed(0)}%</i></div>
+      </button>`;
+    }).join("") : `<div class="empty" style="padding:20px">Nada lançado ainda.</div>`}</div>
+
+    <div class="sec"><h2>Por pessoa</h2></div>
+    <div class="pgrid">${S.pessoas.map(p=>{
+      const v = t.porPessoa[p.id]||0;
+      const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
+      return `<button class="pcard" data-act="filtrarpessoa" data-p="${p.id}" style="text-align:left">
+        <div class="h"><i class="dot" style="background:${CORES[p.cor%8]}"></i>${esc(curtoNome(p.nome))}</div>
+        <div class="v num">${brl(v)}</div>
+        <div class="p">${pc.toFixed(0)}% da fatura</div></button>`;
+    }).join("")}</div>
+
+    ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
+    <div class="row">${prox.map(m=>`<div class="mrow">
+      <div class="m">${esc(m.rot)}<div class="c">${m.n} parcelas</div></div>
+      <div class="val num" style="font-size:15.5px">${brl(m.v)}</div></div>`).join("")}</div>` : ""}
+  </div>` + navbar();
 }
 
 /* ================= configurações ================= */
 function viewConfig(){
-  return `<div class="hd"><div class="eyebrow">Configurar</div><div class="big" style="font-size:26px">Pessoas, cartões e categorias</div></div>
-  <div class="body">
+  return `<div class="top"><div class="hero" style="margin:0">
+    <div class="lbl">Ajustes</div>
+    <div class="big" style="font-size:25px">Pessoas, cartões e categorias</div></div></div>
+  <div class="body" style="padding-top:6px">
     <h2>Pessoas</h2>
     <button class="btn" data-act="addp">+ Adicionar pessoa</button>
     ${S.pessoas.map(p=>`<div class="row">
@@ -734,6 +921,7 @@ function viewConfig(){
     ${S.cats.map(c=>{
       const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0);
       return `<div class="row"><div class="rowtop">
+        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
         <input value="${esc(c)}" data-act="renomecat" data-i="${esc(c)}"
           style="border:0;padding:6px 0;font-weight:600;font-size:16px;background:none;flex:1">
         <div style="display:flex;align-items:center;gap:8px">
@@ -766,7 +954,7 @@ function viewConfig(){
     <button class="btn" data-act="restaurar">Restaurar backup</button>
     <input type="file" id="filein" accept="application/json" style="display:none">
     <p style="font-size:13px;color:var(--mute);line-height:1.6;margin-top:14px">Tudo fica guardado só neste aparelho.</p>
-  </div>` + footer();
+  </div>` + navbar();
 }
 
 /* ================= folhas ================= */
@@ -836,13 +1024,15 @@ sheets.verCat = () => {
   const porEstab = {};
   daCat.forEach(l=>{ porEstab[l.g] = (porEstab[l.g]||0) + l.v; });
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
-    <h3>${esc(t.cat)}</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div class="badge" style="background:${corCat(t.cat)}">${esc(inicialCat(t.cat))}</div>
+      <h3 style="margin:0">${esc(t.cat)}</h3></div>
     <select data-act="vcescopo" style="margin:10px 0 14px">
       <option value="atual"${t.escopo==="atual"?" selected":""}>Fatura aberta</option>
       <option value="todas"${t.escopo==="todas"?" selected":""}>Todas as faturas</option></select>
     <div class="row">
       <div class="rowtop"><div class="nm">Total da categoria</div><div class="val num">${brl(totalCat)}</div></div>
-      <div class="pct"><span style="width:${Math.min(100,pct).toFixed(1)}%"></span></div>
+      <div class="pct"><span style="width:${Math.min(100,pct).toFixed(1)}%;background:${corCat(t.cat)}"></span></div>
       <div style="font-size:14px;color:var(--mute)">
         ${pct.toFixed(1).replace(".",",")}% de ${brl(totalGeral)} · ${daCat.length} lançamentos</div>
     </div>
@@ -1065,7 +1255,12 @@ document.addEventListener("click", ev => {
   if (act === "fechar"){ UI.sheet = null; UI.tmp = null; return render(); }
 
   switch(act){
-    case "ir": UI.view = v; UI.editando = UI.editandoItem = null; window.scrollTo(0,0); return render();
+    case "nav": UI.view = v; UI.editando = UI.editandoItem = null; window.scrollTo(0,0); return render();
+    case "classificar": UI.view = "lista"; UI.soPend = true; UI.filtroP = null;
+      window.scrollTo(0,0); return render();
+    case "vertudocat": UI.verTudoCat = !UI.verTudoCat; return render();
+    case "filtrarpessoa": UI.view = "lista"; UI.filtroP = pid; UI.soPend = false;
+      window.scrollTo(0,0); return render();
     case "sheet":
       UI.sheet = v; UI.tmp = null;
       if (v === "novaFatura" && el.dataset.c) UI.tmp = {cartao: el.dataset.c, rotulo: ""};
@@ -1145,7 +1340,7 @@ document.addEventListener("click", ev => {
     case "abrir": {
       const f = S.faturas.find(x=>x.id===i); if (!f) return;
       S.ativa = i; S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo;
-      UI.view = "lista"; salvar(); window.scrollTo(0,0); return render();
+      UI.view = "inicio"; salvar(); window.scrollTo(0,0); return render();
     }
     case "delf": {
       if (!confirm("Apagar essa fatura e seus lançamentos?")) return;
@@ -1236,7 +1431,7 @@ document.addEventListener("click", ev => {
         n++;
       });
       S.cartaoAtivo = f.cartaoId; S.rotuloAtivo = f.rotulo;
-      salvar(); UI.sheet=null; UI.tmp=null; UI.view="lista"; window.scrollTo(0,0); render();
+      salvar(); UI.sheet=null; UI.tmp=null; UI.view="lista"; UI.soPend=false; window.scrollTo(0,0); render();
       return alert(n + " lançamentos importados." +
         (ger ? "\n" + ger + " parcelas futuras criadas." : "") +
         (ign ? "\n" + ign + " ignorados por já estarem previstos." : ""));
