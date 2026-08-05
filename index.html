@@ -121,7 +121,15 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .it .t{flex:1;min-width:0}
 .it .t button{display:block;font-size:14.5px;font-weight:550;background:none;border:0;padding:0;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .it .t i{font-style:normal;font-size:12px;color:var(--mute)}
-.pin{width:8px;height:8px;border-radius:99px;flex:0 0 auto}
+.pin{width:28px;height:28px;border-radius:9px;flex:0 0 auto;border:0;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.catbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--soft);
+  border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600}
+.catbtn i{width:13px;height:13px;border-radius:5px;display:inline-block}
+.catopt{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
+.catopt+.catopt{border-top:1px solid var(--line)}
+.catopt b{flex:1;font-size:15px;font-weight:600}
 .mini{display:flex;gap:5px;flex-shrink:0}
 .mini-full{margin-top:10px}
 .mini button{min-width:46px;height:40px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);
@@ -136,11 +144,40 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;
   background:color-mix(in srgb, var(--card) 88%, transparent);backdrop-filter:blur(16px);
   border-top:1px solid var(--line)}
-.navb{flex:1;border:0;background:transparent;border-radius:16px;padding:9px 4px 7px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:11px;font-weight:600}
+.navb{flex:1;border:0;background:transparent;border-radius:16px;padding:9px 2px 7px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:10.5px;font-weight:600}
 .navb svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .navb[data-on="1"]{color:var(--ink);background:var(--soft)}
 .navb[data-on="1"] svg{stroke-width:2.3}
+
+/* ---------- contas ---------- */
+.mesnav{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  border-radius:99px;padding:5px;box-shadow:var(--sh)}
+.mesnav button{border:0;background:var(--soft);border-radius:99px;width:40px;height:40px;font-size:18px;color:var(--mute)}
+.mesnav .m{flex:1;text-align:center;font-size:16px;font-weight:700;letter-spacing:-.02em;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.conta{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 0;text-align:left}
+.conta+.conta{border-top:1px solid var(--line)}
+.conta .t{flex:1;min-width:0}
+.conta .t b{display:block;font-size:15.5px;font-weight:600;letter-spacing:-.015em;
+  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.conta .t i{font-style:normal;font-size:12.5px;color:var(--mute)}
+.conta .v{text-align:right;flex:0 0 auto}
+.conta .v b{display:block;font-size:15.5px;font-weight:700;font-family:"JetBrains Mono",monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.mk{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;width:34px;height:34px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--mute)}
+.mk[data-pago="1"]{background:#0A8A6E;border-color:#0A8A6E;color:#fff}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:7px}
+.pg-vencida{background:#FDE4E4;color:#A32A3C} .pg-perto{background:#FDF0DC;color:#8A5A0C}
+.pg-paga{background:#DCF0E9;color:#0A6B55}
+html[data-tema="escuro"] .pg-vencida,html[data-tema="quente"] .pg-vencida{background:#4A2226;color:#FFB6BE}
+html[data-tema="escuro"] .pg-perto,html[data-tema="quente"] .pg-perto{background:#463619;color:#F5CE86}
+html[data-tema="escuro"] .pg-paga,html[data-tema="quente"] .pg-paga{background:#1E4038;color:#8FE0C6}
+@media (prefers-color-scheme: dark){
+  .pg-vencida{background:#4A2226;color:#FFB6BE} .pg-perto{background:#463619;color:#F5CE86}
+  .pg-paga{background:#1E4038;color:#8FE0C6}
+}
 
 /* ---------- página inicial ---------- */
 .sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
@@ -285,6 +322,7 @@ function inicial(){
     cartoes:[{id:"c1",nome:"Personnalité",pagador:"p2"}],
     faturas:[{id:"f1",cartaoId:"c1",rotulo:"Julho/26",lanc:SEED.map((x,i)=>({id:"s"+i,d:x.d,r:x.r,g:x.g,v:x.v,p:x.p||null}))}],
     regras:{}, regrasCat:{}, aloc:{}, ativa:"f1", cartaoAtivo:"c1", rotuloAtivo:"Julho/26",
+    contas:[], pagos:{},
     cats:DEFAULT_CATS.slice(), catv:2
   };
 }
@@ -293,11 +331,15 @@ let S = DB.read() || inicial();
 /* migração: garante campos novos sem perder nada do que já existe.
    Chamada no fim do arquivo, quando todos os utilitários já existem. */
 function migrar(){
+  let mudou = false, mudouEscopo = false;
+  S.contas = S.contas || [];
+  S.pagos = S.pagos || {};
+  if (!S.mesContas){ const d=new Date();
+    S.mesContas = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); mudouEscopo = true; }
   S.regrasCat = S.regrasCat || {};
   S.regras = S.regras || {};
   S.aloc = S.aloc || {};
   if (!S.cats || !S.cats.length) S.cats = DEFAULT_CATS.slice();
-  let mudou = false, mudouEscopo = false;
   if (!S.rotuloAtivo || !S.cartaoAtivo){
     const f0 = S.faturas.find(f=>f.id===S.ativa) || S.faturas[0];
     S.rotuloAtivo = f0 ? f0.rotulo : "";
@@ -550,6 +592,61 @@ const irmaosSerie = id => {
   return S.faturas.flatMap(f=>f.lanc).filter(x=>x.serie===l.serie).map(x=>x.id);
 };
 
+/* --------- contas a pagar --------- */
+const chavePg = (id, m) => id + ":" + m;
+const hojeISO = () => { const d=new Date(); const p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); };
+
+function vencDe(c, m){
+  if (c.tipo === "avulsa") return c.data || (m + "-01");
+  const [a, mm] = m.split("-").map(Number);
+  return m + "-" + String(Math.min(c.dia || 1, diasNoMes(a, mm))).padStart(2, "0");
+}
+function contasDoMes(m){
+  return S.contas.filter(c => {
+    if (c.tipo === "avulsa") return String(c.data||"").slice(0,7) === m;
+    if (c.desde && m < c.desde) return false;
+    if (c.ate && m > c.ate) return false;
+    return true;
+  }).map(c => {
+    const pg = S.pagos[chavePg(c.id, m)];
+    const venc = vencDe(c, m);
+    const hoje = hojeISO();
+    const dias = Math.round((new Date(venc+"T00:00") - new Date(hoje+"T00:00")) / 86400000);
+    return {c, venc, dias,
+            valor: pg && pg.valor != null ? pg.valor : (c.valor || 0),
+            pago: !!(pg && pg.pago), quando: pg ? pg.quando : null,
+            estado: (pg && pg.pago) ? "paga" : (dias < 0 ? "vencida" : (dias <= 7 ? "perto" : "aberta"))};
+  }).sort((a,b) => a.venc < b.venc ? -1 : (a.venc > b.venc ? 1 : 0));
+}
+function resumoContas(m){
+  const L = contasDoMes(m);
+  const r = {total:0, pago:0, aberto:0, nVencidas:0, porPessoa:{}, dev:{}};
+  S.pessoas.forEach(p => r.porPessoa[p.id] = 0);
+  L.forEach(x => {
+    r.total += x.valor;
+    if (x.pago) r.pago += x.valor; else { r.aberto += x.valor; if (x.estado==="vencida") r.nVencidas++; }
+    const a = (x.c.pessoas || []).filter(id => pessoa(id));
+    if (!a.length) return;
+    a.forEach(id => {
+      r.porPessoa[id] += x.valor / a.length;
+      const pag = x.c.pagador;
+      if (pag && id !== pag){ r.dev[pag] = r.dev[pag] || {};
+        r.dev[pag][id] = (r.dev[pag][id] || 0) + x.valor / a.length; }
+    });
+  });
+  const eu = S.euId; let pagoEu = 0, receber = 0; const linhas = [];
+  Object.entries(r.dev).forEach(([pag, quem]) => {
+    if (pag === eu) Object.entries(quem).forEach(([id,v]) => { receber += v;
+      linhas.push({txt:(pessoa(id)?curtoNome(pessoa(id).nome):"?")+" te deve", v}); });
+    else if (quem[eu]){ pagoEu += quem[eu];
+      linhas.push({txt:"você paga a "+(pessoa(pag)?curtoNome(pessoa(pag).nome):"?"), v:quem[eu]}); }
+  });
+  r.liquido = pagoEu - receber; r.linhas = linhas; r.lista = L;
+  return r;
+}
+const mesSoma = (m, n) => compSoma(m, n);
+
 /* ================= alocação ================= */
 function togglePessoa(ids, pid, chaveRegra){
   const ligar = ids.some(id=>!alocDe(id).includes(pid));
@@ -593,7 +690,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "1.7";
+const VERSAO = "1.9";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -614,7 +711,7 @@ function aplicarTema(){
 function render(){
   aplicarTema();
   const y = window.scrollY;
-  const PAGINAS = {inicio:viewInicio, lista:viewLista, config:viewConfig};
+  const PAGINAS = {inicio:viewInicio, lista:viewLista, contas:viewContas, config:viewConfig};
   document.getElementById("app").innerHTML = (PAGINAS[UI.view] || viewInicio)();
   document.getElementById("modal").innerHTML = UI.sheet ? sheets[UI.sheet]() : "";
   document.body.style.overflow = UI.sheet ? "hidden" : "";
@@ -723,21 +820,23 @@ function cardGrupo(g, tipo){
   const cor = g.aloc.length===1 ? CORES[pessoa(g.aloc[0]).cor%8] : null;
   const exp = UI.aberto === g.k;
   const editando = UI.editando === g.k && tipo === "grupo";
-  const cat = tipo === "grupo" ? (g.itens[0].cat || "Outros") : g.k;
-  const cc = corCat(cat);
+  const catsGrupo = tipo === "grupo" ? [...new Set(g.itens.map(i=>i.cat||"Outros"))] : [g.k];
+  const catMista = catsGrupo.length > 1;
+  const cat = catsGrupo[0];
+  const cc = catMista ? "var(--mute)" : corCat(cat);
   const estilo = cor
     ? `border-color:${cor};background:color-mix(in srgb, ${cor} 9%, var(--card));box-shadow:inset 4px 0 0 ${cor}, var(--sh)`
     : "";
   return `<div class="row" style="${estilo}">
     <div class="rowtop">
-      <div class="badge" style="background:${cc}">${esc(inicialCat(cat))}</div>
+      <div class="badge" style="background:${cc}">${catMista?"~":esc(inicialCat(cat))}</div>
       <div style="min-width:0;flex:1">
         ${editando
           ? `<div class="editwrap"><input data-act="bufnome" data-foco value="${esc(g.k)}"><button class="ok" data-act="salvarnome" data-g="${esc(g.k)}">OK</button></div>`
           : `<button class="nm" ${tipo==="grupo"?`data-act="editar" data-g="${esc(g.k)}"`:`data-act="vercat" data-c="${esc(g.k)}"`}>${esc(g.k)}${tipo==="grupo"?' <span style="opacity:.32;font-size:13px">✎</span>':' <span style="opacity:.32;font-size:13px">›</span>'}</button>`}
         <div class="meta">
           <button class="lnk" data-act="exp" data-g="${esc(g.k)}">${g.itens.length} ${g.itens.length===1?"lançamento":"lançamentos"} ${exp?"▴":"▾"}</button>
-          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}" style="color:${cc}">${esc(cat)}</button>`:""}
+          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}" style="color:${cc}">${catMista?catsGrupo.length+" categorias":esc(cat)}</button>`:""}
           ${tagsCartao(g)}
           ${g.misto?`<span class="tag">misto</span>`:""}
           ${g.aloc.length>1?`<span class="tag">÷${g.aloc.length}</span>`:""}
@@ -747,8 +846,9 @@ function cardGrupo(g, tipo){
     </div>
     ${chipsHTML(g.aloc, pid=>`data-act="tg" data-g="${esc(g.k)}" data-tipo="${tipo}" data-p="${pid}"`)}
     ${exp?`<div class="sub">
-      ${tipo==="grupo"?`<div class="catsel"><span>Categoria</span><select data-act="cat" data-g="${esc(g.k)}">
-        ${S.cats.map(c=>`<option${c===cat?" selected":""}>${esc(c)}</option>`).join("")}</select></div>`:""}
+      ${tipo==="grupo"?`<div class="catsel"><span>Categoria</span>
+        <button class="catbtn" data-act="vercatgrupo" data-g="${esc(g.k)}" style="flex:1;justify-content:flex-start">
+          <i style="background:${cc}"></i>${catMista?"várias — tocar para unificar":esc(cat)}</button></div>`:""}
       ${g.itens.map(itemHTML).join("")}</div>`:""}
   </div>`;
 }
@@ -764,7 +864,9 @@ function itemHTML(l, full){
         title="${esc(p.nome)}"
         style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(sigla(p.nome))}</button>`;
     }).join("")}</div>`;
-  const ponto = `<i class="pin" style="background:${corCat(l.cat||"Outros")}"></i>`;
+  const cl = l.cat || "Outros";
+  const ponto = `<button class="pin" data-act="vercatitem" data-i="${l.id}" title="${esc(cl)}"
+    style="background:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
   const info = `<div class="t">
       <button data-act="editaritem" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
       <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
@@ -830,13 +932,77 @@ function viewLista(){
 const ICONES = {
   inicio: '<svg viewBox="0 0 24 24"><path d="M4 19V9.8a2 2 0 0 1 .8-1.6l6-4.5a2 2 0 0 1 2.4 0l6 4.5a2 2 0 0 1 .8 1.6V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></svg>',
   lista:  '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>',
+  contas: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-2.6-1.6L13.8 21l-2.6-1.6L8.6 21 6 19.4V4.5a1 1 0 0 1 1-1Z"/><path d="M9.2 11.6l1.8 1.8 3.8-4"/></svg>',
   config: '<svg viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h2M11 16h8"/><circle cx="16" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>'
 };
 function navbar(){
-  const abas = [["inicio","Resumo"],["lista","Lançamentos"],["config","Ajustes"]];
+  const abas = [["inicio","Resumo"],["lista","Lançamentos"],["contas","Contas"],["config","Ajustes"]];
   return `<div class="nav">${abas.map(([k,n])=>
     `<button class="navb" data-act="nav" data-v="${k}" data-on="${UI.view===k?1:0}">${ICONES[k]}<span>${n}</span></button>`
   ).join("")}</div>`;
+}
+
+/* ================= contas a pagar ================= */
+function viewContas(){
+  const m = S.mesContas;
+  const r = resumoContas(m);
+  const grupos = [
+    ["vencida", "Vencidas"], ["perto", "Vence em breve"], ["aberta", "A vencer"], ["paga", "Pagas"]
+  ].map(([k, n]) => [k, n, r.lista.filter(x => x.estado === k)]).filter(g => g[2].length);
+
+  return `<div class="top">
+    <div class="mesnav">
+      <button data-act="mesConta" data-v="-1" aria-label="Mês anterior">‹</button>
+      <div class="m">${esc(compLabel(m))}</div>
+      <button data-act="mesConta" data-v="1" aria-label="Próximo mês">›</button>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${r.aberto > 0.005 ? "Falta pagar" : (r.total > 0.005 ? "Tudo pago este mês" : "Nenhuma conta cadastrada")}</div>
+      <div class="big num">${brl(r.aberto)}</div>
+      <div class="bar">
+        <span style="width:${r.total?Math.abs(r.pago)/Math.abs(r.total)*100:0}%;background:#4ADE80"></span>
+        <span style="width:${r.total?Math.abs(r.aberto)/Math.abs(r.total)*100:0}%;background:#FBBF24"></span>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#4ADE80"></i><em>Pago</em> <b class="num">${brl(r.pago)}</b></span>
+        <span><i class="dot" style="background:#FBBF24"></i><em>Em aberto</em> <b class="num">${brl(r.aberto)}</b></span>
+      </div>
+      ${r.linhas.length ? `<div class="acerto">${r.linhas.map(l =>
+        `<div>${esc(l.txt)} <b class="num">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
+      ${r.nVencidas ? `<div class="selos"><span class="selo" style="color:#FFAFAF">
+        ${r.nVencidas} ${r.nVencidas===1?"conta vencida":"contas vencidas"}</span></div>` : ""}
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="num">${brl(r.total)}</b><i>total do mês</i></div>
+      <div class="stat"><b class="num">${r.lista.length}</b><i>contas</i></div>
+      <div class="stat"><b class="num">${r.lista.filter(x=>x.pago).length}/${r.lista.length}</b><i>pagas</i></div>
+    </div>
+    <div class="body">
+      <div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Nova conta</button></div>
+      ${grupos.length ? grupos.map(([k, nome, itens]) => `
+        <div class="sec"><h2>${nome}</h2></div>
+        <div class="row">${itens.map(x => linhaConta(x)).join("")}</div>`).join("")
+        : `<div class="empty">Cadastre aluguel, luz, água, internet — o que não passa no cartão.<br>
+             Contas mensais aparecem sozinhas todo mês.</div>`}
+    </div>` + navbar();
+}
+
+function linhaConta(x){
+  const cat = x.c.cat || "Boletos";
+  const pes = (x.c.pessoas||[]).filter(id=>pessoa(id));
+  const selo = {vencida:["pg-vencida", (-x.dias)+"d atrasada"], perto:["pg-perto", x.dias===0?"vence hoje":"em "+x.dias+"d"],
+                paga:["pg-paga","paga"], aberta:["",""]}[x.estado];
+  return `<div class="conta">
+    <button class="mk" data-act="togglepago" data-i="${x.c.id}" data-pago="${x.pago?1:0}"
+      aria-label="${x.pago?"Desmarcar":"Marcar como paga"}">${x.pago?"✓":""}</button>
+    <button class="badge" data-act="vercatconta" data-i="${x.c.id}" title="${esc(cat)}"
+      style="background:${corCat(cat)};width:38px;height:38px;border-radius:12px;font-size:15px;border:0">${esc(inicialCat(cat))}</button>
+    <button class="t" data-act="sheet" data-v="editarConta" data-i="${x.c.id}" style="background:none;border:0;padding:0;text-align:left">
+      <b>${esc(x.c.nome)}${selo[0]?`<span class="pill ${selo[0]}">${esc(selo[1])}</span>`:""}</b>
+      <i>${esc(cat)} · vence ${dia(x.venc)}${x.c.tipo==="mensal"?" · todo mês":""}${pes.length?" · "+pes.map(id=>sigla(pessoa(id).nome)).join("/"):""}${pes.length>1?" ÷"+pes.length:""}</i>
+    </button>
+    <div class="v"><b>${brl(x.valor)}</b></div>
+  </div>`;
 }
 
 /* ================= página inicial ================= */
@@ -888,6 +1054,19 @@ function viewInicio(){
         <div class="v num">${brl(v)}</div>
         <div class="p">${pc.toFixed(0)}% da fatura</div></button>`;
     }).join("")}</div>
+
+    ${(()=>{ const r = resumoContas(S.mesContas);
+      if (!r.lista.length) return "";
+      return `<div class="sec"><h2>Contas de ${esc(compLabel(S.mesContas))}</h2>
+        <button data-act="nav" data-v="contas">abrir</button></div>
+      <div class="row"><button class="cbar" data-act="nav" data-v="contas" style="padding-top:2px">
+        <div class="t"><b>${r.aberto>0.005 ? "Falta pagar" : "Tudo pago"}</b>
+          <div class="track"><span style="width:${r.total?Math.abs(r.pago)/Math.abs(r.total)*100:0}%;background:#0A8A6E"></span></div>
+        </div>
+        <div class="v"><b class="num">${brl(r.aberto)}</b><i>${r.lista.filter(x=>x.pago).length}/${r.lista.length} pagas</i></div>
+      </button>${r.nVencidas?`<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+        ${r.nVencidas} ${r.nVencidas===1?"conta vencida":"contas vencidas"}</div>`:""}</div>`;
+    })()}
 
     ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
     <div class="row">${prox.map(m=>`<div class="mrow">
@@ -1037,7 +1216,7 @@ function viewConfig(){
 const sheets = {};
 
 sheets.exportar = () => {
-  const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual", cat:true});
+  const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual", contas:true});
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <h3>Exportar gastos</h3>
     <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Cada linha traz o valor já dividido e a categoria, pronto para somar.</p>
@@ -1046,6 +1225,7 @@ sheets.exportar = () => {
       <input type="checkbox" data-act="xsel" data-i="${p.id}" ${t.sel.includes(p.id)?"checked":""}>
       <i class="dot" style="background:${CORES[p.cor%8]}"></i> ${esc(p.nome)}</label>`).join("")}
     <label class="check"><input type="checkbox" data-act="xpend" ${t.pend?"checked":""}> Lançamentos sem dono</label>
+    <label class="check"><input type="checkbox" data-act="xcontas" ${t.contas?"checked":""}> Contas de ${esc(compLabel(S.mesContas))}</label>
     <label class="f">Quais faturas</label>
     <select data-act="xescopo">
       <option value="atual"${t.escopo==="atual"?" selected":""}>Só a fatura aberta</option>
@@ -1136,6 +1316,96 @@ sheets.verCat = () => {
         <div class="val num" style="font-size:14px">${brl(l.v)}</div></div>`;
     }).join("")}</div>
     <button class="btn" data-act="fechar" style="margin-top:14px">Fechar</button>
+  </div></div>`;
+};
+
+sheets.escolherCat = () => {
+  const t = UI.tmp || (UI.tmp = {});
+  const q = (t.q || "").trim();
+  const norm = s => semAcento(s).trim();
+  const achados = S.cats.filter(c => !q || norm(c).includes(norm(q)));
+  const existe = S.cats.some(c => norm(c) === norm(q));
+  const conta = c => S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0)
+                   + S.contas.filter(x=>(x.cat||"Boletos")===c).length;
+  const titulo = {grupo:"Categoria do estabelecimento", item:"Categoria do lançamento", conta:"Categoria da conta"}[t.alvo] || "Categoria";
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${titulo}</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 6px">${esc(t.nome||"")}</p>
+    ${t.alvo==="grupo" ? `<p style="font-size:12.5px;color:var(--mute);margin:0 0 12px">
+      Vale para todos os lançamentos deste estabelecimento e vira regra para as próximas faturas.</p>`
+     : (t.alvo==="item" ? `<p style="font-size:12.5px;color:var(--mute);margin:0 0 12px">
+      Muda só este lançamento. O estabelecimento continua na categoria dele.</p>` : `<div style="height:8px"></div>`)}
+    <div class="srch"><input data-act="ecq" data-foco value="${esc(t.q||"")}" placeholder="Buscar categoria"></div>
+    ${q && !existe ? `<button class="btn pri" data-act="eccriar">Criar "${esc(q)}" e usar</button>` : ""}
+    <div class="row">${achados.length ? achados.map(c=>`
+      <button class="catopt" data-act="ecusar" data-c="${esc(c)}">
+        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
+        <b>${esc(c)}</b>
+        ${c===t.atual?`<span class="pill pg-paga">atual</span>`:`<span class="tag">${conta(c)}</span>`}
+      </button>`).join("") : `<div class="empty" style="padding:22px">Nenhuma categoria com esse nome.</div>`}</div>
+    <button class="btn" data-act="fechar">Fechar</button>
+  </div></div>`;
+};
+
+sheets.editarConta = () => {
+  const t = UI.tmp || (UI.tmp = {});
+  const nova = !t.id;
+  const c = nova ? null : S.contas.find(x => x.id === t.id);
+  if (t.f === undefined) t.f = c ? JSON.parse(JSON.stringify(c))
+    : {nome:"", valor:"", dia:10, tipo:"mensal", data:hojeISO(), cat:"Boletos",
+       pagador:S.euId, pessoas:[S.euId], desde:S.mesContas};
+  const f = t.f;
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${nova ? "Nova conta" : "Editar conta"}</h3>
+    <label class="f">Nome</label>
+    <input data-act="cf" data-k="nome" value="${esc(f.nome)}" placeholder="Aluguel, luz, internet…">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1.3"><label class="f">Valor</label>
+        <input data-act="cf" data-k="valor" inputmode="decimal" value="${esc(f.valor)}" placeholder="0,00"></div>
+      <div style="flex:1"><label class="f">${f.tipo==="mensal"?"Dia do vencimento":"Data"}</label>
+        ${f.tipo==="mensal"
+          ? `<input data-act="cf" data-k="dia" type="number" min="1" max="31" inputmode="numeric" value="${esc(f.dia)}">`
+          : `<input data-act="cf" data-k="data" type="date" value="${esc(f.data)}">`}</div>
+    </div>
+    <label class="f">Repetição</label>
+    <div class="seg"><button data-act="cftipo" data-v="mensal" data-on="${f.tipo==="mensal"?1:0}">Todo mês</button>
+      <button data-act="cftipo" data-v="avulsa" data-on="${f.tipo==="avulsa"?1:0}">Uma vez só</button></div>
+    <label class="f">Categoria</label>
+    <button class="catbtn" data-act="vercatform" style="width:100%;justify-content:flex-start;padding:14px">
+      <i style="background:${corCat(f.cat)}"></i>${esc(f.cat)}</button>
+    <label class="f">Quem paga</label>
+    <select data-act="cf" data-k="pagador">${S.pessoas.map(p=>`<option value="${p.id}"${f.pagador===p.id?" selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+    <label class="f">Dividida entre</label>
+    <div class="chips">${S.pessoas.map(p=>{
+      const on = (f.pessoas||[]).includes(p.id);
+      return `<button class="chip" data-act="cfpessoa" data-p="${p.id}" data-on="${on?1:0}"
+        style="${on?`background:${CORES[p.cor%8]};border-color:${CORES[p.cor%8]}`:""}">${esc(curtoNome(p.nome))}</button>`;
+    }).join("")}</div>
+    <button class="btn pri" data-act="cfsalvar">${nova ? "Criar conta" : "Salvar"}</button>
+    ${nova ? "" : `<button class="btn dgr" data-act="cfapagar">Apagar conta</button>`}
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
+sheets.pagarConta = () => {
+  const t = UI.tmp || {};
+  const c = S.contas.find(x => x.id === t.id);
+  if (!c) return "";
+  const m = S.mesContas;
+  if (t.valor === undefined) t.valor = String((c.valor||0).toFixed(2)).replace(".", ",");
+  if (t.quando === undefined) t.quando = hojeISO();
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Pagar ${esc(c.nome)}</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 12px">
+      ${esc(compLabel(m))} · vence ${dia(vencDe(c, m))}</p>
+    <label class="f">Valor pago</label>
+    <input data-act="pgv" inputmode="decimal" value="${esc(t.valor)}">
+    <p style="font-size:12.5px;color:var(--mute);margin:6px 0 0">
+      Ajuste se veio diferente do previsto — luz e água variam todo mês.</p>
+    <label class="f">Quando</label>
+    <input data-act="pgq" type="date" value="${esc(t.quando)}">
+    <button class="btn pri" data-act="pgok">Marcar como paga</button>
+    <button class="btn" data-act="fechar">Cancelar</button>
   </div></div>`;
 };
 
@@ -1280,17 +1550,31 @@ function linhasExport(t){
   return out;
 }
 const CAB = ["fatura","cartao","data","estabelecimento","categoria","parcela","valor_total","dividido_entre","pessoa","valor_da_pessoa"];
+function linhasContas(t){
+  if (!t.contas) return [];
+  const out = [];
+  contasDoMes(S.mesContas).forEach(x=>{
+    const a = (x.c.pessoas||[]).filter(id=>pessoa(id));
+    if (!a.length) return;
+    a.forEach(id=>{ if (!t.sel.includes(id)) return;
+      out.push({f:compLabel(S.mesContas), c:"Conta"+(x.pago?" (paga)":" (em aberto)"), d:dia(x.venc),
+                g:x.c.nome, cat:x.c.cat||"Boletos", p:"", tot:x.valor, div:a.length,
+                quem:pessoa(id).nome, val:x.valor/a.length}); });
+  });
+  return out;
+}
 const campos = o => [o.f,o.c,o.d,o.g,o.cat,o.p,o.tot.toFixed(2).replace(".",","),o.div,o.quem,o.val.toFixed(2).replace(".",",")];
 
+const todasLinhas = t => linhasExport(t).concat(linhasContas(t));
 function gerarCSV(t){
   return "\uFEFF" + CAB.join(";") + "\n" +
-    linhasExport(t).map(o=>campos(o).map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+    todasLinhas(t).map(o=>campos(o).map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
 }
 function gerarTSV(t){
-  return CAB.join("\t") + "\n" + linhasExport(t).map(o=>campos(o).join("\t")).join("\n");
+  return CAB.join("\t") + "\n" + todasLinhas(t).map(o=>campos(o).join("\t")).join("\n");
 }
 function gerarTexto(t){
-  const L = linhasExport(t), out = [];
+  const L = todasLinhas(t), out = [];
   out.push(t.escopo==="todas" ? "Todas as faturas"
     : (S.rotuloAtivo + (S.cartaoAtivo==="todos" ? " · todos os cartões" : " · " + (S.cartoes.find(c=>c.id===S.cartaoAtivo)||{}).nome)), "");
   [...new Set(L.map(o=>o.quem))].forEach(nome=>{
@@ -1346,6 +1630,7 @@ document.addEventListener("click", ev => {
       UI.sheet = v; UI.tmp = null;
       if (v === "novaFatura" && el.dataset.c) UI.tmp = {cartao: el.dataset.c, rotulo: ""};
       if (v === "mudarMes") UI.tmp = {fid: el.dataset.f};
+      if (v === "editarConta") UI.tmp = el.dataset.i ? {id: el.dataset.i} : {};
       return render();
     case "vercat": UI.sheet = "verCat"; UI.tmp = {cat: el.dataset.c, escopo: "atual"}; return render();
     case "catcriar": {
@@ -1465,6 +1750,74 @@ document.addEventListener("click", ev => {
       if (!confirm("Apagar todas as regras de dono e categoria?")) return;
       S.regras = {}; S.regrasCat = {}; salvar(); return render();
     case "tema": S.tema = v; salvar(); return render();
+
+    case "vercatgrupo": {
+      const g = el.dataset.g;
+      const at = [...new Set(lancAtivos().filter(l=>l.g===g).map(l=>l.cat||"Outros"))];
+      UI.voltar = UI.sheet; UI.voltarTmp = UI.tmp;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"grupo", id:g, nome:g, atual: at.length===1?at[0]:null, q:""};
+      return render();
+    }
+    case "vercatitem": {
+      const l = S.faturas.flatMap(f=>f.lanc).find(x=>x.id===i); if (!l) return;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"item", id:i, nome:l.g, atual:l.cat||"Outros", q:""};
+      return render();
+    }
+    case "vercatconta": {
+      const c = S.contas.find(x=>x.id===i); if (!c) return;
+      UI.sheet = "escolherCat"; UI.tmp = {alvo:"conta", id:i, nome:c.nome, atual:c.cat||"Boletos", q:""};
+      return render();
+    }
+    case "vercatform": {
+      UI.voltar = "editarConta"; UI.voltarTmp = UI.tmp;
+      UI.sheet = "escolherCat";
+      UI.tmp = {alvo:"form", nome: UI.voltarTmp.f.nome || "Nova conta", atual: UI.voltarTmp.f.cat, q:""};
+      return render();
+    }
+    case "eccriar": {
+      const nome = ((UI.tmp&&UI.tmp.q)||"").trim(); if (!nome) return;
+      if (S.cats.some(c=>semAcento(c)===semAcento(nome))) return alert("Essa categoria já existe.");
+      S.cats.push(nome); salvar();
+      return aplicarCat(nome);
+    }
+    case "ecusar": return aplicarCat(el.dataset.c);
+    case "mesConta": S.mesContas = mesSoma(S.mesContas, +v); salvar(); window.scrollTo(0,0); return render();
+    case "togglepago": {
+      const k = chavePg(i, S.mesContas);
+      if (S.pagos[k] && S.pagos[k].pago){ delete S.pagos[k]; salvar(); return render(); }
+      UI.sheet = "pagarConta"; UI.tmp = {id:i}; return render();
+    }
+    case "pgok": {
+      const t = UI.tmp, c = S.contas.find(x=>x.id===t.id);
+      if (!c) return;
+      const v2 = num(String(t.valor).replace(/[R$\s]/g,""));
+      S.pagos[chavePg(c.id, S.mesContas)] = {pago:true, valor: isNaN(v2)?c.valor:v2, quando:t.quando};
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "cftipo": UI.tmp.f.tipo = v; return render();
+    case "cfpessoa": {
+      const f = UI.tmp.f, s = new Set(f.pessoas||[]);
+      if (s.has(pid)) s.delete(pid); else s.add(pid);
+      f.pessoas = [...s]; return render();
+    }
+    case "cfsalvar": {
+      const f = UI.tmp.f;
+      if (!f.nome.trim()) return alert("Dê um nome à conta.");
+      const v2 = num(String(f.valor).replace(/[R$\s]/g,""));
+      const obj = {nome:f.nome.trim(), valor: isNaN(v2)?0:v2, dia:+f.dia||1, tipo:f.tipo,
+                   data:f.data, cat:f.cat, pagador:f.pagador, pessoas:f.pessoas||[],
+                   desde:f.desde || S.mesContas, ate:f.ate||null};
+      if (UI.tmp.id){ Object.assign(S.contas.find(x=>x.id===UI.tmp.id), obj); }
+      else S.contas.push(Object.assign({id:uid("ct")}, obj));
+      salvar(); UI.sheet=null; UI.tmp=null; UI.view="contas"; return render();
+    }
+    case "cfapagar": {
+      const id = UI.tmp.id;
+      if (!confirm("Apagar essa conta e todo o histórico de pagamento dela?")) return;
+      S.contas = S.contas.filter(x=>x.id!==id);
+      Object.keys(S.pagos).forEach(k=>{ if (k.split(":")[0]===id) delete S.pagos[k]; });
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
     case "backup": baixar(nomeBackup(), JSON.stringify(S), "application/json"); return;
     case "compartilharbackup": {
       const nome = nomeBackup();
@@ -1558,6 +1911,28 @@ document.addEventListener("click", ev => {
     }
   }
 });
+function aplicarCat(cat){
+  const t = UI.tmp;
+  if (t.alvo === "grupo"){
+    S.faturas.forEach(f => f.lanc.forEach(l => { if (l.g === t.id) l.cat = cat; }));
+    S.regrasCat[t.id] = cat;
+  } else if (t.alvo === "item"){
+    const l = S.faturas.flatMap(f=>f.lanc).find(x=>x.id===t.id);
+    if (l) l.cat = cat;
+  } else if (t.alvo === "conta"){
+    const c = S.contas.find(x=>x.id===t.id);
+    if (c) c.cat = cat;
+  } else if (t.alvo === "form"){
+    UI.sheet = UI.voltar; UI.tmp = UI.voltarTmp; UI.voltar = UI.voltarTmp = null;
+    UI.tmp.f.cat = cat;
+    return render();
+  }
+  salvar();
+  UI.sheet = UI.voltar || null; UI.tmp = UI.voltarTmp || null;
+  UI.voltar = UI.voltarTmp = null;
+  return render();
+}
+
 function valida(t){
   if (!t.sel.length && !t.pend){ alert("Escolha pelo menos uma pessoa."); return false; }
   return true;
@@ -1594,6 +1969,7 @@ document.addEventListener("change", ev => {
     case "mmAno": UI.tmp.ano = +el.value; return render();
     case "sopend": UI.soPend = el.checked; return render();
     case "cat": return mudarCategoria(el.dataset.g, el.value);
+    case "cfcat": UI.tmp.f.cat = el.value; return render();
     case "pagador": { const c=S.cartoes.find(x=>x.id===i); if(c) c.pagador=el.value; salvar(); return render(); }
     case "renome": { const p=pessoa(i); if(p&&el.value.trim()) p.nome=el.value.trim(); salvar(); return render(); }
     case "fechamento": case "vencimento": {
@@ -1617,8 +1993,10 @@ document.addEventListener("change", ev => {
     case "renomec": { const c=S.cartoes.find(x=>x.id===i); if(c&&el.value.trim()) c.nome=el.value.trim(); salvar(); return render(); }
     case "xsel": { const t=UI.tmp; t.sel = el.checked ? [...new Set([...t.sel,i])] : t.sel.filter(x=>x!==i); return; }
     case "xpend": UI.tmp.pend = el.checked; return;
+    case "xcontas": UI.tmp.contas = el.checked; return;
     case "xescopo": UI.tmp.escopo = el.value; return;
     case "nfcartao": UI.tmp.cartao = el.value; return;
+    case "cf": UI.tmp.f[el.dataset.k] = el.value; return render();
   }
 });
 
@@ -1630,6 +2008,10 @@ document.addEventListener("input", ev => {
   if (a === "imptxt"){ UI.tmp = UI.tmp||{}; UI.tmp.txt = el.value; return; }
   if (a === "nfrotulo"){ UI.tmp = UI.tmp||{}; UI.tmp.rotulo = el.value; return; }
   if (a === "pv"){ UI.tmp.prev[+el.dataset.i][el.dataset.k] = el.value; return; }
+  if (a === "cf"){ UI.tmp.f[el.dataset.k] = el.value; return; }
+  if (a === "ecq"){ UI.tmp.q = el.value; render(); return; }
+  if (a === "pgv"){ UI.tmp.valor = el.value; return; }
+  if (a === "pgq"){ UI.tmp.quando = el.value; return; }
 });
 
 document.addEventListener("keydown", ev => {
