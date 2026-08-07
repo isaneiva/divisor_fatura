@@ -249,6 +249,8 @@ html[data-tema="quente"] .warn{background:#3B3524;border-color:#5A5236;color:#EF
 <body>
 <div id="app"></div>
 <div id="modal"></div>
+<input type="file" id="filefatura" accept="image/*,application/pdf" multiple style="display:none">
+<input type="file" id="filein" accept="application/json" style="display:none">
 
 <script>
 "use strict";
@@ -599,7 +601,10 @@ function propagar(l, f){
   for (let i = pi.k + 1; i <= pi.n; i++){
     const comp = compSoma(f.comp, i - pi.k);
     const alvo = garantirFatura(f.cartaoId, comp);
-    const jaTem = alvo.lanc.some(x => x.serie === serie && x.p === i+"/"+pi.n);
+    const rot = i+"/"+pi.n;
+    // já existe essa parcela desse estabelecimento em qualquer fatura do cartão?
+    const jaTem = S.faturas.some(x => x.cartaoId === f.cartaoId &&
+      x.lanc.some(y => y.p === rot && semAcento(y.g) === semAcento(l.g)));
     if (jaTem) continue;
     const id = uid("l");
     alvo.lanc.push({id, d:l.d, r:l.r, g:l.g, v:l.v, p:i+"/"+pi.n, cat:l.cat, serie, auto:true});
@@ -635,6 +640,34 @@ function limparAuto(cartaoId, manter){
   S.faturas = S.faturas.filter(f =>
     f.cartaoId!==cartaoId || f.lanc.length || f.id===manter || f.comp===atual);
 }
+// compras estornadas que ainda têm parcelas previstas rodando
+function estornosPendentes(){
+  const res = [];
+  S.faturas.forEach(f => f.lanc.forEach(l => {
+    if (l.v >= 0) return;
+    const chave = semAcento(l.g);
+    const futuras = [];
+    S.faturas.filter(x => x.cartaoId === f.cartaoId).forEach(x => x.lanc.forEach(y => {
+      if (y.auto && semAcento(y.g) === chave) futuras.push({l:y, rot:x.rotulo, comp:x.comp||""});
+    }));
+    if (!futuras.length) return;
+    const existe = res.find(r => r.chave === chave && r.cartaoId === f.cartaoId);
+    if (existe){ existe.estorno += l.v; return; }
+    res.push({chave, nome:l.g, cartaoId:f.cartaoId, cartao:nomeCartao(f), estorno:l.v,
+              futuras: futuras.sort((a,b)=>a.comp<b.comp?-1:1)});
+  }));
+  res.forEach(r => r.somaFuturas = r.futuras.reduce((a,x)=>a+x.l.v, 0));
+  return res;
+}
+
+function apagarLanc(ids){
+  const set = new Set(ids);
+  S.faturas.forEach(f => {
+    f.lanc = f.lanc.filter(l => { if (set.has(l.id)){ delete S.aloc[l.id]; return false; } return true; });
+  });
+  salvar();
+}
+
 function propagarTudo(cartaoId){
   let n = 0;
   S.faturas.filter(f=>f.cartaoId===cartaoId).slice()
@@ -748,7 +781,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.4";
+const VERSAO = "2.5";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -926,7 +959,7 @@ function itemHTML(l, full){
   const ponto = `<button class="pin" data-act="vercatitem" data-i="${l.id}" title="${esc(cl)}"
     style="background:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
   const info = `<div class="t">
-      <button data-act="editaritem" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
+      <button data-act="abrirlanc" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
       <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
     </div>`;
   if (editando) return `<div class="it"><div class="t">
@@ -958,13 +991,27 @@ function barraLista(){
     </div></div>`;
 }
 
+const ORDENS = [["data-desc","Mais recentes"],["data-asc","Mais antigos"],
+                ["valor-desc","Maior valor"],["valor-asc","Menor valor"],
+                ["nome","Nome A–Z"]];
+function ordenar(L){
+  const o = UI.ordem || "data-desc";
+  const c = [...L];
+  if (o === "data-asc")   c.sort((a,b)=> String(a.d)<String(b.d)?-1:(String(a.d)>String(b.d)?1:0));
+  else if (o === "valor-desc") c.sort((a,b)=> Math.abs(b.v)-Math.abs(a.v));
+  else if (o === "valor-asc")  c.sort((a,b)=> Math.abs(a.v)-Math.abs(b.v));
+  else if (o === "nome")  c.sort((a,b)=> a.g.localeCompare(b.g, "pt-BR", {sensitivity:"base"}));
+  else c.sort((a,b)=> String(a.d)<String(b.d)?1:(String(a.d)>String(b.d)?-1:0));
+  return c;
+}
+
 function viewLista(){
   const f = fatura();
   if (!f) return barraLista() + `<div class="empty">Vá em <b>Ajustes</b> para criar sua primeira fatura.</div>` + navbar();
   const L = visiveis();
   let corpo;
   if (UI.modo === "item"){
-    corpo = `<div class="row">${L.slice().sort((a,b)=>a.d<b.d?1:-1).map(l=>itemHTML(l,true)).join("") || `<div class="empty">Nada por aqui.</div>`}</div>`;
+    corpo = `<div class="row">${ordenar(L).map(l=>itemHTML(l,true)).join("") || `<div class="empty">Nada por aqui.</div>`}</div>`;
   } else {
     const tipo = UI.modo === "cat" ? "cat" : "grupo";
     const gs = agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g));
@@ -978,7 +1025,13 @@ function viewLista(){
     </div></div>
     <div class="body">
     ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
-    <label class="check"><input type="checkbox" data-act="sopend" ${UI.soPend?"checked":""}> Mostrar só o que falta</label>
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 2px 14px">
+      <label class="check" style="margin:0;flex:1">
+        <input type="checkbox" data-act="sopend" ${UI.soPend?"checked":""}> Só o que falta</label>
+      ${UI.modo==="item" ? `<select data-act="ordem" style="width:auto;padding:9px 12px;border-radius:99px;font-size:13.5px;font-weight:600">
+        ${ORDENS.map(([k,n])=>`<option value="${k}"${(UI.ordem||"data-desc")===k?" selected":""}>${n}</option>`).join("")}
+      </select>` : ""}
+    </div>
     ${corpo}
     <p style="font-size:13px;color:var(--mute);line-height:1.6;margin:18px 0 8px">
       Toque num nome para atribuir, toque de novo para desfazer. Dois ou mais nomes acesos dividem em partes iguais.
@@ -1362,6 +1415,14 @@ function viewConfig(){
            <button class="btn pri" data-act="gerarparc">Gerar ${pv.n} parcelas futuras</button>`
         : `<div class="row"><div style="font-size:15px">Todas as parcelas já estão lançadas nos meses seguintes.</div></div>`;
     })()}
+    ${(()=>{ const es = estornosPendentes();
+      return es.length ? `<div class="row" style="border-color:#E2A0AC">
+        <div style="font-size:15px;font-weight:600">${es.length} compra${es.length===1?"":"s"} com estorno
+          ainda ${es.length===1?"tem":"têm"} parcelas previstas.</div>
+        <div style="font-size:13px;color:var(--mute);margin-top:6px">
+          Somam ${brl(es.reduce((a,r)=>a+r.somaFuturas,0))} nos próximos meses.</div></div>
+        <button class="btn" data-act="sheet" data-v="estornos">Revisar estornos</button>` : "";
+    })()}
     <button class="btn dgr" data-act="limparauto">Apagar parcelas previstas</button>
 
     <h2>Regras salvas</h2>
@@ -1405,7 +1466,6 @@ function viewConfig(){
       <button class="btn" data-act="backup">Baixar backup (.json)</button>
       <button class="btn" data-act="compartilharbackup">Compartilhar backup</button>
       <button class="btn" data-act="restaurar">Restaurar backup</button>
-      <input type="file" id="filein" accept="application/json" style="display:none">
       <p style="font-size:12.5px;color:var(--mute);line-height:1.6;margin:10px 0 0">
         Tudo fica guardado só neste aparelho — nada é enviado para servidor nenhum.
         Faça backup antes de reinstalar o app ou trocar de celular.</p>
@@ -1629,6 +1689,67 @@ sheets.verPessoa = () => {
   </div></div>`;
 };
 
+sheets.estornos = () => {
+  const lista = estornosPendentes();
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Compras estornadas</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 14px;line-height:1.5">
+      Estes estabelecimentos têm estorno lançado e parcelas previstas ainda rodando nos próximos meses.
+      Se a compra foi cancelada, as parcelas não deveriam existir.</p>
+    ${lista.length ? lista.map((r,i)=>`
+      <div class="row">
+        <div class="rowtop">
+          <div class="badge" style="background:${corCat(r.futuras[0].l.cat||"Outros")}">${esc(inicialCat(r.futuras[0].l.cat||"Outros"))}</div>
+          <div style="flex:1;min-width:0"><div class="nm">${esc(r.nome)}</div>
+            <div class="meta"><span class="tag">${esc(r.cartao)}</span>
+              <span class="tag" style="color:#C0334D">estorno ${brl(r.estorno)}</span></div></div>
+        </div>
+        <div class="sub">
+          ${r.futuras.map(x=>`<div class="it"><div class="t">
+            <b style="font-size:14px">${esc(x.rot)}</b><i>parcela ${esc(x.l.p||"")} · previsto</i></div>
+            <div class="val num" style="font-size:14px">${brl(x.l.v)}</div></div>`).join("")}
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;padding-top:10px">
+            <span>${r.futuras.length} parcelas previstas</span><span class="num">${brl(r.somaFuturas)}</span></div>
+        </div>
+        <button class="btn dgr" data-act="apagarestorno" data-i="${i}" style="margin-top:12px">
+          Apagar as ${r.futuras.length} parcelas previstas</button>
+      </div>`).join("")
+      : `<div class="empty">Nenhum estorno com parcelas previstas em aberto.</div>`}
+    <button class="btn" data-act="fechar">Fechar</button>
+  </div></div>`;
+};
+
+sheets.editarLanc = () => {
+  const t = UI.tmp || {};
+  let alvo = null, fat = null;
+  S.faturas.forEach(f => f.lanc.forEach(l => { if (l.id === t.id){ alvo = l; fat = f; } }));
+  if (!alvo) return "";
+  if (t.f === undefined) t.f = {g: alvo.g, valor: paraCampo(alvo.v), p: alvo.p || "", cat: alvo.cat || "Outros"};
+  const f = t.f;
+  const pv = num(String(f.valor).replace(/[R$\s]/g, ""));
+  const irmaos = alvo.serie ? S.faturas.flatMap(x=>x.lanc).filter(y=>y.serie===alvo.serie) : [alvo];
+  const futuras = irmaos.filter(y => y.auto);
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Lançamento</h3>
+    <p style="font-size:13.5px;color:var(--mute);margin:0 0 14px">
+      ${esc(fat.rotulo)} · ${esc(nomeCartao(fat))} · ${dia(alvo.d)}${alvo.p&&alvo.p!=="estorno"?" · parcela "+alvo.p:""}${alvo.auto?" · previsto":""}</p>
+    <label class="f" style="margin-top:0">Estabelecimento</label>
+    <input data-act="elf" data-k="g" value="${esc(f.g)}">
+    <label class="f">Valor</label>
+    <input data-act="elf" data-k="valor" inputmode="decimal" value="${esc(f.valor)}">
+    <div id="previaLanc" style="font-size:12.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:5px;font-weight:600">
+      ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
+    <label class="f">Categoria</label>
+    <button class="catbtn" data-act="vercatlanc" style="width:100%;justify-content:flex-start;padding:14px">
+      <i style="background:${corCat(f.cat)}"></i>${esc(f.cat)}</button>
+    <button class="btn pri" data-act="elsalvar">Salvar</button>
+    <button class="btn dgr" data-act="elapagar">Apagar este lançamento</button>
+    ${irmaos.length>1 ? `<button class="btn dgr" data-act="elapagarserie">
+      Apagar as ${irmaos.length} parcelas desta compra${futuras.length?" ("+futuras.length+" previstas)":""}</button>` : ""}
+    <button class="btn" data-act="fechar">Cancelar</button>
+  </div></div>`;
+};
+
 sheets.escolherCat = () => {
   const t = UI.tmp || (UI.tmp = {});
   const q = (t.q || "").trim();
@@ -1791,7 +1912,6 @@ sheets.importar = () => {
       Envie os prints da fatura ou o PDF e o app lê sozinho.</p>
     <button class="btn pri" data-act="enviararq" ${t.lendo?'disabled style="opacity:.55"':""}>
       ${t.lendo ? "Lendo…" : "Enviar prints ou PDF"}</button>
-    <input type="file" id="filefatura" accept="image/*,application/pdf" multiple style="display:none">
     ${(t.arquivos||[]).length ? `<div class="row" style="margin-top:10px">${t.arquivos.map((a,i)=>`
       <div class="it"><div class="t"><b style="font-size:13.5px">${esc(a.nome)}</b>
         <i id="arq${i}">${esc(a.estado)}</i></div></div>`).join("")}</div>` : ""}
@@ -2048,7 +2168,11 @@ document.addEventListener("click", ev => {
   const el = ev.target.closest("[data-act]");
   if (!el) return;
   const act = el.dataset.act, i = el.dataset.i, v = el.dataset.v, pid = el.dataset.p, g = el.dataset.g;
-  if (act === "fechar"){ UI.sheet = null; UI.tmp = null; return render(); }
+  if (act === "fechar"){
+    // o fundo escuro só fecha se for tocado nele mesmo; cliques dentro da folha não fecham
+    if (el.classList.contains("sheet") && ev.target !== el) return;
+    UI.sheet = null; UI.tmp = null; UI.voltar = UI.voltarTmp = null; return render();
+  }
 
   switch(act){
     case "nav": UI.view = v; UI.editando = UI.editandoItem = null; window.scrollTo(0,0); return render();
@@ -2144,6 +2268,38 @@ document.addEventListener("click", ev => {
 
     case "editar": UI.editando = g; UI.buffer = g; return render();
     case "salvarnome": renomearGrupo(g, UI.buffer); UI.editando = null; return render();
+    case "abrirlanc": UI.sheet = "editarLanc"; UI.tmp = {id:i}; return render();
+    case "elsalvar": {
+      const t = UI.tmp; let alvo = null;
+      S.faturas.forEach(f => f.lanc.forEach(l => { if (l.id === t.id) alvo = l; }));
+      if (!alvo) return;
+      const nome = (t.f.g||"").trim();
+      const v2 = num(String(t.f.valor).replace(/[R$\s]/g,""));
+      if (nome) { alvo.g = nome; alvo.r = alvo.r || nome; }
+      if (!isNaN(v2)) alvo.v = v2;
+      alvo.cat = t.f.cat;
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "elapagar": {
+      if (!confirm("Apagar este lançamento?")) return;
+      apagarLanc([UI.tmp.id]);
+      UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "elapagarserie": {
+      let alvo = null;
+      S.faturas.forEach(f => f.lanc.forEach(l => { if (l.id === UI.tmp.id) alvo = l; }));
+      if (!alvo || !alvo.serie) return;
+      const ids = S.faturas.flatMap(f=>f.lanc).filter(y=>y.serie===alvo.serie).map(y=>y.id);
+      if (!confirm("Apagar as " + ids.length + " parcelas desta compra?")) return;
+      apagarLanc(ids);
+      UI.sheet=null; UI.tmp=null; return render();
+    }
+    case "vercatlanc": {
+      UI.voltar = "editarLanc"; UI.voltarTmp = UI.tmp;
+      UI.sheet = "escolherCat";
+      UI.tmp = {alvo:"form", nome: UI.voltarTmp.f.g, atual: UI.voltarTmp.f.cat, q:""};
+      return render();
+    }
     case "editaritem": UI.editandoItem = i; UI.buffer = ""; return render();
     case "salvaritem": renomearItem(i, UI.buffer); UI.editandoItem = null; return render();
 
@@ -2213,6 +2369,12 @@ document.addEventListener("click", ev => {
       S.faturas = S.faturas.filter(f=>f.lanc.length || !f.comp || f.comp===compAtual(S.cartoes.find(c=>c.id===f.cartaoId)));
       if (!rotulos().includes(S.rotuloAtivo)) S.rotuloAtivo = rotulos()[0]||"";
       salvar(); return render();
+    }
+    case "apagarestorno": {
+      const r = estornosPendentes()[+i]; if (!r) return;
+      if (!confirm("Apagar as " + r.futuras.length + " parcelas previstas de " + r.nome + "?")) return;
+      apagarLanc(r.futuras.map(x => x.l.id));
+      return render();
     }
     case "limparRegras":
       if (!confirm("Apagar todas as regras de dono e categoria?")) return;
@@ -2393,7 +2555,7 @@ function aplicarCat(cat){
     if (c) c.cat = cat;
   } else if (t.alvo === "form"){
     UI.sheet = UI.voltar; UI.tmp = UI.voltarTmp; UI.voltar = UI.voltarTmp = null;
-    UI.tmp.f.cat = cat;
+    if (UI.tmp && UI.tmp.f) UI.tmp.f.cat = cat;
     return render();
   }
   salvar();
@@ -2443,6 +2605,7 @@ document.addEventListener("change", ev => {
     case "mmMes": UI.tmp.mes = +el.value; return render();
     case "mmAno": UI.tmp.ano = +el.value; return render();
     case "sopend": UI.soPend = el.checked; return render();
+    case "ordem": UI.ordem = el.value; return render();
     case "cat": return mudarCategoria(el.dataset.g, el.value);
     case "cfcat": UI.tmp.f.cat = el.value; return render();
     case "pagador": { const c=S.cartoes.find(x=>x.id===i); if(c) c.pagador=el.value; salvar(); return render(); }
@@ -2484,6 +2647,11 @@ document.addEventListener("input", ev => {
   if (a === "imptxt"){ UI.tmp = UI.tmp||{}; UI.tmp.txt = el.value; return; }
   if (a === "nfrotulo"){ UI.tmp = UI.tmp||{}; UI.tmp.rotulo = el.value; return; }
   if (a === "pv"){ UI.tmp.prev[+el.dataset.i][el.dataset.k] = el.value; return; }
+  if (a === "elf"){
+    UI.tmp.f[el.dataset.k] = el.value;
+    if (el.dataset.k === "valor") previa("previaLanc", el.value);
+    return;
+  }
   if (a === "cf"){
     UI.tmp.f[el.dataset.k] = el.value;
     if (el.dataset.k === "valor") previa("previaValor", el.value);
