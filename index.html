@@ -345,7 +345,7 @@ function inicial(){
     cartoes:[{id:"c1",nome:"Personnalité",pagador:"p2"}],
     faturas:[{id:"f1",cartaoId:"c1",rotulo:"Julho/26",lanc:SEED.map((x,i)=>({id:"s"+i,d:x.d,r:x.r,g:x.g,v:x.v,p:x.p||null}))}],
     regras:{}, regrasCat:{}, aloc:{}, ativa:"f1", cartaoAtivo:"c1", rotuloAtivo:"Julho/26",
-    contas:[], pagos:{}, fatPagas:{}, acertos:{}, orcamento:{total:0, base:"eu", limites:{}}, acertos:{},
+    contas:[], pagos:{}, fatPagas:{}, acertos:{}, orcamento:{base:"eu", totais:{}, limites:{}}, acertos:{},
     cats:DEFAULT_CATS.slice(), catv:2
   };
 }
@@ -358,7 +358,13 @@ function migrar(){
   S.contas = S.contas || [];
   S.pagos = S.pagos || {};
   S.fatPagas = S.fatPagas || {};
-  S.orcamento = S.orcamento || {total:0, base:"eu", limites:{}};
+  S.orcamento = S.orcamento || {base:"eu", totais:{}, limites:{}};
+  if (!S.orcamento.totais){            // formato antigo: um total e tetos únicos
+    S.orcamento = {base: S.orcamento.base || "eu",
+                   totais: {todos: S.orcamento.total || 0},
+                   limites: {todos: S.orcamento.limites || {}}};
+    mudouEscopo = true;
+  }
   S.acertos = S.acertos || {};
   S.acertos = S.acertos || {};
   if (!S.mesContas){ const d=new Date();
@@ -801,7 +807,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.7";
+const VERSAO = "2.8";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -1173,9 +1179,12 @@ function resumoPagar(m){
 }
 
 /* --------- orçamento --------- */
-function gastoOrcamento(m){
+const tetosDe = f => (S.orcamento.limites || {})[f] || {};
+const totalDe  = f => ((S.orcamento.totais || {})[f]) || 0;
+
+function gastoOrcamento(m, forcarFonte){
   const o = S.orcamento, soMeu = o.base !== "tudo";
-  const fonte = S.fonteOrc || "todos";
+  const fonte = forcarFonte || S.fonteOrc || "todos";
   const porCat = {}, porFonte = {}; let total = 0, semDono = 0, nSemDono = 0;
   itensDoMes(m).forEach(it => {
     if (fonte !== "todos" && it.fonteId !== fonte) return;
@@ -1189,7 +1198,7 @@ function gastoOrcamento(m){
     porFonte[it.onde] = (porFonte[it.onde] || 0) + v;
     total += v;
   });
-  const limites = o.limites || {};
+  const limites = tetosDe(fonte);
   const monitoradas = Object.keys(limites).filter(c => limites[c] > 0)
     .map(c => { const g = porCat[c] || 0, lim = limites[c];
       return {cat:c, gasto:g, limite:lim, sobra:lim - g, pct: lim ? g/lim*100 : 0}; })
@@ -1197,10 +1206,14 @@ function gastoOrcamento(m){
   const fora = Object.entries(porCat).filter(([c]) => !(limites[c] > 0))
     .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
   const somaLimites = monitoradas.reduce((a,x) => a + x.limite, 0);
+  const alvo = totalDe(fonte);
   return {porCat, porFonte, fonte, total, semDono, nSemDono, monitoradas, fora, somaLimites,
-          sobraTotal: (o.total || 0) - total,
-          naoDistribuido: (o.total || 0) - somaLimites};
+          alvo, temAlvo: alvo > 0,
+          sobraTotal: alvo - total,
+          naoDistribuido: alvo - somaLimites};
 }
+const nomeOrigem = f => f === "todos" ? "Tudo"
+  : (f === "contas" ? "Contas" : ((S.cartoes.find(c=>c.id===f)||{}).nome || "—"));
 const CORLIM = p => p >= 100 ? "#C0334D" : (p >= 80 ? "#C77A16" : "#0A8A6E");
 
 /* ================= contas a pagar ================= */
@@ -1287,11 +1300,10 @@ function linhaConta(x){
 /* ================= orçamento ================= */
 function viewOrcamento(){
   const m = S.mesContas, o = S.orcamento, g = gastoOrcamento(m);
-  const temTotal = (o.total || 0) > 0;
+  const temTotal = g.temAlvo;
   const filtrado = g.fonte !== "todos";
-  const nomeFonte = g.fonte === "contas" ? "Contas"
-    : ((S.cartoes.find(c=>c.id===g.fonte)||{}).nome || "");
-  const pctTotal = temTotal ? Math.abs(g.total) / o.total * 100 : 0;
+  const nomeFonte = nomeOrigem(g.fonte);
+  const pctTotal = temTotal ? Math.abs(g.total) / g.alvo * 100 : 0;
 
   return `<div class="top">
     <div class="mesnav">
@@ -1300,15 +1312,16 @@ function viewOrcamento(){
       <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
     </div></div>
     <div class="hero">
-      <div class="lbl">${filtrado ? "Gasto em " + esc(nomeFonte)
-        : (temTotal ? (g.sobraTotal >= 0 ? "Ainda pode gastar" : "Passou do que tinha") : "Defina quanto você tem")}</div>
-      <div class="big num">${brl(filtrado ? g.total : Math.abs(g.sobraTotal))}</div>
-      ${temTotal && !filtrado ? `<div class="bar">
+      <div class="lbl">${temTotal
+        ? (g.sobraTotal >= 0 ? "Ainda pode gastar" : "Passou do que tinha") + (filtrado ? " em " + esc(nomeFonte) : "")
+        : (filtrado ? "Gasto em " + esc(nomeFonte) : "Defina quanto você tem")}</div>
+      <div class="big num">${brl(temTotal ? Math.abs(g.sobraTotal) : g.total)}</div>
+      ${temTotal ? `<div class="bar">
         <span style="width:${Math.min(100,pctTotal).toFixed(1)}%;background:${pctTotal>=100?"#F87171":(pctTotal>=80?"#FBBF24":"#4ADE80")}"></span>
       </div>
       <div class="legend">
         <span><i class="dot" style="background:#4ADE80"></i><em>Gasto</em> <b class="num">${brl(g.total)}</b></span>
-        <span><i class="dot" style="background:rgba(255,255,255,.35)"></i><em>Total</em> <b class="num">${brl(o.total)}</b></span>
+        <span><i class="dot" style="background:rgba(255,255,255,.35)"></i><em>${filtrado?"Meta":"Total"}</em> <b class="num">${brl(g.alvo)}</b></span>
       </div>
       <div class="selos"><span class="selo">${pctTotal.toFixed(0)}% usado</span>
         <span class="selo">${o.base==="tudo" ? "somando todo mundo" : "só a sua parte"}</span></div>` : ""}
@@ -1320,17 +1333,17 @@ function viewOrcamento(){
     </div>
     <div class="body" style="padding-top:6px">
       <div class="cta"><button class="pri" data-act="sheet" data-v="editarOrcamento">
-        ${temTotal ? "Ajustar orçamento" : "Definir orçamento"}</button></div>
+        ${temTotal || Object.keys(tetosDe(g.fonte)).length ? "Ajustar metas" : "Definir metas"}${filtrado ? " de " + esc(nomeFonte) : ""}</button></div>
 
       ${g.nSemDono && o.base !== "tudo" ? `<div class="warn" style="margin-top:14px">
         ${g.nSemDono} lançamento${g.nSemDono===1?"":"s"} ainda sem dono (${brl(g.semDono)}) não entram na conta.
         Classifique-os para o orçamento ficar exato.</div>` : ""}
 
-      ${filtrado ? `<div class="warn" style="margin-top:14px">
-        Mostrando só ${esc(nomeFonte)}. Os tetos são do mês inteiro, então as barras aqui
-        medem apenas a fatia que veio dessa origem.</div>` : ""}
+      ${filtrado && !g.monitoradas.length && !temTotal ? `<div class="warn" style="margin-top:14px">
+        ${esc(nomeFonte)} ainda não tem metas próprias. Toque em Definir orçamento para criar
+        tetos só desta origem — eles são independentes dos tetos gerais.</div>` : ""}
 
-      ${g.monitoradas.length ? `<div class="sec"><h2>Tetos por categoria</h2></div>
+      ${g.monitoradas.length ? `<div class="sec"><h2>Metas por categoria${filtrado ? " · " + esc(nomeFonte) : ""}</h2></div>
       <div class="row">${g.monitoradas.map(x => {
         const p = Math.min(100, Math.max(0, x.pct)), cor = CORLIM(x.pct);
         return `<button class="lim" data-act="vercatmes" data-c="${esc(x.cat)}">
@@ -1341,8 +1354,8 @@ function viewOrcamento(){
           <div class="v"><b class="num" style="color:${cor}">${x.pct.toFixed(0)}%</b>
             <i style="color:${cor}">${x.sobra >= 0 ? "faltam " + brl(x.sobra) : "passou " + brl(-x.sobra)}</i></div>
         </button>`;
-      }).join("")}</div>` : (temTotal ? `<div class="empty">Nenhuma categoria com teto ainda.<br>
-        Toque em Ajustar orçamento para escolher quais monitorar.</div>` : "")}
+      }).join("")}</div>` : `<div class="empty">Nenhuma meta definida${filtrado ? " para " + esc(nomeFonte) : ""}.<br>
+        Toque no botão acima para escolher as categorias.</div>`}
 
       ${g.fora.length ? `<div class="sec"><h2>Fora do monitoramento</h2></div>
       <div class="row">${g.fora.slice(0, UI.verTudoFora ? 999 : 5).map(([c,v]) => `
@@ -1353,8 +1366,8 @@ function viewOrcamento(){
         ${g.fora.length > 5 && !UI.verTudoFora ? `<button class="lnk" data-act="vertudofora" style="margin-top:10px">
           ver as outras ${g.fora.length - 5}</button>` : ""}</div>` : ""}
 
-      ${temTotal && !filtrado ? `<div class="row" style="margin-top:16px">
-        <div class="kv"><span>Você tem</span><b class="num">${brl(o.total)}</b></div>
+      ${temTotal ? `<div class="row" style="margin-top:16px">
+        <div class="kv"><span>${filtrado ? "Meta de " + esc(nomeFonte) : "Você tem"}</span><b class="num">${brl(g.alvo)}</b></div>
         <div class="kv"><span>Distribuído em tetos</span><b class="num">${brl(g.somaLimites)}</b></div>
         <div class="kv"><span>Sem teto definido</span><b class="num" style="color:${g.naoDistribuido<0?"#C0334D":"inherit"}">${brl(g.naoDistribuido)}</b></div>
         <div class="kv"><span>Gasto até agora</span><b class="num">${brl(g.total)}</b></div>
@@ -1448,18 +1461,26 @@ function viewInicio(){
         ${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</div>`:""}</div>` : ""}
 
       ${(()=>{ const o = S.orcamento;
-        if (!(o.total > 0)) return "";
-        const g = gastoOrcamento(m);
-        const pct = Math.abs(g.total)/o.total*100;
+        const origens = ["todos", ...S.cartoes.map(c=>c.id), "contas"];
+        const estouros = [];
+        origens.forEach(fo => gastoOrcamento(m, fo).monitoradas
+          .filter(x => x.pct >= 100)
+          .forEach(x => estouros.push(x.cat + (fo==="todos" ? "" : " ("+nomeOrigem(fo)+")"))));
+        if (!(totalDe("todos") > 0)) return estouros.length ? `<div class="sec"><h2>Orçamento</h2>
+            <button data-act="nav" data-v="orcamento">abrir</button></div>
+          <div class="row"><div style="font-size:14px;color:#C0334D;font-weight:600">
+            ${esc(estouros.join(", "))} estourou o teto</div></div>` : "";
+        const g = gastoOrcamento(m, "todos");
+        const pct = Math.abs(g.total)/g.alvo*100;
         return `<div class="sec"><h2>Orçamento</h2>
           <button data-act="nav" data-v="orcamento">abrir</button></div>
         <div class="row"><button class="cbar" data-act="nav" data-v="orcamento" style="padding-top:2px">
           <div class="t"><b>${g.sobraTotal>=0?"Ainda pode gastar":"Passou do que tinha"}</b>
             <div class="track"><span style="width:${Math.min(100,pct).toFixed(1)}%;background:${CORLIM(pct)}"></span></div></div>
           <div class="v"><b class="num" style="color:${CORLIM(pct)}">${brl(Math.abs(g.sobraTotal))}</b>
-            <i>${pct.toFixed(0)}% de ${brl(o.total)}</i></div></button>
-          ${g.monitoradas.filter(x=>x.pct>=100).length ? `<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
-            ${g.monitoradas.filter(x=>x.pct>=100).map(x=>x.cat).join(", ")} estourou o teto</div>`:""}</div>`;
+            <i>${pct.toFixed(0)}% de ${brl(g.alvo)}</i></div></button>
+          ${estouros.length ? `<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+            ${esc(estouros.join(", "))} estourou o teto</div>`:""}</div>`;
       })()}
 
       ${prox.length ? `<div class="sec"><h2>Já comprometido</h2></div>
@@ -1846,31 +1867,43 @@ sheets.verPessoa = () => {
 sheets.editarOrcamento = () => {
   const t = UI.tmp || (UI.tmp = {});
   const o = S.orcamento;
-  if (t.f === undefined) t.f = {total: paraCampo(o.total), base: o.base || "eu",
-                                limites: Object.assign({}, o.limites)};
+  if (t.fonte === undefined) t.fonte = S.fonteOrc || "todos";
+  if (t.f === undefined || t.f._fonte !== t.fonte)
+    t.f = {_fonte: t.fonte, total: totalDe(t.fonte) > 0 ? paraCampo(totalDe(t.fonte)) : "", base: o.base || "eu",
+           limites: Object.assign({}, tetosDe(t.fonte))};
   const f = t.f;
   const pv = num(String(f.total).replace(/[R$\s]/g, ""));
-  const g = gastoOrcamento(S.mesContas);
+  const g = gastoOrcamento(S.mesContas, t.fonte);
   const soma = S.cats.reduce((a,c) => a + (num(String(f.limites[c]||"").replace(/[R$\s]/g,"")) || 0), 0);
   const sobra = (isNaN(pv) ? 0 : pv) - soma;
   const q = (t.q || "").trim();
   const lista = S.cats.filter(c => !q || semAcento(c).includes(semAcento(q)));
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <h3>Orçamento de ${esc(compLabel(S.mesContas))}</h3>
-    <label class="f" style="margin-top:10px">Quanto você tem no mês</label>
+    <label class="f" style="margin-top:10px">Definindo metas de</label>
+    <select data-act="orfonte">
+      <option value="todos"${t.fonte==="todos"?" selected":""}>Tudo somado</option>
+      ${S.cartoes.map(c=>`<option value="${c.id}"${t.fonte===c.id?" selected":""}>${esc(c.nome)}</option>`).join("")}
+      <option value="contas"${t.fonte==="contas"?" selected":""}>Contas</option>
+    </select>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 0 0;line-height:1.5">
+      ${t.fonte==="todos" ? "Metas gerais, somando cartões e contas."
+        : "Metas só de " + esc(nomeOrigem(t.fonte)) + ", independentes das gerais."}</p>
+    <label class="f">${t.fonte==="todos" ? "Quanto você tem no mês" : "Meta total nesta origem"}</label>
     <input data-act="orf" data-k="total" inputmode="decimal" value="${esc(f.total)}" placeholder="0,00">
     <div id="previaOrc" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
       ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
 
-    <label class="f">Contar quais gastos</label>
+    ${t.fonte==="todos" ? `<label class="f">Contar quais gastos</label>
     <div class="seg">
       <button data-act="orbase" data-v="eu" data-on="${f.base==="eu"?1:0}">Só a minha parte</button>
       <button data-act="orbase" data-v="tudo" data-on="${f.base==="tudo"?1:0}">Tudo do mês</button>
     </div>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 0 0">Vale para todas as origens.</p>` : ""}
 
     <label class="f">Teto por categoria</label>
     <p style="font-size:12.5px;color:var(--mute);margin:0 0 10px;line-height:1.5">
-      Deixe em branco as que você não quer monitorar. O valor ao lado do nome é o gasto deste mês.</p>
+      Deixe em branco as que você não quer monitorar. O valor ao lado é o gasto deste mês${t.fonte==="todos"?"":" nesta origem"}.</p>
     <div class="srch"><input data-act="orq" value="${esc(t.q||"")}" placeholder="Buscar categoria"></div>
     <div class="row">${lista.map(c => `
       <div class="orow">
@@ -2387,15 +2420,21 @@ document.addEventListener("click", ev => {
     case "vertudofora": UI.verTudoFora = !UI.verTudoFora; return render();
     case "fonteOrc": S.fonteOrc = v; salvar(); window.scrollTo(0,0); return render();
     case "orbase": UI.tmp.f.base = v; return render();
+    case "orfonte": return;
     case "orsalvar": {
-      const f = UI.tmp.f;
+      const t = UI.tmp, f = t.f, fonte = t.fonte || "todos";
       const tot = num(String(f.total).replace(/[R$\s]/g,""));
       const lim = {};
       Object.entries(f.limites).forEach(([c, s]) => {
         const v2 = num(String(s == null ? "" : s).replace(/[R$\s]/g,""));
         if (!isNaN(v2) && v2 > 0) lim[c] = v2;
       });
-      S.orcamento = {total: isNaN(tot) ? 0 : tot, base: f.base, limites: lim};
+      S.orcamento.totais = S.orcamento.totais || {};
+      S.orcamento.limites = S.orcamento.limites || {};
+      S.orcamento.totais[fonte] = isNaN(tot) ? 0 : tot;
+      S.orcamento.limites[fonte] = lim;
+      if (fonte === "todos") S.orcamento.base = f.base;
+      S.fonteOrc = fonte;
       salvar(); UI.sheet = null; UI.tmp = null; UI.view = "orcamento"; return render();
     }
     case "mesResumo": S.mesContas = mesSoma(S.mesContas, +v);
@@ -2853,6 +2892,7 @@ document.addEventListener("change", ev => {
     case "xcontas": UI.tmp.contas = el.checked; return;
     case "xescopo": UI.tmp.escopo = el.value; return;
     case "nfcartao": UI.tmp.cartao = el.value; return;
+    case "orfonte": UI.tmp.fonte = el.value; return render();
     case "cf": UI.tmp.f[el.dataset.k] = el.value; return render();
     case "acq": UI.tmp.quando = el.value; return;
   }
