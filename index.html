@@ -611,6 +611,17 @@ function acerto(){
 }
 
 /* --------- parcelas futuras --------- */
+// duas linhas são a mesma parcela da mesma compra?
+// estabelecimento + número da parcela + data da compra original.
+// Sem data dos dois lados, cai para o valor (tolerância de 2 centavos).
+function mesmaParcela(a, b){
+  if (semAcento(a.g || "") !== semAcento(b.g || "")) return false;
+  if (String(a.p || "") !== String(b.p || "")) return false;
+  const da = String(a.d || ""), db = String(b.d || "");
+  if (da && db) return da === db;
+  return Math.abs((+a.v || 0) - (+b.v || 0)) < 0.02;
+}
+
 function parcelaInfo(p){
   const m = String(p||"").match(/^(\d+)\s*\/\s*(\d+)$/);
   if (!m) return null;
@@ -628,9 +639,9 @@ function propagar(l, f){
     const comp = compSoma(f.comp, i - pi.k);
     const alvo = garantirFatura(f.cartaoId, comp);
     const rot = i+"/"+pi.n;
-    // já existe essa parcela desse estabelecimento em qualquer fatura do cartão?
+    const nova = {g:l.g, p:rot, d:l.d, v:l.v};
     const jaTem = S.faturas.some(x => x.cartaoId === f.cartaoId &&
-      x.lanc.some(y => y.p === rot && semAcento(y.g) === semAcento(l.g)));
+      x.lanc.some(y => y.serie === serie ? y.p === rot : mesmaParcela(y, nova)));
     if (jaTem) continue;
     const id = uid("l");
     alvo.lanc.push({id, d:l.d, r:l.r, g:l.g, v:l.v, p:i+"/"+pi.n, cat:l.cat, serie, auto:true});
@@ -1591,6 +1602,10 @@ function viewConfig(){
           Somam ${brl(es.reduce((a,r)=>a+r.somaFuturas,0))} nos próximos meses.</div></div>
         <button class="btn" data-act="sheet" data-v="estornos">Revisar estornos</button>` : "";
     })()}
+    <button class="btn" data-act="refazerparc">Refazer todas as parcelas previstas</button>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 0 0;line-height:1.5">
+      Apaga as previstas e gera de novo a partir dos lançamentos reais. Use se desconfiar
+      que faltam parcelas nos meses seguintes.</p>
     <button class="btn dgr" data-act="limparauto">Apagar parcelas previstas</button>
 
     <h2>Regras salvas</h2>
@@ -2258,7 +2273,8 @@ async function lerArquivos(lista){
   if (!prev.length){ render(); return alert("Li os arquivos, mas não identifiquei lançamentos. Confira o texto na caixa abaixo."); }
   const fat = S.faturas.find(x => x.id === S.ativa) || fatura();
   prev.forEach(x => { const parc = (x.p||"").trim();
-    x.dup = !!(fat && parc && fat.lanc.some(l => l.p===parc && semAcento(l.g)===semAcento(x.g) && !l.auto)); });
+    const val0 = num(String(x.v).replace(/[R$\s]/g,""));
+    x.dup = !!(fat && parc && fat.lanc.some(l => !l.auto && mesmaParcela(l, {g:x.g, p:parc, d:x.d, v:val0}))); });
   UI.tmp.prev = prev;
   render();
 }
@@ -2618,6 +2634,13 @@ document.addEventListener("click", ev => {
       const n = gerarTodasParcelas();
       render(); return alert(n + " parcelas futuras criadas.");
     }
+    case "refazerparc": {
+      if (!confirm("Apagar as parcelas previstas e gerar de novo? Os lançamentos reais não são tocados.")) return;
+      let n = 0;
+      S.cartoes.forEach(c => { limparAuto(c.id); n += propagarTudo(c.id); });
+      salvar(); render();
+      return alert(n + " parcelas previstas geradas.");
+    }
     case "limparauto": {
       const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.auto).length,0);
       if (!n) return alert("Não há parcelas previstas para apagar.");
@@ -2746,7 +2769,8 @@ document.addEventListener("click", ev => {
       const f = S.faturas.find(x=>x.id===S.ativa) || fatura();
       prev.forEach(x=>{
         const parc = (x.p||"").trim();
-        x.dup = !!(f && parc && f.lanc.some(l => l.p===parc && semAcento(l.g)===semAcento(x.g) && !l.auto));
+        const val0 = num(String(x.v).replace(/[R$\s]/g,""));
+        x.dup = !!(f && parc && f.lanc.some(l => !l.auto && mesmaParcela(l, {g:x.g, p:parc, d:x.d, v:val0})));
       });
       UI.tmp.prev = prev; return render();
     }
@@ -2763,7 +2787,7 @@ document.addEventListener("click", ev => {
         if (x.dup){ ign++; return; }
         const parc = (x.p||"").trim()||null;
         // se já existe uma parcela prevista igual, ela vira a real em vez de duplicar
-        const prev = parc && f.lanc.find(l=>l.auto && l.p===parc && semAcento(l.g)===semAcento(x.g));
+        const prev = parc && f.lanc.find(l => l.auto && mesmaParcela(l, {g:x.g, p:parc, d:x.d, v:val}));
         if (prev){ prev.auto = false; prev.v = val; if (x.d) prev.d = x.d; n++; return; }
         const id = uid("l");
         const novo = {id, d:x.d||"", r:x.g, g:x.g, v:val, p:parc,
