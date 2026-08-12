@@ -3,165 +3,243 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#14161C">
+<meta name="theme-color" content="#F2F3F7">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <title>Divisor de Fatura</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+/* ============================================================
+   Sistema visual — "livro-caixa"
+   Regras que valem para o app inteiro:
+   1. Uma superfície só (--card) + um fio de contorno (--line).
+      Sombra só no que realmente flutua: barra de abas e folha.
+   2. Cor forte só responde "de quem é?" — pilulas de pessoa,
+      barra do herói e o trilho lateral do grupo.
+   3. Categoria e status entram como tinta clara (16% da cor).
+   4. Pílula = filtro/etiqueta. Retângulo arredondado = controle.
+   5. Dinheiro é sempre mono tabular; texto é sempre Jakarta.
+   ============================================================ */
+
 :root{
-  --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
-  --hero1:#6A34C9; --hero2:#3F1F8C; --heroink:#fff; --heromute:#C9C2EA;
-  --r:22px; --r2:16px;
-  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10);
+  --bg:#F2F3F7; --card:#FFF; --soft:#F1F2F6; --line:#E4E6EC;
+  --ink:#14161B; --mute:#6B6F7A; --faint:#9AA0AC;
+  --ac:#5B2CC4; --acsoft:#EDE7FB;
+  --pos:#0A7A63; --atn:#A2680A; --neg:#BE3049;
+  --tfg:#000;                       /* contraste da tinta de categoria */
+  --heroA:#6C3AD8; --heroB:#3E1F8E;
+  --r:16px; --rl:22px; --rs:12px; --pad:16px;
+  --sh:0 1px 2px rgba(18,20,28,.05);
+  --shf:0 -1px 0 var(--line), 0 -12px 28px -20px rgba(18,20,28,.28);
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
-         --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
+  :root{ --bg:#232321; --card:#2E2E2C; --soft:#383836; --line:#403F3B;
+         --ink:#F2F0EA; --mute:#A4A199; --faint:#87847C;
+         --ac:#B79BFF; --acsoft:#3A3350; --tfg:#fff;
+         --pos:#5FCFAF; --atn:#E8B863; --neg:#FF9AA6;
+         --heroA:#5E33BE; --heroB:#33196F;
+         --sh:0 1px 2px rgba(0,0,0,.22);
+         --shf:0 -1px 0 var(--line), 0 -12px 28px -20px rgba(0,0,0,.6); }
 }
-html[data-tema="claro"]{ --bg:#F0F1F6; --card:#FFF; --ink:#15161C; --mute:#71757F; --line:#E5E7ED; --soft:#F5F6FA;
-  --sh:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -12px rgba(20,22,28,.10); }
-html[data-tema="escuro"]{ --bg:#0D0E13; --card:#181A21; --ink:#F1F2F6; --mute:#8B8F9A; --line:#262933; --soft:#20232C;
-  --sh:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -14px rgba(0,0,0,.7); }
-html[data-tema="quente"]{ --bg:#262624; --card:#30302E; --ink:#F2F0EA; --mute:#9C9A93; --line:#403F3B; --soft:#3A3A37;
-  --sh:0 1px 2px rgba(0,0,0,.18), 0 8px 22px -14px rgba(0,0,0,.45); }
+html[data-tema="claro"]{ --bg:#F2F3F7; --card:#FFF; --soft:#F1F2F6; --line:#E4E6EC;
+  --ink:#14161B; --mute:#6B6F7A; --faint:#9AA0AC; --ac:#5B2CC4; --acsoft:#EDE7FB;
+  --pos:#0A7A63; --atn:#A2680A; --neg:#BE3049; --tfg:#000;
+  --heroA:#6C3AD8; --heroB:#3E1F8E; --sh:0 1px 2px rgba(18,20,28,.05);
+  --shf:0 -1px 0 var(--line), 0 -12px 28px -20px rgba(18,20,28,.28); }
+html[data-tema="escuro"]{ --bg:#0E1014; --card:#171A20; --soft:#1F232B; --line:#262A33;
+  --ink:#EFF1F5; --mute:#8D93A0; --faint:#6E7480; --ac:#B79BFF; --acsoft:#2A2544; --tfg:#fff;
+  --pos:#5FCFAF; --atn:#E8B863; --neg:#FF9AA6;
+  --heroA:#5A31B8; --heroB:#2C1663; --sh:0 1px 2px rgba(0,0,0,.4);
+  --shf:0 -1px 0 var(--line), 0 -12px 28px -20px rgba(0,0,0,.8); }
+html[data-tema="quente"]{ --bg:#232321; --card:#2E2E2C; --soft:#383836; --line:#403F3B;
+  --ink:#F2F0EA; --mute:#A4A199; --faint:#87847C; --ac:#B79BFF; --acsoft:#3A3350; --tfg:#fff;
+  --pos:#5FCFAF; --atn:#E8B863; --neg:#FF9AA6;
+  --heroA:#5E33BE; --heroB:#33196F; --sh:0 1px 2px rgba(0,0,0,.22);
+  --shf:0 -1px 0 var(--line), 0 -12px 28px -20px rgba(0,0,0,.6); }
+
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  background:var(--bg);color:var(--ink);font-size:16px;line-height:1.42;-webkit-text-size-adjust:100%;
-  padding-bottom:calc(112px + env(safe-area-inset-bottom))}
-.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-.disp,.big,.nm,h2,h3,.stat b,.badge,.tog button,.foot button,.btn{
-  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-optical-sizing:auto}
+  background:var(--bg);color:var(--ink);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
 button{font-family:inherit;cursor:pointer;font-size:inherit;color:inherit}
-button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--hero1);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
+  outline:2.5px solid var(--ac);outline-offset:2px}
+
+/* tinta de categoria: fundo com 16% da cor, letra com 60% */
+.tinta{background:var(--soft);color:var(--ink);
+       background:color-mix(in srgb, var(--c) 16%, var(--card));
+       color:color-mix(in srgb, var(--c) 60%, var(--tfg))}
 
 /* ---------- topo ---------- */
-.top{padding:calc(12px + env(safe-area-inset-top)) 14px 0}
+.top{padding:calc(10px + env(safe-area-inset-top)) var(--pad) 0}
 .selrow{display:flex;gap:8px}
 .selrow select{flex:1;min-width:0;background:var(--card);color:var(--ink);border:1px solid var(--line);
-  border-radius:99px;padding:12px 16px;font-size:14.5px;font-weight:600;box-shadow:var(--sh);
-  appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);
-  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+  border-radius:var(--rs);padding:11px 34px 11px 13px;font-size:14.5px;font-weight:600;box-shadow:none;
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.mesnav{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--rs);padding:4px}
+.mesnav button{border:0;background:transparent;border-radius:9px;width:38px;height:38px;font-size:19px;color:var(--mute)}
+.mesnav .m{flex:1;text-align:center;font-size:15.5px;font-weight:700;letter-spacing:-.02em}
 
-/* ---------- cartão-herói ---------- */
-.hero{margin:12px 14px 0;border-radius:var(--r);padding:20px 20px 18px;color:var(--heroink);
-  background:radial-gradient(120% 130% at 88% 8%, #8B5CF6 0%, var(--hero1) 38%, var(--hero2) 100%);
-  box-shadow:0 12px 30px -16px rgba(74,32,150,.6);position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%)}
-.hero .lbl{font-size:13px;color:var(--heromute);position:relative}
-.hero .big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.045em;margin-top:5px;position:relative}
-.bar{display:flex;height:9px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.18);margin-top:15px;position:relative}
-.bar>span{transition:width .35s cubic-bezier(.4,0,.2,1)}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:13px;font-size:13.5px;color:var(--heromute);position:relative}
+/* ---------- herói: o único bloco com cor cheia ---------- */
+.hero{margin:12px var(--pad) 0;border-radius:var(--rl);padding:20px;color:#fff;overflow:hidden;
+  background:linear-gradient(158deg, var(--heroA) 0%, var(--heroB) 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.hero .lbl{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.66)}
+.hero .big{font-size:34px;font-weight:700;line-height:1.05;letter-spacing:-.05em;margin-top:6px}
+.bar{display:flex;gap:3px;height:10px;margin-top:16px}
+.bar>span{border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);min-width:0}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:12px;font-size:13.5px;
+  color:rgba(255,255,255,.66)}
 .legend span{display:flex;align-items:center;gap:7px;min-width:0}
 .legend em{font-style:normal;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .legend b{color:#fff;font-weight:600}
 .dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto}
-.acerto{margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:var(--heromute);position:relative}
-.acerto div{margin-top:5px}
+.acerto{margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:13.5px;color:rgba(255,255,255,.78)}
+.acerto>div+div{margin-top:9px}
 .acerto b{color:#fff}
-.selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;position:relative}
-.selo{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
+.selos{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.selo{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;
+  border-radius:99px;background:rgba(255,255,255,.13);color:rgba(255,255,255,.9);white-space:nowrap}
+.hero .cardtag{background:rgba(255,255,255,.14);color:#fff}
+.hero .mk{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff}
+.hero .mk[data-pago="1"]{background:rgba(255,255,255,.9);border-color:transparent;color:var(--heroB)}
+/* rodapé de números do herói: substitui a faixa de cartõezinhos rolantes */
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);margin:18px -20px -20px;
+  border-top:1px solid rgba(255,255,255,.15)}
+.hstats>div{padding:11px 8px 13px 14px;min-width:0}
+.hstats>div+div{border-left:1px solid rgba(255,255,255,.15)}
+.hstats b{display:block;font-size:15px;font-weight:700;letter-spacing:-.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hstats i{font-style:normal;display:block;font-size:11.5px;margin-top:2px;color:rgba(255,255,255,.6);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* ---------- faixa de números ---------- */
-.stats{display:flex;gap:9px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
+/* faixa de números fora do herói (usada nas folhas) */
+.stats{display:flex;gap:8px;overflow-x:auto;padding:12px var(--pad) 2px;scrollbar-width:none}
 .stats::-webkit-scrollbar{display:none}
-.stat{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
-  padding:11px 15px;box-shadow:var(--sh);min-width:104px}
-.stat b{display:block;font-size:16.5px;font-weight:700;letter-spacing:-.035em}
+.stat{flex:0 0 auto;background:var(--soft);border-radius:var(--rs);padding:10px 14px;min-width:100px}
+.stat b{display:block;font-size:16px;font-weight:700;letter-spacing:-.04em}
 .stat i{font-style:normal;font-size:11.5px;color:var(--mute)}
 
 /* ---------- filtros e abas ---------- */
-.fscroll{display:flex;gap:7px;overflow-x:auto;padding:12px 14px 2px;scrollbar-width:none}
+.fscroll{display:flex;gap:7px;overflow-x:auto;padding:12px var(--pad) 2px;scrollbar-width:none}
 .fscroll::-webkit-scrollbar{display:none}
-.fchip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:10px 15px;
-  font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap;display:flex;align-items:center;gap:7px;box-shadow:var(--sh)}
-.fchip[data-on="1"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.stick{position:sticky;top:0;z-index:15;background:var(--bg);padding:12px 14px 8px;
-  box-shadow:0 10px 12px -10px rgba(0,0,0,.10)}
-.tog{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;box-shadow:var(--sh)}
-.tog button{flex:1;border:0;background:transparent;padding:11px 2px;border-radius:99px;font-size:13.5px;font-weight:600;color:var(--mute)}
-.tog button[data-on="1"]{background:var(--ink);color:var(--bg)}
-.check{display:flex;align-items:center;gap:11px;font-size:14.5px;color:var(--mute);margin:12px 2px 14px;padding:0 2px}
-.check input{width:21px;height:21px;margin:0;accent-color:var(--hero1)}
+.fchip{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-radius:99px;padding:9px 14px;
+  font-size:13.5px;font-weight:600;color:var(--mute);white-space:nowrap;display:flex;align-items:center;gap:7px;
+  min-height:38px}
+.fchip[data-on="1"]{background:var(--acsoft);color:var(--ac);border-color:transparent;font-weight:700}
+.fchip.tinta[data-on="1"]{background:var(--acsoft);color:var(--ac);border-color:transparent}
+.fchip.tinta[data-on="1"]{background:color-mix(in srgb, var(--c) 20%, var(--card));
+  color:color-mix(in srgb, var(--c) 62%, var(--tfg))}
+.fchip select{border:0;background:transparent;padding:0;font:inherit;color:inherit;width:auto}
+.stick{position:sticky;top:0;z-index:15;background:var(--bg);padding:10px var(--pad) 8px;
+  box-shadow:0 8px 10px -10px rgba(0,0,0,.14)}
+.tog{display:flex;gap:2px;background:var(--soft);border-radius:14px;padding:3px}
+.tog button{flex:1;border:0;background:transparent;padding:10px 2px;border-radius:11px;
+  font-size:13.5px;font-weight:600;color:var(--mute)}
+.tog button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:var(--sh);font-weight:700}
+.check{display:flex;align-items:center;gap:11px;font-size:14.5px;color:var(--mute);margin:12px 2px 14px}
+.check input{width:21px;height:21px;margin:0;accent-color:var(--ac)}
 
-.body{padding:0 14px}
-/* ---------- linhas ---------- */
-.row{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:9px;box-shadow:var(--sh)}
+.body{padding:0 var(--pad)}
+
+/* ---------- painel: uma superfície agrupa uma lista ---------- */
+.row{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;
+  margin-bottom:10px;box-shadow:none}
 .rowtop{display:flex;gap:12px;align-items:flex-start}
-.badge{width:42px;height:42px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-  font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em}
-.nm{font-weight:600;font-size:16.5px;letter-spacing:-.025em;overflow-wrap:anywhere;background:none;border:0;padding:0;text-align:left;width:100%}
-.val{font-weight:700;font-size:17px;white-space:nowrap;margin-left:auto}
-.meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px}
-.lnk{border:1px solid var(--line);background:var(--soft);padding:5px 11px;border-radius:99px;font-size:12px;color:var(--mute);font-weight:600}
-.tag{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap;border:0}
-.cardtag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--mute);white-space:nowrap}
-.hero .cardtag{background:rgba(255,255,255,.14);color:#fff}
-.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
-.chip{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;padding:12px 8px;font-size:14px;
-  font-weight:600;color:var(--mute);flex:1 1 0;min-width:74px;min-height:46px}
-.chip[data-on="1"]{color:#fff;border-color:transparent}
-.editwrap{display:flex;gap:8px;align-items:center}
-.editwrap input{flex:1;font-size:16px;font-weight:600;padding:11px;border:2px solid var(--hero1);border-radius:12px}
-.ok{background:var(--hero1);color:#fff;border:0;border-radius:12px;padding:13px 17px;font-weight:700}
+.badge{width:40px;height:40px;border-radius:13px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:15.5px;font-weight:700;letter-spacing:-.02em;border:0;
+  background:var(--soft);color:var(--ink);
+  background:color-mix(in srgb, var(--c,#6B6F79) 16%, var(--card));
+  color:color-mix(in srgb, var(--c,#6B6F79) 60%, var(--tfg))}
+.nm{font-weight:600;font-size:16px;letter-spacing:-.02em;overflow-wrap:anywhere;background:none;border:0;
+  padding:0;text-align:left;width:100%;line-height:1.3}
+.val{font-weight:700;font-size:16px;white-space:nowrap;margin-left:auto;letter-spacing:-.04em}
+.meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}
+.lnk{border:0;background:var(--soft);padding:5px 10px;border-radius:99px;font-size:12px;color:var(--mute);font-weight:600}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 4px 5px 0;
+  border-radius:99px;background:transparent;color:var(--mute);white-space:nowrap;border:0}
+.cardtag{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;background:var(--soft);
+  color:var(--mute);white-space:nowrap}
 
-.sub{border-top:1px solid var(--line);margin-top:14px;padding-top:11px}
-.catsel{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+/* grupo de lançamentos: trilho colorido = de quem é */
+.grp{position:relative;overflow:hidden;padding-left:17px}
+.grp[data-exp="1"]{background:var(--soft);background:color-mix(in srgb, var(--soft) 60%, var(--card))}
+.rail{position:absolute;left:0;top:0;bottom:0;width:4px;display:flex;flex-direction:column;gap:2px;padding:2px 0}
+.rail span{flex:1;border-radius:99px}
+
+/* pílulas de pessoa: cor cheia quando ligada — é a resposta do app */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:99px;padding:12px 8px;font-size:14px;
+  font-weight:600;color:var(--mute);flex:1 1 0;min-width:74px;min-height:46px}
+.chip[data-on="1"]{color:#fff;border-color:transparent;font-weight:700}
+.editwrap{display:flex;gap:8px;align-items:center}
+.editwrap input{flex:1;font-size:16px;font-weight:600;padding:11px;border:2px solid var(--ac);border-radius:var(--rs)}
+.ok{background:var(--ac);color:#fff;border:0;border-radius:var(--rs);padding:13px 17px;font-weight:700}
+
+.sub{border-top:1px solid var(--line);margin-top:14px;padding-top:6px}
+.catsel{display:flex;align-items:center;gap:9px;margin:6px 0 4px}
 .catsel span{font-size:12.5px;color:var(--mute);font-weight:600;flex:0 0 auto}
-.catsel select{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;font-size:14.5px;background:var(--soft);color:var(--ink)}
+.catsel select{flex:1;padding:11px;border:1px solid var(--line);border-radius:var(--rs);font-size:14.5px;
+  background:var(--soft);color:var(--ink)}
 .it{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .it:last-child{border-bottom:0}
 .it2{display:block}
 .itop{display:flex;align-items:center;gap:10px}
 .it .t{flex:1;min-width:0}
-.it .t button{display:block;font-size:14.5px;font-weight:550;background:none;border:0;padding:0;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it .t button{display:block;font-size:14.5px;font-weight:600;background:none;border:0;padding:0;text-align:left;
+  width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .it .t i{font-style:normal;font-size:12px;color:var(--mute)}
-.pin{width:28px;height:28px;border-radius:9px;flex:0 0 auto;border:0;padding:0;
-  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;
-  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
-.catbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--soft);
-  border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600}
-.catbtn i{width:13px;height:13px;border-radius:5px;display:inline-block}
+.pin{width:30px;height:30px;border-radius:10px;flex:0 0 auto;border:0;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;
+  background:var(--soft);color:var(--ink);
+  background:color-mix(in srgb, var(--c,#6B6F79) 16%, var(--card));
+  color:color-mix(in srgb, var(--c,#6B6F79) 60%, var(--tfg))}
+.catbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:transparent;
+  border-radius:99px;padding:9px 13px;font-size:13px;font-weight:600}
+.catbtn i{width:11px;height:11px;border-radius:4px;display:inline-block;flex:0 0 auto}
 .catopt{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
 .catopt+.catopt{border-top:1px solid var(--line)}
 .catopt b{flex:1;font-size:15px;font-weight:600}
 .mini{display:flex;gap:5px;flex-shrink:0}
 .mini-full{margin-top:10px}
-.mini button{min-width:46px;height:40px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);
+.mini button{min-width:46px;height:40px;border-radius:11px;border:1.5px solid var(--line);background:transparent;
   color:var(--mute);font-size:12px;font-weight:700;padding:0 4px;overflow:hidden}
 .mini-full button{flex:1;min-width:0}
 .mini button[data-on="1"]{color:#fff;border-color:transparent}
-.pct{height:9px;border-radius:99px;background:var(--soft);overflow:hidden;margin:11px 0 6px}
-.pct>span{display:block;height:100%;background:var(--hero1);border-radius:99px}
+.pct{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:11px 0 6px}
+.pct>span{display:block;height:100%;background:var(--ac);border-radius:99px}
 
-/* ---------- barra de navegação ---------- */
+/* ---------- barra de abas ---------- */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
-  padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;
-  background:color-mix(in srgb, var(--card) 88%, transparent);backdrop-filter:blur(16px);
-  border-top:1px solid var(--line)}
-.navb{flex:1;border:0;background:transparent;border-radius:16px;padding:9px 2px 7px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:10.5px;font-weight:600}
-.navb svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.navb[data-on="1"]{color:var(--ink);background:var(--soft)}
-.navb[data-on="1"] svg{stroke-width:2.3}
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:2px;
+  background:var(--card);background:color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter:blur(18px);box-shadow:var(--shf)}
+.navb{flex:1;border:0;background:transparent;border-radius:12px;padding:8px 2px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--faint);font-size:11px;font-weight:600}
+.navb svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.navb[data-on="1"]{color:var(--ac);font-weight:700}
+.navb[data-on="1"] svg{stroke-width:2.2}
 
 /* ---------- orçamento ---------- */
 .lim{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 0;text-align:left}
 .lim+.lim{border-top:1px solid var(--line)}
 .lim .t{flex:1;min-width:0}
-.lim .t b{display:block;font-size:15px;font-weight:600;letter-spacing:-.015em;
-  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+.lim .t b{display:block;font-size:15px;font-weight:600;letter-spacing:-.015em}
 .lim .t i{font-style:normal;font-size:12.5px;color:var(--mute)}
-.lim .track{height:9px;border-radius:99px;background:var(--soft);margin-top:8px;overflow:hidden;position:relative}
+.lim .track{height:8px;border-radius:99px;background:var(--soft);margin-top:8px;overflow:hidden;position:relative}
 .lim .track span{display:block;height:100%;border-radius:99px;transition:width .3s}
 .lim .v{text-align:right;flex:0 0 auto}
 .lim .v b{display:block;font-size:14.5px;font-weight:700;font-family:"JetBrains Mono",monospace;
-  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em}
 .lim .v i{font-style:normal;font-size:11.5px}
 .orow{display:grid;grid-template-columns:38px 1fr 108px;gap:10px;align-items:center;padding:9px 0}
 .orow+.orow{border-top:1px solid var(--line)}
@@ -170,98 +248,103 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .orow input{padding:10px;font-size:14.5px;border-radius:10px;text-align:right;background:var(--soft)}
 
 /* ---------- contas ---------- */
-.mesnav{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
-  border-radius:99px;padding:5px;box-shadow:var(--sh)}
-.mesnav button{border:0;background:var(--soft);border-radius:99px;width:40px;height:40px;font-size:18px;color:var(--mute)}
-.mesnav .m{flex:1;text-align:center;font-size:16px;font-weight:700;letter-spacing:-.02em;
-  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
 .conta{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:13px 0;text-align:left}
 .conta+.conta{border-top:1px solid var(--line)}
 .conta .t{flex:1;min-width:0}
 .conta .t b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  font-size:15.5px;font-weight:600;letter-spacing:-.015em;line-height:1.25;
-  font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+  font-size:15px;font-weight:600;letter-spacing:-.015em;line-height:1.28}
 .conta .t i{display:block;font-style:normal;font-size:12.5px;color:var(--mute);margin-top:3px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .conta .v{text-align:right;flex:0 0 auto}
-.conta .v b{display:block;font-size:15.5px;font-weight:700;font-family:"JetBrains Mono",monospace;
-  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-.mk{border:1.5px solid var(--line);background:var(--soft);border-radius:99px;width:34px;height:34px;flex:0 0 auto;
-  display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--mute)}
-.mk[data-pago="1"]{background:#0A8A6E;border-color:#0A8A6E;color:#fff}
-.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:7px}
-.pg-vencida{background:#FDE4E4;color:#A32A3C} .pg-perto{background:#FDF0DC;color:#8A5A0C}
-.pg-paga{background:#DCF0E9;color:#0A6B55}
+.conta .v b{display:block;font-size:15px;font-weight:700;font-family:"JetBrains Mono",monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.mk{border:1.5px solid var(--line);background:transparent;border-radius:99px;width:34px;height:34px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--mute);padding:0}
+.mk[data-pago="1"]{background:var(--pos);border-color:transparent;color:#fff}
+html[data-tema="escuro"] .mk[data-pago="1"],html[data-tema="quente"] .mk[data-pago="1"]{color:#0E2A22}
+@media (prefers-color-scheme: dark){ html:not([data-tema="claro"]) .mk[data-pago="1"]{color:#0E2A22} }
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:7px;
+  vertical-align:1px}
+.pg-vencida{background:#FCE4E7;color:#A32A3C} .pg-perto{background:#FBEEDA;color:#84570C}
+.pg-paga{background:#DFF0EA;color:#0A6B55}
 html[data-tema="escuro"] .pg-vencida,html[data-tema="quente"] .pg-vencida{background:#4A2226;color:#FFB6BE}
 html[data-tema="escuro"] .pg-perto,html[data-tema="quente"] .pg-perto{background:#463619;color:#F5CE86}
 html[data-tema="escuro"] .pg-paga,html[data-tema="quente"] .pg-paga{background:#1E4038;color:#8FE0C6}
 @media (prefers-color-scheme: dark){
-  .pg-vencida{background:#4A2226;color:#FFB6BE} .pg-perto{background:#463619;color:#F5CE86}
-  .pg-paga{background:#1E4038;color:#8FE0C6}
+  html:not([data-tema="claro"]) .pg-vencida{background:#4A2226;color:#FFB6BE}
+  html:not([data-tema="claro"]) .pg-perto{background:#463619;color:#F5CE86}
+  html:not([data-tema="claro"]) .pg-paga{background:#1E4038;color:#8FE0C6}
 }
 
-/* ---------- página inicial ---------- */
-.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
+/* ---------- resumo ---------- */
+.sec{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 9px}
 .sec h2{margin:0}
-.sec button{border:0;background:none;font-size:13px;font-weight:600;color:var(--hero1)}
+.sec button{border:0;background:none;font-size:13px;font-weight:600;color:var(--ac);padding:4px 0}
 .cbar{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;text-align:left}
 .cbar+.cbar{border-top:1px solid var(--line)}
 .cbar .t{flex:1;min-width:0}
 .cbar .t b{display:block;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
-.cbar .track{height:7px;border-radius:99px;background:var(--soft);margin-top:7px;overflow:hidden}
+.cbar .track{height:6px;border-radius:99px;background:var(--soft);margin-top:8px;overflow:hidden}
 .cbar .track span{display:block;height:100%;border-radius:99px}
 .cbar .v{text-align:right;flex:0 0 auto}
-.cbar .v b{display:block;font-size:14.5px;font-weight:700}
+.cbar .v b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.04em}
 .cbar .v i{font-style:normal;font-size:11.5px;color:var(--mute)}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px;box-shadow:var(--sh)}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .pcard .h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--mute)}
-.pcard .v{font-size:19px;font-weight:700;letter-spacing:-.035em;margin-top:8px}
+.pcard .v{font-size:19px;font-weight:700;letter-spacing:-.045em;margin-top:8px}
 .pcard .p{font-size:11.5px;color:var(--mute);margin-top:2px}
 .mrow{display:flex;align-items:center;gap:12px;padding:12px 0}
 .mrow+.mrow{border-top:1px solid var(--line)}
 .mrow .m{flex:1;font-size:14.5px;font-weight:600}
-.mrow .c{font-size:12px;color:var(--mute)}
+.mrow .c{font-size:12px;color:var(--mute);font-weight:500}
 .cta{display:flex;gap:9px;margin-top:16px}
-.cta button{flex:1;border-radius:99px;padding:16px 8px;font-size:15px;font-weight:700;
-  border:1px solid var(--line);background:var(--card);box-shadow:var(--sh)}
-.cta button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cta button{flex:1;border-radius:14px;padding:15px 8px;font-size:15px;font-weight:700;
+  border:1px solid var(--line);background:var(--card)}
+.cta button.pri{background:var(--ac);color:#fff;border-color:transparent}
+html[data-tema="escuro"] .cta button.pri,html[data-tema="quente"] .cta button.pri{color:#1A1240}
+@media (prefers-color-scheme: dark){ html:not([data-tema="claro"]) .cta button.pri{color:#1A1240} }
 
-h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:26px 0 10px;font-weight:700}
+h2{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:24px 0 9px;font-weight:700}
 h2:first-child{margin-top:8px}
-label.f{display:block;font-size:12.5px;color:var(--mute);margin:12px 0 5px;font-weight:600}
-input,select,textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font-size:16px;
+label.f{display:block;font-size:12.5px;color:var(--mute);margin:14px 0 6px;font-weight:600}
+input,select,textarea{width:100%;padding:13px;border:1px solid var(--line);border-radius:var(--rs);font-size:16px;
   font-family:inherit;background:var(--card);color:var(--ink)}
-textarea{min-height:170px;font-family:ui-monospace,monospace;font-size:14px}
-.btn{width:100%;padding:16px;border-radius:99px;border:1px solid var(--line);background:var(--card);
-  font-size:15.5px;font-weight:650;margin-top:10px;box-shadow:var(--sh)}
-.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.btn.dgr{color:#D2475F;border-color:transparent;background:var(--soft);box-shadow:none}
-.mini2{border:1px solid var(--line);background:var(--soft);border-radius:99px;padding:9px 13px;font-size:12.5px;font-weight:600;color:var(--mute)}
+textarea{min-height:170px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px;line-height:1.6}
+.btn{width:100%;padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--card);
+  font-size:15.5px;font-weight:700;margin-top:10px}
+.btn.pri{background:var(--ac);color:#fff;border-color:transparent}
+html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A1240}
+@media (prefers-color-scheme: dark){ html:not([data-tema="claro"]) .btn.pri{color:#1A1240} }
+.btn.dgr{color:var(--neg);border-color:transparent;background:var(--soft)}
+.mini2{border:1px solid var(--line);background:transparent;border-radius:99px;padding:9px 13px;font-size:12.5px;
+  font-weight:600;color:var(--mute)}
 
-.sheet{position:fixed;inset:0;z-index:40;background:rgba(8,9,13,.6);display:flex;align-items:flex-end;backdrop-filter:blur(3px)}
-.sheetbox{background:var(--bg);width:100%;max-height:93vh;overflow:auto;border-radius:26px 26px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom))}
-.sheetbox::before{content:"";display:block;width:42px;height:5px;border-radius:99px;background:var(--line);margin:0 auto 16px}
-.sheetbox h3{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.04em}
-.warn{background:#FFF4D6;border:1px solid #E8CE86;color:#4A3A10;border-radius:14px;padding:13px;font-size:13.5px;margin-bottom:12px;white-space:pre-wrap}
-@media (prefers-color-scheme: dark){ .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE} }
-html[data-tema="claro"] .warn{background:#FFF4D6;border-color:#E8CE86;color:#4A3A10}
-html[data-tema="escuro"] .warn{background:#33290D;border-color:#5C4A17;color:#F0DFB4}
-html[data-tema="quente"] .warn{background:#3B3524;border-color:#5A5236;color:#EFE3BE}
-.seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:6px}
-.seg button{flex:1 1 44%;border:1px solid transparent;background:transparent;border-radius:15px;padding:13px 8px;
+/* ---------- folha ---------- */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(8,9,13,.55);display:flex;align-items:flex-end;
+  backdrop-filter:blur(3px)}
+.sheetbox{background:var(--bg);width:100%;max-height:93vh;overflow:auto;border-radius:24px 24px 0 0;
+  padding:10px var(--pad) calc(24px + env(safe-area-inset-bottom));
+  box-shadow:0 -20px 50px -30px rgba(0,0,0,.6)}
+.sheetbox::before{content:"";display:block;width:40px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 16px}
+.sheetbox h3{margin:0 0 6px;font-size:21px;font-weight:800;letter-spacing:-.035em}
+.warn{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--atn);color:var(--ink);
+  border-radius:var(--rs);padding:13px;font-size:13.5px;margin-bottom:12px;white-space:pre-wrap;line-height:1.5}
+.seg{display:flex;flex-wrap:wrap;gap:6px;background:var(--soft);border-radius:18px;padding:5px}
+.seg button{flex:1 1 44%;border:0;background:transparent;border-radius:14px;padding:13px 10px;
   font-size:14px;font-weight:600;color:var(--mute);display:flex;align-items:center;gap:9px;justify-content:flex-start}
-.seg button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:var(--sh);border-color:var(--line)}
+.seg button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:var(--sh);font-weight:700}
 .sw{width:19px;height:19px;border-radius:7px;flex:0 0 auto;border:1.5px solid rgba(128,128,128,.4)}
-.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;font-size:14.5px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:14.5px}
 .kv+.kv{border-top:1px solid var(--line)}
 .kv span{color:var(--mute)}
-.kv b{font-weight:600}
-.pv{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;
+.kv b{font-weight:700}
+.pv{background:var(--card);border:1px solid var(--line);border-radius:var(--rs);padding:10px;margin-bottom:8px;
   display:grid;grid-template-columns:76px 1fr 90px 56px 40px;gap:6px;align-items:center}
 .pv input{padding:9px;font-size:13.5px;border-radius:9px;background:var(--soft)}
-.empty{text-align:center;color:var(--mute);font-size:15px;padding:46px 18px;line-height:1.6}
+.empty{text-align:center;color:var(--mute);font-size:15px;padding:44px 18px;line-height:1.6}
 .srch{position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:2}
+.ajuda{font-size:13.5px;color:var(--mute);line-height:1.65;margin:14px 2px 4px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -818,14 +901,14 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.8";
+const VERSAO = "2.9";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
   ["escuro", "Escuro",        "#0D0E13"],
   ["quente", "Escuro quente", "#262624"]
 ];
-const CORBARRA = {claro:"#F0F1F6", escuro:"#0D0E13", quente:"#262624"};
+const CORBARRA = {claro:"#F2F3F7", escuro:"#0E1014", quente:"#232321"};
 function aplicarTema(){
   const t = (S && S.tema) || "auto";
   if (t === "auto") document.documentElement.removeAttribute("data-tema");
@@ -833,7 +916,7 @@ function aplicarTema(){
   const sis = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
   const efetivo = t === "auto" ? (sis ? "quente" : "claro") : t;
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute("content", CORBARRA[efetivo] || "#F0F1F6");
+  if (m) m.setAttribute("content", CORBARRA[efetivo] || "#F2F3F7");
 }
 
 function render(){
@@ -859,11 +942,11 @@ function header(){
   const rots = rotulos();
   const fut = previstoFuturo();
   const stats = [
-    {b: brl(t.total), i: "fatura"},
+    {b: brl(t.total), i: "total da fatura"},
     {b: String(lancAtivos().length), i: "lançamentos"},
-    {b: t.nPend ? String(t.nPend) : "0", i: t.nPend ? "sem dono" : "tudo classificado"},
+    t.nPend ? {b: String(t.nPend), i: "sem dono"}
+            : (fut.n ? {b: brl(fut.v), i: fut.n + " a vencer"} : {b: "0", i: "sem dono"}),
   ];
-  if (fut.n) stats.push({b: brl(fut.v), i: fut.n + " parcelas a vencer"});
   return `<div class="top">
     <div class="selrow">
       <select data-act="cartao" aria-label="Cartão">
@@ -882,8 +965,16 @@ function header(){
       ${ac.linhas.length>1 ? `<div class="acerto">${ac.linhas.map(l=>
         `<div>${esc(l.txt)} <b class="num">${brl(l.v)}</b></div>`).join("")}</div>` : ""}
       ${selosStatus()}
-    </div>
-    <div class="stats">${stats.map(s=>`<div class="stat"><b class="num">${esc(s.b)}</b><i>${esc(s.i)}</i></div>`).join("")}</div>`;
+      ${hstats(stats)}
+    </div>`;
+}
+
+/* rodapé de números dentro do herói — no máximo três, senão vira faixa de ruído */
+function hstats(items){
+  const l = items.filter(Boolean).slice(0,3);
+  if (!l.length) return "";
+  return `<div class="hstats">${l.map(s=>
+    `<div><b class="num">${esc(s.b)}</b><i>${esc(s.i)}</i></div>`).join("")}</div>`;
 }
 
 function previstoFuturo(){
@@ -904,17 +995,17 @@ function selosStatus(){
   }).filter(Boolean);
   if (!sel.length) return "";
   const um = sel.length === 1;
-  return `<div class="selos">${sel.map(s=>`<span class="selo" style="color:${CORSTATUS[s.st.e]}">
-      ${um?"":esc(s.nome)+" · "}${esc(s.st.t)}</span>`).join("")}</div>`;
+  return `<div class="selos">${sel.map(s=>`<span class="selo">
+      <i class="dot" style="background:${CORSTATUS[s.st.e]}"></i>${um?"":esc(s.nome)+" · "}${esc(s.st.t)}</span>`).join("")}</div>`;
 }
 
 function filtroPessoas(){
   const op = [{k:null,n:"Todos"}, ...S.pessoas.map(p=>({k:p.id,n:curtoNome(p.nome),c:CORES[p.cor%8]})), {k:"sem",n:"Sem dono"}];
-  return `<div class="fscroll">${op.map(o=>{
+  return op.map(o=>{
     const on = UI.filtroP === o.k;
-    return `<button class="fchip" data-on="${on?1:0}" data-act="filtroP" data-v="${o.k==null?"":o.k}"
-      style="${on&&o.c?`background:${o.c};border-color:${o.c}`:""}">${o.c?`<i class="dot" style="background:${on?"#fff":o.c}"></i>`:""}${esc(o.n)}</button>`;
-  }).join("")}</div>`;
+    return `<button class="fchip${o.c?" tinta":""}" data-on="${on?1:0}" data-act="filtroP" data-v="${o.k==null?"":o.k}"
+      ${o.c?`style="--c:${o.c}"`:""}>${o.c?`<i class="dot" style="background:${o.c}"></i>`:""}${esc(o.n)}</button>`;
+  }).join("");
 }
 
 function chipsHTML(aloc, attrs){
@@ -952,22 +1043,26 @@ function cardGrupo(g, tipo){
   const catMista = catsGrupo.length > 1;
   const cat = catsGrupo[0];
   const cc = catMista ? "var(--mute)" : corCat(cat);
-  const estilo = cor
-    ? `border-color:${cor};background:color-mix(in srgb, ${cor} 9%, var(--card));box-shadow:inset 4px 0 0 ${cor}, var(--sh)`
-    : "";
-  return `<div class="row" style="${estilo}">
+  /* trilho da esquerda: uma faixa por dono, em partes iguais — mostra a divisão sem tingir o card */
+  const trilho = g.aloc.length
+    ? `<span class="rail">${g.aloc.map(id=>{
+        const p = pessoa(id);
+        return `<span style="background:${CORES[(p?p.cor:0)%8]}"></span>`;
+      }).join("")}</span>` : "";
+  return `<div class="row grp" data-exp="${exp?1:0}">${trilho}
     <div class="rowtop">
-      <div class="badge" style="background:${cc}">${catMista?"~":esc(inicialCat(cat))}</div>
+      <div class="badge" style="--c:${cc}">${catMista?"~":esc(inicialCat(cat))}</div>
       <div style="min-width:0;flex:1">
         ${editando
           ? `<div class="editwrap"><input data-act="bufnome" data-foco value="${esc(g.k)}"><button class="ok" data-act="salvarnome" data-g="${esc(g.k)}">OK</button></div>`
           : `<button class="nm" ${tipo==="grupo"?`data-act="editar" data-g="${esc(g.k)}"`:`data-act="vercat" data-c="${esc(g.k)}"`}>${esc(g.k)}${tipo==="grupo"?' <span style="opacity:.32;font-size:13px">✎</span>':' <span style="opacity:.32;font-size:13px">›</span>'}</button>`}
         <div class="meta">
           <button class="lnk" data-act="exp" data-g="${esc(g.k)}">${g.itens.length} ${g.itens.length===1?"lançamento":"lançamentos"} ${exp?"▴":"▾"}</button>
-          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}" style="color:${cc}">${catMista?catsGrupo.length+" categorias":esc(cat)}</button>`:""}
+          ${tipo==="grupo"?`<button class="tag" data-act="vercat" data-c="${esc(cat)}">
+            <i class="dot" style="background:${cc}"></i>${catMista?catsGrupo.length+" categorias":esc(cat)}</button>`:""}
           ${tagsCartao(g)}
-          ${g.misto?`<span class="tag">misto</span>`:""}
-          ${g.aloc.length>1?`<span class="tag">÷${g.aloc.length}</span>`:""}
+          ${g.misto?`<span class="cardtag">misto</span>`:""}
+          ${g.aloc.length>1?`<span class="cardtag">÷${g.aloc.length}</span>`:""}
         </div>
       </div>
       <div class="val num">${brl(g.total)}</div>
@@ -994,7 +1089,7 @@ function itemHTML(l, full){
     }).join("")}</div>`;
   const cl = l.cat || "Outros";
   const ponto = `<button class="pin" data-act="vercatitem" data-i="${l.id}" title="${esc(cl)}"
-    style="background:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
+    style="--c:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
   const info = `<div class="t">
       <button data-act="abrirlanc" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
       <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
@@ -1020,10 +1115,10 @@ function barraLista(){
         ${rots.map(r=>`<option value="${esc(r)}"${S.rotuloAtivo===r?" selected":""}>${esc(r)}</option>`).join("")}
       </select>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin:14px 2px 0">
-      <div class="big num" style="font-size:25px;font-weight:800;letter-spacing:-.04em">${brl(t.total)}</div>
+    <div style="display:flex;align-items:baseline;gap:9px;margin:16px 2px 0">
+      <div class="num" style="font-size:26px;font-weight:700;letter-spacing:-.05em">${brl(t.total)}</div>
       <div style="font-size:13px;color:var(--mute)">${lancAtivos().length} lançamentos</div>
-      <div style="margin-left:auto;font-size:13px;font-weight:600;color:${t.nPend?"#C77A16":"#0A8A6E"}">
+      <div style="margin-left:auto;font-size:13px;font-weight:700;color:${t.nPend?"var(--atn)":"var(--pos)"}">
         ${t.nPend ? t.nPend+" sem dono" : "completo"}</div>
     </div></div>`;
 }
@@ -1054,26 +1149,31 @@ function viewLista(){
     const gs = agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g));
     corpo = gs.map(g=>cardGrupo(g,tipo)).join("") || `<div class="empty">Nada por aqui.</div>`;
   }
-  return barraLista() + `<div class="stick">` + filtroPessoas().replace('class="fscroll"','class="fscroll" style="padding:0 0 10px"') + `
+  return barraLista() + `<div class="stick">
     <div class="tog">
       <button data-act="modo" data-v="grupo" data-on="${UI.modo==="grupo"?1:0}">Estabelecimento</button>
       <button data-act="modo" data-v="item" data-on="${UI.modo==="item"?1:0}">Lançamento</button>
       <button data-act="modo" data-v="cat" data-on="${UI.modo==="cat"?1:0}">Categoria</button>
-    </div></div>
-    <div class="body">
-    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
-    <div style="display:flex;align-items:center;gap:10px;margin:12px 2px 14px">
-      <label class="check" style="margin:0;flex:1">
-        <input type="checkbox" data-act="sopend" ${UI.soPend?"checked":""}> Só o que falta</label>
-      ${UI.modo==="item" ? `<select data-act="ordem" style="width:auto;padding:9px 12px;border-radius:99px;font-size:13.5px;font-weight:600">
-        ${ORDENS.map(([k,n])=>`<option value="${k}"${(UI.ordem||"data-desc")===k?" selected":""}>${n}</option>`).join("")}
-      </select>` : ""}
     </div>
+    <div class="fscroll" style="padding:9px 0 2px">
+      ${filtroPessoas()}
+      <button class="fchip" data-act="sopendc" data-on="${UI.soPend?1:0}">Só o que falta</button>
+      ${UI.modo==="item" ? `<label class="fchip" style="padding-right:11px">Ordem:
+        <select data-act="ordem">${ORDENS.map(([k,n])=>
+          `<option value="${k}"${(UI.ordem||"data-desc")===k?" selected":""}>${n}</option>`).join("")}
+        </select></label>` : ""}
+    </div></div>
+    <div class="body" style="padding-top:12px">
+    ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
     ${corpo}
-    <p style="font-size:13px;color:var(--mute);line-height:1.6;margin:18px 0 8px">
-      Toque num nome para atribuir, toque de novo para desfazer. Dois ou mais nomes acesos dividem em partes iguais.
-      Toque no nome do estabelecimento (✎) para corrigi-lo. Escolhas no estabelecimento viram regra e voltam prontas nas próximas faturas.
-    </p>
+    <div style="margin:18px 0 8px">
+      <button class="mini2" data-act="ajuda">${UI.ajuda?"Entendi":"Como funciona?"}</button>
+      ${UI.ajuda?`<p class="ajuda">
+        Toque num nome para atribuir, toque de novo para desfazer. Dois ou mais nomes acesos dividem em partes iguais.
+        A faixa colorida na lateral mostra essa divisão.
+        Toque no nome do estabelecimento (✎) para corrigi-lo. Escolhas no estabelecimento viram regra
+        e voltam prontas nas próximas faturas.</p>`:""}
+    </div>
   </div>` + navbar();
 }
 
@@ -1085,7 +1185,7 @@ const ICONES = {
   config: '<svg viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h2M11 16h8"/><circle cx="16" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>'
 };
 function navbar(){
-  const abas = [["inicio","Resumo"],["lista","Lanç."],["contas","Contas"],["orcamento","Orçam."],["config","Ajustes"]];
+  const abas = [["inicio","Resumo"],["lista","Gastos"],["contas","Contas"],["orcamento","Metas"],["config","Ajustes"]];
   return `<div class="nav">${abas.map(([k,n])=>
     `<button class="navb" data-act="nav" data-v="${k}" data-on="${UI.view===k?1:0}">${ICONES[k]}<span>${n}</span></button>`
   ).join("")}</div>`;
@@ -1225,7 +1325,7 @@ function gastoOrcamento(m, forcarFonte){
 }
 const nomeOrigem = f => f === "todos" ? "Tudo"
   : (f === "contas" ? "Contas" : ((S.cartoes.find(c=>c.id===f)||{}).nome || "—"));
-const CORLIM = p => p >= 100 ? "#C0334D" : (p >= 80 ? "#C77A16" : "#0A8A6E");
+const CORLIM = p => p >= 100 ? "var(--neg)" : (p >= 80 ? "var(--atn)" : "var(--pos)");
 
 /* ================= contas a pagar ================= */
 function viewContas(){
@@ -1253,16 +1353,15 @@ function viewContas(){
         <span><i class="dot" style="background:#4ADE80"></i><em>Pago</em> <b class="num">${brl(rp.pago)}</b></span>
         <span><i class="dot" style="background:#FBBF24"></i><em>Em aberto</em> <b class="num">${brl(rp.aberto)}</b></span>
       </div>
-      ${rp.nVencidas ? `<div class="selos"><span class="selo" style="color:#FFAFAF">
-        ${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</span></div>` : ""}
+      ${rp.nVencidas ? `<div class="selos"><span class="selo">
+        <i class="dot" style="background:#FFAFAF"></i>${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</span></div>` : ""}
+      ${hstats([
+        {b: brl(rp.faturas.reduce((a,x)=>a+x.valor,0)), i:"faturas"},
+        {b: brl(r.total), i:"contas"},
+        {b: rp.nPagos+"/"+rp.nItens, i:"já pagas"},
+      ])}
     </div>
-    <div class="stats">
-      <div class="stat"><b class="num">${brl(rp.total)}</b><i>total a pagar</i></div>
-      <div class="stat"><b class="num">${brl(rp.faturas.reduce((a,x)=>a+x.valor,0))}</b><i>faturas</i></div>
-      <div class="stat"><b class="num">${brl(r.total)}</b><i>contas</i></div>
-      <div class="stat"><b class="num">${rp.nPagos}/${rp.nItens}</b><i>pagas</i></div>
-    </div>
-    <div class="body">
+    <div class="body" style="padding-top:2px">
       <div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Nova conta</button></div>
       ${rp.faturas.length ? `<div class="sec"><h2>Faturas de cartão</h2></div>
       <div class="row">${rp.faturas.map(x => linhaFatura(x)).join("")}</div>` : ""}
@@ -1281,7 +1380,7 @@ function linhaFatura(x){
   return `<div class="conta">
     <button class="mk" data-act="togglefat" data-i="${x.f.id}" data-pago="${x.pago?1:0}"
       aria-label="${x.pago?"Desmarcar":"Marcar fatura como paga"}">${x.pago?"✓":""}</button>
-    <div class="badge" style="background:#4B29A8;width:38px;height:38px;border-radius:12px;font-size:14px">${esc(sigla(x.c?x.c.nome:"?"))}</div>
+    <div class="badge" style="--c:var(--ac);width:38px;height:38px;border-radius:12px;font-size:13.5px">${esc(sigla(x.c?x.c.nome:"?"))}</div>
     <button class="t" data-act="abrirfat" data-i="${x.f.id}" style="background:none;border:0;padding:0;text-align:left">
       <b>${esc(x.c?x.c.nome:"Cartão")}${selo[0]?`<span class="pill ${selo[0]}">${esc(selo[1])}</span>`:""}</b>
       <i>fatura ${esc(x.f.rotulo)} · ${x.f.lanc.length} lançamentos${x.venc?" · vence "+dia(x.venc):""}</i>
@@ -1299,7 +1398,7 @@ function linhaConta(x){
     <button class="mk" data-act="togglepago" data-i="${x.c.id}" data-pago="${x.pago?1:0}"
       aria-label="${x.pago?"Desmarcar":"Marcar como paga"}">${x.pago?"✓":""}</button>
     <button class="badge" data-act="vercatconta" data-i="${x.c.id}" title="${esc(cat)}"
-      style="background:${corCat(cat)};width:38px;height:38px;border-radius:12px;font-size:15px;border:0">${esc(inicialCat(cat))}</button>
+      style="--c:${corCat(cat)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(cat))}</button>
     <button class="t" data-act="sheet" data-v="editarConta" data-i="${x.c.id}" style="background:none;border:0;padding:0;text-align:left">
       <b>${esc(x.c.nome)}${selo[0]?`<span class="pill ${selo[0]}">${esc(selo[1])}</span>`:""}</b>
       <i>${esc(cat)} · ${dia(x.venc)}${x.c.tipo==="mensal"?" · mensal":""}${pes.length?" · "+pes.map(id=>sigla(pessoa(id).nome)).join("/"):""}${pes.length>1?" ÷"+pes.length:""}</i>
@@ -1358,7 +1457,7 @@ function viewOrcamento(){
       <div class="row">${g.monitoradas.map(x => {
         const p = Math.min(100, Math.max(0, x.pct)), cor = CORLIM(x.pct);
         return `<button class="lim" data-act="vercatmes" data-c="${esc(x.cat)}">
-          <div class="badge" style="background:${corCat(x.cat)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(x.cat))}</div>
+          <div class="badge" style="--c:${corCat(x.cat)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(x.cat))}</div>
           <div class="t"><b>${esc(x.cat)}</b>
             <div class="track"><span style="width:${p.toFixed(1)}%;background:${cor}"></span></div>
             <i>${brl(x.gasto)} de ${brl(x.limite)}</i></div>
@@ -1371,7 +1470,7 @@ function viewOrcamento(){
       ${g.fora.length ? `<div class="sec"><h2>Fora do monitoramento</h2></div>
       <div class="row">${g.fora.slice(0, UI.verTudoFora ? 999 : 5).map(([c,v]) => `
         <button class="cbar" data-act="vercatmes" data-c="${esc(c)}">
-          <div class="badge" style="background:${corCat(c)};width:34px;height:34px;border-radius:11px;font-size:13px">${esc(inicialCat(c))}</div>
+          <div class="badge" style="--c:${corCat(c)};width:34px;height:34px;border-radius:11px;font-size:13px">${esc(inicialCat(c))}</div>
           <div class="t"><b>${esc(c)}</b></div>
           <div class="v"><b class="num">${brl(v)}</b></div></button>`).join("")}
         ${g.fora.length > 5 && !UI.verTudoFora ? `<button class="lnk" data-act="vertudofora" style="margin-top:10px">
@@ -1380,10 +1479,10 @@ function viewOrcamento(){
       ${temTotal ? `<div class="row" style="margin-top:16px">
         <div class="kv"><span>${filtrado ? "Meta de " + esc(nomeFonte) : "Você tem"}</span><b class="num">${brl(g.alvo)}</b></div>
         <div class="kv"><span>Distribuído em tetos</span><b class="num">${brl(g.somaLimites)}</b></div>
-        <div class="kv"><span>Sem teto definido</span><b class="num" style="color:${g.naoDistribuido<0?"#C0334D":"inherit"}">${brl(g.naoDistribuido)}</b></div>
+        <div class="kv"><span>Sem teto definido</span><b class="num" style="color:${g.naoDistribuido<0?"var(--neg)":"inherit"}">${brl(g.naoDistribuido)}</b></div>
         <div class="kv"><span>Gasto até agora</span><b class="num">${brl(g.total)}</b></div>
         <div class="kv"><span>${g.sobraTotal>=0?"Ainda pode gastar":"Estourou"}</span>
-          <b class="num" style="color:${g.sobraTotal<0?"#C0334D":"#0A8A6E"}">${brl(Math.abs(g.sobraTotal))}</b></div>
+          <b class="num" style="color:${g.sobraTotal<0?"var(--neg)":"var(--pos)"}">${brl(Math.abs(g.sobraTotal))}</b></div>
       </div>` : ""}
     </div>` + navbar();
 }
@@ -1430,22 +1529,20 @@ function viewInicio(){
           <span style="flex:1;${l.quitado?"text-decoration:line-through":""}">${esc(l.txt)}</span>
           <b class="num">${brl(l.quitado && l.valorPago!=null ? l.valorPago : l.v)}</b>
         </div>`).join("")}</div>` : ""}
+      ${hstats([
+        {b: brl(t.total), i:"gasto no mês"},
+        {b: brl(t.cartoes), i:"cartões"},
+        {b: brl(t.contas), i:"contas"},
+      ])}
     </div>
-    <div class="stats">
-      <div class="stat"><b class="num">${brl(t.total)}</b><i>gasto no mês</i></div>
-      <div class="stat"><b class="num">${brl(t.cartoes)}</b><i>cartões</i></div>
-      <div class="stat"><b class="num">${brl(t.contas)}</b><i>contas</i></div>
-      ${t.nPend?`<div class="stat"><b class="num">${t.nPend}</b><i>sem dono</i></div>`:""}
-    </div>
-    <div class="body">
+    <div class="body" style="padding-top:2px">
       ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
       <div class="cta">
         ${t.nPend?`<button class="pri" data-act="classificar">Classificar ${t.nPend}</button>`:""}
         <button ${t.nPend?"":'class="pri"'} data-act="sheet" data-v="exportar">Exportar</button>
       </div>
 
-      <div class="sec"><h2>Por pessoa</h2>
-        <button data-act="dica">toque para abrir</button></div>
+      <div class="sec"><h2>Por pessoa</h2></div>
       <div class="pgrid">${S.pessoas.map(p=>{
         const v = t.porPessoa[p.id]||0;
         const pc = t.total ? Math.abs(v)/Math.abs(t.total)*100 : 0;
@@ -1466,9 +1563,9 @@ function viewInicio(){
         <button data-act="nav" data-v="contas">abrir</button></div>
       <div class="row"><button class="cbar" data-act="nav" data-v="contas" style="padding-top:2px">
         <div class="t"><b>${rp.aberto>0.005 ? "Falta pagar" : "Tudo pago"}</b>
-          <div class="track"><span style="width:${rp.total?Math.abs(rp.pago)/Math.abs(rp.total)*100:0}%;background:#0A8A6E"></span></div></div>
+          <div class="track"><span style="width:${rp.total?Math.abs(rp.pago)/Math.abs(rp.total)*100:0}%;background:var(--pos)"></span></div></div>
         <div class="v"><b class="num">${brl(rp.aberto)}</b><i>${rp.nPagos}/${rp.nItens} pagas</i></div>
-      </button>${rp.nVencidas?`<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+      </button>${rp.nVencidas?`<div style="font-size:13px;color:var(--neg);font-weight:600;padding-top:8px">
         ${rp.nVencidas} vencida${rp.nVencidas===1?"":"s"}</div>`:""}</div>` : ""}
 
       ${(()=>{ const o = S.orcamento;
@@ -1479,7 +1576,7 @@ function viewInicio(){
           .forEach(x => estouros.push(x.cat + (fo==="todos" ? "" : " ("+nomeOrigem(fo)+")"))));
         if (!(totalDe("todos") > 0)) return estouros.length ? `<div class="sec"><h2>Orçamento</h2>
             <button data-act="nav" data-v="orcamento">abrir</button></div>
-          <div class="row"><div style="font-size:14px;color:#C0334D;font-weight:600">
+          <div class="row"><div style="font-size:14px;color:var(--neg);font-weight:600">
             ${esc(estouros.join(", "))} estourou o teto</div></div>` : "";
         const g = gastoOrcamento(m, "todos");
         const pct = Math.abs(g.total)/g.alvo*100;
@@ -1490,7 +1587,7 @@ function viewInicio(){
             <div class="track"><span style="width:${Math.min(100,pct).toFixed(1)}%;background:${CORLIM(pct)}"></span></div></div>
           <div class="v"><b class="num" style="color:${CORLIM(pct)}">${brl(Math.abs(g.sobraTotal))}</b>
             <i>${pct.toFixed(0)}% de ${brl(g.alvo)}</i></div></button>
-          ${estouros.length ? `<div style="font-size:13px;color:#C0334D;font-weight:600;padding-top:8px">
+          ${estouros.length ? `<div style="font-size:13px;color:var(--neg);font-weight:600;padding-top:8px">
             ${esc(estouros.join(", "))} estourou o teto</div>`:""}</div>`;
       })()}
 
@@ -1504,7 +1601,7 @@ function viewInicio(){
 function barraCat(c, v, total, max, attrs){
   const pc = total ? Math.abs(v)/Math.abs(total)*100 : 0;
   return `<button class="cbar" ${attrs||""}>
-    <div class="badge" style="background:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
+    <div class="badge" style="--c:${corCat(c)};width:38px;height:38px;border-radius:12px;font-size:15px">${esc(inicialCat(c))}</div>
     <div class="t"><b>${esc(c)}</b>
       <div class="track"><span style="width:${Math.max(2,Math.abs(v)/(max||1)*100).toFixed(1)}%;background:${corCat(c)}"></span></div></div>
     <div class="v"><b class="num">${brl(v)}</b><i>${pc.toFixed(0)}%</i></div>
@@ -1573,7 +1670,7 @@ function viewConfig(){
     ${S.cats.map(c=>{
       const n = S.faturas.reduce((a,f)=>a+f.lanc.filter(l=>l.cat===c).length,0);
       return `<div class="row"><div class="rowtop">
-        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
+        <div class="badge" style="--c:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
         <input value="${esc(c)}" data-act="renomecat" data-i="${esc(c)}"
           style="border:0;padding:6px 0;font-weight:600;font-size:16px;background:none;flex:1">
         <div style="display:flex;align-items:center;gap:8px">
@@ -1595,7 +1692,7 @@ function viewConfig(){
         : `<div class="row"><div style="font-size:15px">Todas as parcelas já estão lançadas nos meses seguintes.</div></div>`;
     })()}
     ${(()=>{ const es = estornosPendentes();
-      return es.length ? `<div class="row" style="border-color:#E2A0AC">
+      return es.length ? `<div class="row" style="border-color:var(--neg)">
         <div style="font-size:15px;font-weight:600">${es.length} compra${es.length===1?"":"s"} com estorno
           ainda ${es.length===1?"tem":"têm"} parcelas previstas.</div>
         <div style="font-size:13px;color:var(--mute);margin-top:6px">
@@ -1732,7 +1829,7 @@ sheets.verCat = () => {
   daCat.forEach(l=>{ porEstab[l.g] = (porEstab[l.g]||0) + l.v; });
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-      <div class="badge" style="background:${corCat(t.cat)}">${esc(inicialCat(t.cat))}</div>
+      <div class="badge" style="--c:${corCat(t.cat)}">${esc(inicialCat(t.cat))}</div>
       <h3 style="margin:0">${esc(t.cat)}</h3></div>
     <select data-act="vcescopo" style="margin:10px 0 14px">
       <option value="mes"${t.escopo==="mes"?" selected":""}>${esc(compLabel(S.mesContas))} · cartões e contas</option>
@@ -1793,7 +1890,7 @@ sheets.acertar = () => {
       ${esc(compLabel(S.mesContas))} · devido ${brl(t.v)}</p>
     <label class="f">Quanto ${receber ? "você recebeu" : "você pagou"}</label>
     <input data-act="acv" inputmode="decimal" value="${esc(t.valor)}">
-    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"var(--pos)"};margin-top:6px;font-weight:700">
       ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
     <label class="f">Quando</label>
     <input data-act="acq" type="date" value="${esc(t.quando)}">
@@ -1816,7 +1913,7 @@ sheets.pagarFatura = () => {
       ${esc(c?c.nome:"")} · ${esc(f.rotulo)} · ${f.lanc.length} lançamentos</p>
     <label class="f">Valor pago</label>
     <input data-act="acv" inputmode="decimal" value="${esc(t.valor)}">
-    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+    <div id="previaAcerto" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"var(--pos)"};margin-top:6px;font-weight:700">
       ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
     <label class="f">Quando</label>
     <input data-act="acq" type="date" value="${esc(t.quando)}">
@@ -1847,7 +1944,7 @@ sheets.verPessoa = () => {
 
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-      <div class="badge" style="background:${CORES[p.cor%8]}">${esc(sigla(p.nome))}</div>
+      <div class="badge" style="--c:${CORES[p.cor%8]}">${esc(sigla(p.nome))}</div>
       <div><h3 style="margin:0">${esc(curtoNome(p.nome))}</h3>
         <div style="font-size:13px;color:var(--mute)">${esc(compLabel(m))}</div></div>
     </div>
@@ -1906,7 +2003,7 @@ sheets.editarOrcamento = () => {
         : "Metas só de " + esc(nomeOrigem(t.fonte)) + ", independentes das gerais."}</p>
     <label class="f">${t.fonte==="todos" ? "Quanto você tem no mês" : "Meta total nesta origem"}</label>
     <input data-act="orf" data-k="total" inputmode="decimal" value="${esc(f.total)}" placeholder="0,00">
-    <div id="previaOrc" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:6px;font-weight:700">
+    <div id="previaOrc" style="font-size:13.5px;color:${isNaN(pv)?"var(--mute)":"var(--pos)"};margin-top:6px;font-weight:700">
       ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
 
     ${t.fonte==="todos" ? `<label class="f">Contar quais gastos</label>
@@ -1922,7 +2019,7 @@ sheets.editarOrcamento = () => {
     <div class="srch"><input data-act="orq" value="${esc(t.q||"")}" placeholder="Buscar categoria"></div>
     <div class="row">${lista.map(c => `
       <div class="orow">
-        <div class="badge" style="background:${corCat(c)};width:34px;height:34px;border-radius:11px;font-size:13px">${esc(inicialCat(c))}</div>
+        <div class="badge" style="--c:${corCat(c)};width:34px;height:34px;border-radius:11px;font-size:13px">${esc(inicialCat(c))}</div>
         <div style="min-width:0"><div class="n">${esc(c)}</div>
           <div class="g">${brl(g.porCat[c] || 0)} gasto</div></div>
         <input data-act="orlim" data-c="${esc(c)}" inputmode="decimal"
@@ -1952,7 +2049,7 @@ sheets.estornos = () => {
     ${lista.length ? lista.map((r,i)=>`
       <div class="row">
         <div class="rowtop">
-          <div class="badge" style="background:${corCat(r.futuras[0].l.cat||"Outros")}">${esc(inicialCat(r.futuras[0].l.cat||"Outros"))}</div>
+          <div class="badge" style="--c:${corCat(r.futuras[0].l.cat||"Outros")}">${esc(inicialCat(r.futuras[0].l.cat||"Outros"))}</div>
           <div style="flex:1;min-width:0"><div class="nm">${esc(r.nome)}</div>
             <div class="meta"><span class="tag">${esc(r.cartao)}</span>
               <span class="tag" style="color:#C0334D">estorno ${brl(r.estorno)}</span></div></div>
@@ -1990,7 +2087,7 @@ sheets.editarLanc = () => {
     <input data-act="elf" data-k="g" value="${esc(f.g)}">
     <label class="f">Valor</label>
     <input data-act="elf" data-k="valor" inputmode="decimal" value="${esc(f.valor)}">
-    <div id="previaLanc" style="font-size:12.5px;color:${isNaN(pv)?"var(--mute)":"#0A8A6E"};margin-top:5px;font-weight:600">
+    <div id="previaLanc" style="font-size:12.5px;color:${isNaN(pv)?"var(--mute)":"var(--pos)"};margin-top:5px;font-weight:600">
       ${isNaN(pv) ? "digite o valor" : brl(pv)}</div>
     <label class="f">Categoria</label>
     <button class="catbtn" data-act="vercatlanc" style="width:100%;justify-content:flex-start;padding:14px">
@@ -2023,7 +2120,7 @@ sheets.escolherCat = () => {
     ${q && !existe ? `<button class="btn pri" data-act="eccriar">Criar "${esc(q)}" e usar</button>` : ""}
     <div class="row">${achados.length ? achados.map(c=>`
       <button class="catopt" data-act="ecusar" data-c="${esc(c)}">
-        <div class="badge" style="background:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
+        <div class="badge" style="--c:${corCat(c)};width:36px;height:36px;border-radius:11px;font-size:14px">${esc(inicialCat(c))}</div>
         <b>${esc(c)}</b>
         ${c===t.atual?`<span class="pill pg-paga">atual</span>`:`<span class="tag">${conta(c)}</span>`}
       </button>`).join("") : `<div class="empty" style="padding:22px">Nenhuma categoria com esse nome.</div>`}</div>
@@ -2137,7 +2234,7 @@ sheets.mudarMes = () => {
     ${conflito?`<div class="warn">Já existe uma fatura de ${esc(compLabel(comp))} nesse cartão.</div>`:""}
     ${auto?`<div class="warn">As ${auto} parcelas previstas deste cartão serão refeitas a partir do novo mês.
       Os ${f.lanc.filter(l=>!l.auto).length} lançamentos desta fatura, com dono e categoria, ficam como estão.</div>`
-     :`<div class="row" style="background:#E8F4EF;border-color:#B7DCCE"><div style="font-size:13.5px">
+     :`<div class="row" style="border-left:3px solid var(--pos)"><div style="font-size:13.5px">
         Os ${f.lanc.length} lançamentos, com dono e categoria, continuam exatamente como estão. Muda só o mês.</div></div>`}
     <button class="btn pri" data-act="mmSalvar" ${conflito?"disabled style=\"opacity:.5\"":""}>Mudar para ${esc(compLabel(comp))}</button>
     <button class="btn" data-act="fechar">Cancelar</button>
@@ -2432,6 +2529,8 @@ document.addEventListener("click", ev => {
     case "nav": UI.view = v; UI.editando = UI.editandoItem = null; window.scrollTo(0,0); return render();
     case "classificar": UI.view = "lista"; UI.soPend = true; UI.filtroP = null;
       window.scrollTo(0,0); return render();
+    case "sopendc": UI.soPend = !UI.soPend; return render();
+    case "ajuda": UI.ajuda = !UI.ajuda; return render();
     case "vertudocat": UI.verTudoCat = !UI.verTudoCat; return render();
     case "vertudofora": UI.verTudoFora = !UI.verTudoFora; return render();
     case "fonteOrc": S.fonteOrc = v; salvar(); window.scrollTo(0,0); return render();
