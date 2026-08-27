@@ -198,6 +198,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .it .t button{display:block;font-size:14.5px;font-weight:600;background:none;border:0;padding:0;text-align:left;
   width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .it .t i{font-style:normal;font-size:12px;color:var(--mute)}
+.it .t u{display:block;text-decoration:none;font-size:13px;color:var(--ink);opacity:.78;margin:1px 0 2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pin{width:30px;height:30px;border-radius:10px;flex:0 0 auto;border:0;padding:0;
   display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;
   background:var(--soft);color:var(--ink);
@@ -342,6 +344,7 @@ html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A124
 .pv{background:var(--card);border:1px solid var(--line);border-radius:var(--rs);padding:10px;margin-bottom:8px;
   display:grid;grid-template-columns:76px 1fr 90px 56px 40px;gap:6px;align-items:center}
 .pv input{padding:9px;font-size:13.5px;border-radius:9px;background:var(--soft)}
+.pv .desc{grid-column:1 / -1}
 .empty{text-align:center;color:var(--mute);font-size:15px;padding:44px 18px;line-height:1.6}
 .srch{position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:2}
 .ajuda{font-size:13.5px;color:var(--mute);line-height:1.65;margin:14px 2px 4px}
@@ -496,6 +499,28 @@ let UI = {view:"inicio", modo:"grupo", soPend:false, filtroP:null, aberto:null,
 /* ================= utilidades ================= */
 const brl = n => (n<0?"−R$ ":"R$ ") + Math.abs(n).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
 const dia = s => /^\d{4}-/.test(s) ? s.slice(8,10)+"/"+s.slice(5,7) : s;
+
+/* As datas chegam da importação como "DD/MM" (sem ano), então comparar como texto
+   ordenava pelo dia do mês: 01/08 vinha antes de 24/07. Aqui montamos uma chave
+   AAAA-MM-DD de verdade, deduzindo o ano pela competência da fatura — uma compra
+   de dezembro numa fatura de janeiro pertence ao ano anterior. */
+function chaveData(l){
+  const s = String((l && l.d) || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if (!m) return "9999-99-99";                    // sem data reconhecível vai para o fim
+  const dd = m[1].padStart(2,"0"), mm = m[2].padStart(2,"0");
+  if (m[3]) return (m[3].length===2 ? "20"+m[3] : m[3]) + "-" + mm + "-" + dd;
+  const comp = (l && l._f && l._f.comp) || (l && l._comp) || "";
+  if (/^\d{4}-\d{2}$/.test(comp)){
+    const ca = +comp.slice(0,4), cm = +comp.slice(5,7);
+    return String(+mm > cm ? ca - 1 : ca) + "-" + mm + "-" + dd;
+  }
+  return "0000-" + mm + "-" + dd;
+}
+const dataLonga = l => { const k = chaveData(l);
+  return /^\d{4}-\d{2}-\d{2}$/.test(k) && !k.startsWith("0000") && !k.startsWith("9999")
+    ? k.slice(8,10)+"/"+k.slice(5,7)+"/"+k.slice(0,4) : dia(l && l.d); };
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pessoa = id => S.pessoas.find(p=>p.id===id);
 const MESES_NOME = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -727,7 +752,7 @@ function propagar(l, f){
       x.lanc.some(y => y.serie === serie ? y.p === rot : mesmaParcela(y, nova)));
     if (jaTem) continue;
     const id = uid("l");
-    alvo.lanc.push({id, d:l.d, r:l.r, g:l.g, v:l.v, p:i+"/"+pi.n, cat:l.cat, serie, auto:true});
+    alvo.lanc.push({id, d:l.d, r:l.r, g:l.g, v:l.v, p:i+"/"+pi.n, cat:l.cat, desc:l.desc||"", serie, auto:true});
     const a = alocDe(l.id);
     if (a.length) S.aloc[id] = a.slice();
     else if (S.regras[l.g]) S.aloc[id] = S.regras[l.g].slice();
@@ -901,7 +926,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "2.9";
+const VERSAO = "3.0";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -1072,7 +1097,7 @@ function cardGrupo(g, tipo){
       ${tipo==="grupo"?`<div class="catsel"><span>Categoria</span>
         <button class="catbtn" data-act="vercatgrupo" data-g="${esc(g.k)}" style="flex:1;justify-content:flex-start">
           <i style="background:${cc}"></i>${catMista?"várias — tocar para unificar":esc(cat)}</button></div>`:""}
-      ${g.itens.map(itemHTML).join("")}</div>`:""}
+      ${ordenar(g.itens).map(l=>itemHTML(l)).join("")}</div>`:""}
   </div>`;
 }
 
@@ -1092,6 +1117,7 @@ function itemHTML(l, full){
     style="--c:${corCat(cl)}">${esc(inicialCat(cl))}</button>`;
   const info = `<div class="t">
       <button data-act="abrirlanc" data-i="${l.id}">${esc(full?l.g:l.r)}</button>
+      ${l.desc?`<u>${esc(l.desc)}</u>`:""}
       <i>${dia(l.d)}${l.p ? (l.p==="estorno"?" · estorno":" · parc. "+l.p) : ""}${a.length>1?" · ÷"+a.length:""}${l.auto?" · previsto":""}</i>
     </div>`;
   if (editando) return `<div class="it"><div class="t">
@@ -1129,11 +1155,28 @@ const ORDENS = [["data-desc","Mais recentes"],["data-asc","Mais antigos"],
 function ordenar(L){
   const o = UI.ordem || "data-desc";
   const c = [...L];
-  if (o === "data-asc")   c.sort((a,b)=> String(a.d)<String(b.d)?-1:(String(a.d)>String(b.d)?1:0));
+  const cmp = (a,b) => { const x = chaveData(a), y = chaveData(b);
+    return x < y ? -1 : (x > y ? 1 : 0); };
+  if (o === "data-asc")   c.sort(cmp);
   else if (o === "valor-desc") c.sort((a,b)=> Math.abs(b.v)-Math.abs(a.v));
   else if (o === "valor-asc")  c.sort((a,b)=> Math.abs(a.v)-Math.abs(b.v));
   else if (o === "nome")  c.sort((a,b)=> a.g.localeCompare(b.g, "pt-BR", {sensitivity:"base"}));
-  else c.sort((a,b)=> String(a.d)<String(b.d)?1:(String(a.d)>String(b.d)?-1:0));
+  else c.sort((a,b)=> cmp(b,a));
+  return c;
+}
+
+/* mesma ordem aplicada a grupos: pela data da compra mais recente (ou mais antiga) do grupo */
+function ordenarGrupos(gs){
+  const o = UI.ordem || "data-desc";
+  const c = [...gs];
+  const chaves = g => g.itens.map(chaveData).filter(k=>k<"9999");
+  const maxK = g => { const k = chaves(g); return k.length ? k.reduce((a,b)=>a>b?a:b) : "0000-00-00"; };
+  const minK = g => { const k = chaves(g); return k.length ? k.reduce((a,b)=>a<b?a:b) : "9999-99-99"; };
+  if (o === "data-asc")   c.sort((a,b)=> minK(a)<minK(b)?-1:(minK(a)>minK(b)?1:0));
+  else if (o === "data-desc") c.sort((a,b)=> maxK(a)>maxK(b)?-1:(maxK(a)<maxK(b)?1:0));
+  else if (o === "valor-asc") c.sort((a,b)=> Math.abs(a.total)-Math.abs(b.total));
+  else if (o === "nome")  c.sort((a,b)=> String(a.k).localeCompare(String(b.k), "pt-BR", {sensitivity:"base"}));
+  else c.sort((a,b)=> Math.abs(b.total)-Math.abs(a.total));
   return c;
 }
 
@@ -1146,7 +1189,7 @@ function viewLista(){
     corpo = `<div class="row">${ordenar(L).map(l=>itemHTML(l,true)).join("") || `<div class="empty">Nada por aqui.</div>`}</div>`;
   } else {
     const tipo = UI.modo === "cat" ? "cat" : "grupo";
-    const gs = agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g));
+    const gs = ordenarGrupos(agrupar(L, tipo==="cat" ? (l=>l.cat||"Outros") : (l=>l.g)));
     corpo = gs.map(g=>cardGrupo(g,tipo)).join("") || `<div class="empty">Nada por aqui.</div>`;
   }
   return barraLista() + `<div class="stick">
@@ -1158,10 +1201,10 @@ function viewLista(){
     <div class="fscroll" style="padding:9px 0 2px">
       ${filtroPessoas()}
       <button class="fchip" data-act="sopendc" data-on="${UI.soPend?1:0}">Só o que falta</button>
-      ${UI.modo==="item" ? `<label class="fchip" style="padding-right:11px">Ordem:
+      <label class="fchip" style="padding-right:11px">Ordem:
         <select data-act="ordem">${ORDENS.map(([k,n])=>
           `<option value="${k}"${(UI.ordem||"data-desc")===k?" selected":""}>${n}</option>`).join("")}
-        </select></label>` : ""}
+        </select></label>
     </div></div>
     <div class="body" style="padding-top:12px">
     ${AVISO_STORAGE?`<div class="warn">${esc(AVISO_STORAGE)}</div>`:""}
@@ -1760,7 +1803,8 @@ function viewConfig(){
 const sheets = {};
 
 sheets.exportar = () => {
-  const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual", contas:true});
+  const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual",
+                                 contas:true, formato:"planilha"});
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <h3>Exportar gastos</h3>
     <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Cada linha traz o valor já dividido e a categoria, pronto para somar.</p>
@@ -1774,6 +1818,14 @@ sheets.exportar = () => {
     <select data-act="xescopo">
       <option value="atual"${t.escopo==="atual"?" selected":""}>Só a fatura aberta</option>
       <option value="todas"${t.escopo==="todas"?" selected":""}>Todas as faturas</option></select>
+    <label class="f">Formato</label>
+    <div class="seg">
+      <button data-act="xformato" data-v="planilha" data-on="${t.formato!=="tabela"?1:0}">Planilha por pessoa</button>
+      <button data-act="xformato" data-v="tabela" data-on="${t.formato==="tabela"?1:0}">Tabela completa</button>
+    </div>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 2px 0">${t.formato!=="tabela"
+      ? "Um bloco por pessoa e por cartão: data, estabelecimento, descrição, categoria, parcela, quem paga e valor, com TOTAL no fim."
+      : "Uma linha por pessoa por lançamento, com valor total e valor já dividido — bom para somar e filtrar."}</p>
     <label class="f">Como enviar</label>
     <button class="btn pri" data-act="xshare">Compartilhar (Drive, WhatsApp…)</button>
     <button class="btn" data-act="xsheets">Copiar para colar no Sheets</button>
@@ -2074,7 +2126,8 @@ sheets.editarLanc = () => {
   let alvo = null, fat = null;
   S.faturas.forEach(f => f.lanc.forEach(l => { if (l.id === t.id){ alvo = l; fat = f; } }));
   if (!alvo) return "";
-  if (t.f === undefined) t.f = {g: alvo.g, valor: paraCampo(alvo.v), p: alvo.p || "", cat: alvo.cat || "Outros"};
+  if (t.f === undefined) t.f = {g: alvo.g, valor: paraCampo(alvo.v), p: alvo.p || "",
+                                desc: alvo.desc || "", cat: alvo.cat || "Outros"};
   const f = t.f;
   const pv = num(String(f.valor).replace(/[R$\s]/g, ""));
   const irmaos = alvo.serie ? S.faturas.flatMap(x=>x.lanc).filter(y=>y.serie===alvo.serie) : [alvo];
@@ -2085,6 +2138,8 @@ sheets.editarLanc = () => {
       ${esc(fat.rotulo)} · ${esc(nomeCartao(fat))} · ${dia(alvo.d)}${alvo.p&&alvo.p!=="estorno"?" · parcela "+alvo.p:""}${alvo.auto?" · previsto":""}</p>
     <label class="f" style="margin-top:0">Estabelecimento</label>
     <input data-act="elf" data-k="g" value="${esc(f.g)}">
+    <label class="f">Descrição <span style="font-weight:500;text-transform:none;letter-spacing:0">— o que foi comprado</span></label>
+    <input data-act="elf" data-k="desc" value="${esc(f.desc||"")}" placeholder="ex.: remédio para dor de cabeça">
     <label class="f">Valor</label>
     <input data-act="elf" data-k="valor" inputmode="decimal" value="${esc(f.valor)}">
     <div id="previaLanc" style="font-size:12.5px;color:${isNaN(pv)?"var(--mute)":"var(--pos)"};margin-top:5px;font-weight:600">
@@ -2282,6 +2337,8 @@ sheets.importar = () => {
       <input data-act="pv" data-k="v" data-i="${i}" value="${esc(x.v)}" class="num">
       <input data-act="pv" data-k="p" data-i="${i}" value="${esc(x.p||"")}">
       <button class="mini2" data-act="pvdel" data-i="${i}" style="padding:10px 8px">✕</button>
+      <input class="desc" data-act="pv" data-k="desc" data-i="${i}" value="${esc(x.desc||"")}"
+        placeholder="Descrição (opcional)">
     </div>${x.dup?`<div style="font-size:12px;color:var(--mute);margin:-4px 0 8px 4px">
       já existe nesta fatura ·
       <button class="lnk" data-act="pvdup" data-i="${i}">importar mesmo assim</button></div>`:""}`).join("")}
@@ -2403,13 +2460,33 @@ const paraCampo = v => (v == null || v === "" || isNaN(v)) ? "" : Number(v).toFi
 const parcNoNome = s => { const m = s.match(RE_PARC2); return m ? +m[1]+"/"+ +m[2] : ""; };
 const limpaNome = s => s.replace(RE_PARC2,"").replace(/[>›»<‹«]/g,"").replace(/\s{2,}/g," ").trim();
 
+/* num campo separado por | reconhecemos o pedaço pelo formato, não pela posição.
+   Assim valem tanto "data | estabelecimento | valor | parcela" quanto
+   "data | estabelecimento | descrição | valor" — e as duas juntas. */
+const RE_SO_PARC = /^\d{1,3}\s*\/\s*\d{1,3}$/;
+const RE_SO_VALOR = /^[-−(]?\s*R?\$?\s*\d{1,3}([.\s]\d{3})*([.,]\d{1,2})?\s*\)?$/;
+const ehValor = s => RE_SO_VALOR.test(String(s).trim()) && /\d/.test(s);
+function lerLinhaPipe(l){
+  const c = l.split(/[|;\t]/).map(s=>s.trim());
+  const o = {d:c[0]||"", g:c[1]||"", v:"", p:"", desc:""};
+  const sobra = [];
+  for (let i = 2; i < c.length; i++){
+    const x = c[i]; if (!x) continue;
+    if (!o.p && RE_SO_PARC.test(x)){ o.p = x.replace(/\s/g,""); continue; }
+    if (ehValor(x)){
+      const neg = /^\(.*\)$/.test(x) || /^[-−]/.test(x);      // (R$ 0,15) = estorno
+      o.v = (neg?"-":"") + x.replace(/[R$()\s−-]/g,"");
+      continue;
+    }
+    sobra.push(x);
+  }
+  o.desc = sobra.join(" · ");
+  return o;
+}
 function lerColado(txt){
   const linhas = txt.split(/\r?\n/).map(s=>s.trim()).filter(s=>s && !RUIDO.test(s));
   if (linhas.filter(l=>/[|;]/.test(l)).length > linhas.length*0.5){
-    return linhas.map(l=>{
-      const c = l.split(/[|;]/).map(s=>s.trim());
-      return {d:c[0]||"", g:c[1]||"", v:(c[2]||"").replace(/R\$\s*/,""), p:c[3]||""};
-    }).filter(x=>x.g);
+    return linhas.map(lerLinhaPipe).filter(x=>x.g && !/^(data|dt)$/i.test(x.d));
   }
   let dataAtual = ""; const nomes = [], valores = [];
   for (const l of linhas){
@@ -2468,6 +2545,106 @@ function linhasContas(t){
 const campos = o => [o.f,o.c,o.d,o.g,o.cat,o.p,o.tot.toFixed(2).replace(".",","),o.div,o.quem,o.val.toFixed(2).replace(".",",")];
 
 const todasLinhas = t => linhasExport(t).concat(linhasContas(t));
+const saidaCSV = t => (t.formato!=="tabela") ? "\uFEFF"+gerarPlanilha(t,";") : gerarCSV(t);
+const saidaTSV = t => (t.formato!=="tabela") ? gerarPlanilha(t,"\t") : gerarTSV(t);
+
+/* ---------- planilha por pessoa, no formato de repasse ----------
+   Um bloco por pessoa e por cartão: título, vencimento, tabela e TOTAL.
+   O valor da linha é sempre a parte daquela pessoa; quando a compra foi
+   dividida, a descrição registra o ÷N para a conta bater com a fatura. */
+const CAB_PLANILHA = ["Data","Estabelecimento","Descrição","Categoria","Parcela","Quem paga","Valor (R$)"];
+const brlCel = v => (v < 0 ? "(R$ " + brl(Math.abs(v)).replace("R$ ","") + ")" : brl(v));
+function somaDias(iso, n){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso||"")) return null;
+  const d = new Date(iso + "T12:00");
+  d.setDate(d.getDate() + n);
+  const p = x => String(x).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+const brDia = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso||"") ? iso.slice(8,10)+"/"+iso.slice(5,7)+"/"+iso.slice(0,4) : "";
+
+function blocosPlanilha(t){
+  const fs = t.escopo === "todas" ? S.faturas : faturasAtivas();
+  const alvos = S.pessoas.filter(p => t.sel.includes(p.id));
+  if (t.pend) alvos.push({id:"__sem", nome:"Sem dono", cor:0});
+  const blocos = [];
+
+  alvos.forEach(p => {
+    fs.forEach(f => {
+      const c = cartaoDe(f);
+      const itens = f.lanc.filter(l => {
+        const a = alocDe(l.id).filter(id => pessoa(id));
+        return p.id === "__sem" ? !a.length : a.includes(p.id);
+      });
+      if (!itens.length) return;
+      const pagador = c && c.pagador ? (pessoa(c.pagador)||{}).nome : "";
+      const linhas = ordenarPorData(itens.map(l => Object.assign({_f:f}, l))).map(l => {
+        const a = alocDe(l.id).filter(id => pessoa(id));
+        const div = a.length || 1;
+        const desc = (l.desc||"") + (div > 1 ? (l.desc?" · ":"") + "÷"+div : "");
+        return [dataLonga(l), l.g, desc, l.cat||"Outros",
+                l.p && l.p !== "estorno" ? l.p : (l.p==="estorno"?"estorno":""),
+                pagador || "", brlCel(l.v/div)];
+      });
+      const total = itens.reduce((s,l) => {
+        const div = (alocDe(l.id).filter(id=>pessoa(id)).length) || 1;
+        return s + l.v/div; }, 0);
+      const venc = dataVenc(c, f.comp);
+      const rotuloTotal = p.id === S.euId ? "TOTAL A PAGAR" : "TOTAL A RECEBER";
+      blocos.push({
+        titulo: "Compras " + (p.id==="__sem" ? "sem dono" : "de " + p.nome) + " — Fatura " + (c?c.nome:"cartão"),
+        sub: (venc ? "Vencimento da fatura: " + brDia(venc) : "Fatura " + f.rotulo)
+           + (venc && p.id!=="__sem" ? " · " + p.nome + " repassa em " + brDia(somaDias(venc,-2)) : ""),
+        linhas, total, rotuloTotal
+      });
+    });
+
+    if (t.contas && p.id !== "__sem"){
+      const cs = contasDoMes(S.mesContas).filter(x => (x.c.pessoas||[]).includes(p.id));
+      if (cs.length){
+        const linhas = cs.map(x => {
+          const div = ((x.c.pessoas||[]).filter(id=>pessoa(id)).length) || 1;
+          return [brDia(x.venc)||dia(x.venc), x.c.nome,
+                  (x.pago?"paga":"em aberto") + (div>1?" · ÷"+div:""),
+                  x.c.cat||"Boletos", "", "", brlCel(x.valor/div)];
+        });
+        blocos.push({titulo:"Contas de " + p.nome + " — " + compLabel(S.mesContas), sub:"",
+          linhas, total: linhas.reduce((s,_,i)=>{
+            const x = cs[i], div = ((x.c.pessoas||[]).filter(id=>pessoa(id)).length)||1;
+            return s + x.valor/div; }, 0),
+          rotuloTotal: p.id === S.euId ? "TOTAL A PAGAR" : "TOTAL A RECEBER"});
+      }
+    }
+  });
+  return blocos;
+}
+const ordenarPorData = L => [...L].sort((a,b)=>{ const x=chaveData(a), y=chaveData(b);
+  return x<y?-1:(x>y?1:0); });
+
+function gerarPlanilha(t, sep){
+  const s = sep || ";";
+  const cel = x => { const v = String(x == null ? "" : x).replace(/[\r\n]+/g," ");
+    if (s === "\t") return v.replace(/\t/g," ");          // colar no Sheets: sem aspas
+    return (v.includes(s) || v.includes('"')) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  const out = [];
+  const blocos = blocosPlanilha(t);
+  if (!blocos.length) return "Nada para exportar com essas opções.";
+  blocos.forEach((b, i) => {
+    if (i) out.push("", "");
+    out.push([b.titulo].map(cel).join(s));
+    if (b.sub) out.push([b.sub].map(cel).join(s));
+    out.push("");
+    out.push(CAB_PLANILHA.map(cel).join(s));
+    b.linhas.forEach(l => out.push(l.map(cel).join(s)));
+    out.push(["","","","","",b.rotuloTotal, brlCel(b.total)].map(cel).join(s));
+  });
+  out.push("", "Notas:");
+  out.push(cel("· Coluna Parcela = parcela atual / total de parcelas."));
+  out.push(cel("· Valores entre parênteses são estornos."));
+  out.push(cel("· ÷N na descrição significa compra dividida — o valor já é a parte da pessoa."));
+  out.push(cel("· Última data de atualização: " + brDia(hojeISO())));
+  return out.join("\n");
+}
 function gerarCSV(t){
   return "\uFEFF" + CAB.join(";") + "\n" +
     todasLinhas(t).map(o=>campos(o).map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
@@ -2535,6 +2712,7 @@ document.addEventListener("click", ev => {
     case "vertudofora": UI.verTudoFora = !UI.verTudoFora; return render();
     case "fonteOrc": S.fonteOrc = v; salvar(); window.scrollTo(0,0); return render();
     case "orbase": UI.tmp.f.base = v; return render();
+    case "xformato": UI.tmp.formato = v; return render();
     case "orfonte": return;
     case "orsalvar": {
       const t = UI.tmp, f = t.f, fonte = t.fonte || "todos";
@@ -2651,6 +2829,10 @@ document.addEventListener("click", ev => {
       if (nome) { alvo.g = nome; alvo.r = alvo.r || nome; }
       if (!isNaN(v2)) alvo.v = v2;
       alvo.cat = t.f.cat;
+      alvo.desc = (t.f.desc || "").trim();
+      // a mesma compra parcelada carrega a descrição nas parcelas seguintes
+      if (alvo.serie) S.faturas.forEach(f => f.lanc.forEach(l => {
+        if (l.serie === alvo.serie && l.id !== alvo.id) l.desc = alvo.desc; }));
       salvar(); UI.sheet=null; UI.tmp=null; return render();
     }
     case "elapagar": {
@@ -2890,6 +3072,7 @@ document.addEventListener("click", ev => {
         if (prev){ prev.auto = false; prev.v = val; if (x.d) prev.d = x.d; n++; return; }
         const id = uid("l");
         const novo = {id, d:x.d||"", r:x.g, g:x.g, v:val, p:parc,
+                      desc:(x.desc||"").trim(),
                       cat:S.regrasCat[x.g] || categorizar(x.g)};
         f.lanc.push(novo);
         if (S.regras[x.g]) S.aloc[id] = S.regras[x.g].slice();
@@ -2903,20 +3086,20 @@ document.addEventListener("click", ev => {
         (ign ? "\n" + ign + " ignorados por já estarem previstos." : ""));
     }
 
-    case "xcsv": { const t=UI.tmp; if(!valida(t))return; baixar(nomeArquivo(t,"csv"), gerarCSV(t), "text/csv;charset=utf-8"); UI.sheet=null; return render(); }
+    case "xcsv": { const t=UI.tmp; if(!valida(t))return; baixar(nomeArquivo(t,"csv"), saidaCSV(t), "text/csv;charset=utf-8"); UI.sheet=null; return render(); }
     case "xsheets": { const t=UI.tmp; if(!valida(t))return;
-      return copiar(gerarTSV(t), "Copiado. Abra o Google Sheets, toque numa célula e cole — vai separar em colunas sozinho."); }
+      return copiar(saidaTSV(t), "Copiado. Abra o Google Sheets, toque numa célula e cole — vai separar em colunas sozinho."); }
     case "xtexto": { const t=UI.tmp; if(!valida(t))return; return copiar(gerarTexto(t), "Resumo copiado."); }
     case "xshare": {
       const t = UI.tmp; if (!valida(t)) return;
       const nome = nomeArquivo(t,"csv");
-      const file = new File([gerarCSV(t)], nome, {type:"text/csv"});
+      const file = new File([saidaCSV(t)], nome, {type:"text/csv"});
       if (navigator.canShare && navigator.canShare({files:[file]})){
         navigator.share({files:[file], title:nome})
           .then(()=>{ UI.sheet=null; UI.tmp=null; render(); })
           .catch(()=>{});
       } else {
-        baixar(nome, gerarCSV(t), "text/csv;charset=utf-8");
+        baixar(nome, saidaCSV(t), "text/csv;charset=utf-8");
         alert("Este navegador não abre o compartilhamento. Baixei o arquivo — envie para o Drive pela pasta Downloads.");
       }
       return;
