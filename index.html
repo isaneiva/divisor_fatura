@@ -708,15 +708,18 @@ const CSS_REL = `
 .rel-carth b{font-size:14.5px}
 .rel-carth b em{font-style:normal;font-weight:400;color:#6B6F7A}
 .rel-carth span{font-size:12.5px;color:#6B6F7A;font-family:"JetBrains Mono",ui-monospace,monospace}
-.rel-l{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F1F2F5}
-.rel-l .pin{flex:0 0 26px;width:26px;height:26px;border-radius:8px}
+.rel-l{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #F1F2F5}
+.rel-l .pin{flex:0 0 26px;width:26px;height:26px;border-radius:8px;margin-top:1px}
 .rel-l .pin svg{width:14px;height:14px}
-.rel-dt{flex:0 0 40px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#6B6F7A}
+.rel-dt{flex:0 0 40px;padding-top:3px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#6B6F7A}
 .rel-es{flex:1;min-width:0}
-.rel-es b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rel-es i{display:block;font-style:normal;font-size:11.5px;color:#6B6F7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rel-pc{flex:0 0 auto;font-size:11px;color:#5A5E68;border:1px solid #DFE1E7;border-radius:99px;padding:2px 7px}
-.rel-vl{flex:0 0 auto;min-width:82px;text-align:right;
+/* num documento que a outra pessoa vai ler, cortar texto não serve:
+   nome e descrição quebram em quantas linhas precisarem. */
+.rel-es b{display:block;font-size:14px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.rel-es i{display:block;font-style:normal;font-size:11.5px;color:#6B6F7A;
+  line-height:1.35;margin-top:1px;overflow-wrap:anywhere}
+.rel-pc{flex:0 0 auto;margin-top:2px;font-size:11px;color:#5A5E68;border:1px solid #DFE1E7;border-radius:99px;padding:2px 7px}
+.rel-vl{flex:0 0 auto;min-width:92px;padding-top:1px;text-align:right;
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13.5px}
 .rel-st{display:flex;justify-content:flex-end;gap:10px;padding-top:8px;font-size:12.5px;color:#6B6F7A}
 .rel-pe{margin-top:26px;padding-top:12px;border-top:1px solid #E4E6EB;font-size:11px;color:#8A8E99}
@@ -1390,7 +1393,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.6";
+const VERSAO = "4.7";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
