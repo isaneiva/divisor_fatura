@@ -679,6 +679,173 @@ function blocoMarca(bruto){
   </div>`;
 }
 
+/* ============================================================
+   v4.6 — relatório para enviar a outra pessoa
+   Sem biblioteca de PDF: monta uma tela própria e usa a
+   impressão do navegador ("Salvar como PDF"). Assim os ícones
+   das marcas saem vetoriais e o arquivo não engorda.
+   ============================================================ */
+const CSS_REL = `
+#rel{position:fixed;inset:0;z-index:900;overflow:auto;background:#fff;color:#14161B;
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif}
+#rel *{box-sizing:border-box}
+.rel-bar{position:sticky;top:0;display:flex;gap:8px;padding:10px 14px;background:#fff;
+  border-bottom:1px solid #E4E6EB;z-index:3}
+.rel-bar button{flex:1;height:40px;border:1px solid #D8DAE2;border-radius:10px;background:#fff;
+  font-family:inherit;font-size:14px;font-weight:600;color:#14161B;cursor:pointer}
+.rel-bar button.pri{background:#14161B;color:#fff;border-color:#14161B}
+.rel-pg{max-width:760px;margin:0 auto;padding:22px 18px 60px}
+.rel-cap{border-bottom:2px solid #14161B;padding-bottom:14px}
+.rel-mes{margin:0;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#6B6F7A}
+.rel-cap h1{margin:5px 0 3px;font-size:26px;letter-spacing:-.03em;font-weight:800}
+.rel-cap .qt{margin:0;font-size:13px;color:#6B6F7A}
+.rel-tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:15px}
+.rel-tot span{font-size:13px;color:#6B6F7A}
+.rel-tot b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:25px;letter-spacing:-.02em}
+.rel-cart{margin-top:22px}
+.rel-carth{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding-bottom:7px;border-bottom:1px solid #E4E6EB}
+.rel-carth b{font-size:14.5px}
+.rel-carth b em{font-style:normal;font-weight:400;color:#6B6F7A}
+.rel-carth span{font-size:12.5px;color:#6B6F7A;font-family:"JetBrains Mono",ui-monospace,monospace}
+.rel-l{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F1F2F5}
+.rel-l .pin{flex:0 0 26px;width:26px;height:26px;border-radius:8px}
+.rel-l .pin svg{width:14px;height:14px}
+.rel-dt{flex:0 0 40px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#6B6F7A}
+.rel-es{flex:1;min-width:0}
+.rel-es b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel-es i{display:block;font-style:normal;font-size:11.5px;color:#6B6F7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel-pc{flex:0 0 auto;font-size:11px;color:#5A5E68;border:1px solid #DFE1E7;border-radius:99px;padding:2px 7px}
+.rel-vl{flex:0 0 auto;min-width:82px;text-align:right;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13.5px}
+.rel-st{display:flex;justify-content:flex-end;gap:10px;padding-top:8px;font-size:12.5px;color:#6B6F7A}
+.rel-pe{margin-top:26px;padding-top:12px;border-top:1px solid #E4E6EB;font-size:11px;color:#8A8E99}
+.rel-vazio{padding:40px 0;text-align:center;color:#6B6F7A;font-size:14px}
+/* o .pin base vive na folha principal do app. O relatório repete aqui
+   para que o .html baixado seja autossuficiente, sem color-mix (que nem
+   todo motor de impressão entende). */
+#rel .pin{display:inline-flex;align-items:center;justify-content:center;line-height:1;
+  border-radius:8px;font-size:11px;font-weight:700;flex:0 0 auto;
+  border:1px solid rgba(0,0,0,.10);overflow:visible}
+#rel .pin svg{fill:currentColor;display:block}
+#rel .pin[data-mc]{background:var(--mc);color:var(--mg)}
+#rel .pin[data-mono]{background:#EFF0F4;color:var(--mn)}
+@page{size:A4;margin:12mm 11mm}
+@media print{
+  body > *:not(#rel){display:none!important}
+  #rel{position:static;overflow:visible}
+  .rel-bar{display:none!important}
+  .rel-pg{max-width:none;padding:0}
+  .rel-l,.rel-carth{break-inside:avoid}
+  .rel-cap{break-after:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}`;
+
+/* "DD/MM" sem ano ordena errado como texto. Resolve o ano pela competência
+   da fatura: mês maior que o da competência veio do ano anterior. */
+function chaveDataRel(l, f){
+  const s = String(l.d || "");
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m = s.match(/^(\d{2})\/(\d{2})/);
+  if (m && f && f.comp){
+    const [ay, am] = f.comp.split("-").map(Number);
+    const ano = Number(m[2]) > am ? ay - 1 : ay;
+    return ano + "-" + m[2] + "-" + m[1];
+  }
+  return s;
+}
+
+function dadosRelatorio(pid, escopo){
+  const fs = escopo === "todas" ? S.faturas : faturasAtivas();
+  const blocos = []; let total = 0, n = 0;
+  fs.forEach(f => {
+    const itens = [];
+    (f.lanc || []).forEach(l => {
+      const a = alocDe(l.id).filter(id => pessoa(id));
+      if (!a.includes(pid)) return;
+      itens.push({l, v: l.v / a.length, div: a.length, k: chaveDataRel(l, f)});
+    });
+    if (!itens.length) return;
+    itens.sort((x,y) => x.k < y.k ? -1 : x.k > y.k ? 1 : 0);
+    const sub = itens.reduce((s,x) => s + x.v, 0);
+    total += sub; n += itens.length;
+    blocos.push({f, c: cartaoDe(f), itens, sub});
+  });
+  return {blocos, total, n};
+}
+
+function linhaRel(x){
+  const l = x.l, mv = marcaVis(l.g);
+  const parc = (l.p && l.p !== "estorno") ? l.p : "";
+  const desc = [l.desc, x.div > 1 ? "dividido por " + x.div : ""].filter(Boolean).join(" · ");
+  return '<div class="rel-l">' + avatarMarca(mv, "")
+    + '<span class="rel-dt">' + esc(dia(l.d)) + '</span>'
+    + '<span class="rel-es"><b>' + esc(mv.rotulo || l.r || l.g) + '</b>'
+    + (desc ? '<i>' + esc(desc) + '</i>' : '') + '</span>'
+    + (parc ? '<span class="rel-pc">' + esc(parc) + '</span>' : '')
+    + '<span class="rel-vl">' + brl(x.v) + '</span></div>';
+}
+
+function corpoRelatorio(pid, escopo){
+  const p = pessoa(pid), d = dadosRelatorio(pid, escopo);
+  const mes = escopo === "todas" ? "Todas as faturas" : (S.rotuloAtivo || "Fatura");
+  if (!d.n) return '<header class="rel-cap"><p class="rel-mes">' + esc(mes) + '</p><h1>'
+    + esc(p ? p.nome : "") + '</h1></header><p class="rel-vazio">Nada alocado para essa pessoa.</p>';
+  const cab = '<header class="rel-cap">'
+    + '<p class="rel-mes">' + esc(mes) + '</p>'
+    + '<h1>' + esc(p ? p.nome : "") + '</h1>'
+    + '<p class="qt">' + d.n + (d.n === 1 ? " compra" : " compras")
+    + (d.blocos.length > 1 ? " · " + d.blocos.length + " cartões" : "") + '</p>'
+    + '<div class="rel-tot"><span>Total a pagar</span><b>' + brl(d.total) + '</b></div></header>';
+  const corpo = d.blocos.map(b => {
+    const pg = b.c && b.c.pagador ? pessoa(b.c.pagador) : null;
+    return '<section class="rel-cart"><div class="rel-carth">'
+      + '<b>' + esc(b.c ? b.c.nome : "Cartão")
+      + (pg ? ' <em>· pago por ' + esc(pg.nome) + '</em>' : '') + '</b>'
+      + '<span>' + brl(b.sub) + '</span></div>'
+      + b.itens.map(linhaRel).join("") + '</section>';
+  }).join("");
+  const hoje = new Date();
+  return cab + corpo + '<p class="rel-pe">Divisor de Fatura · gerado em '
+    + fmtData(hoje) + "/" + hoje.getFullYear()
+    + ' · valores já divididos entre quem participou de cada compra.</p>';
+}
+
+function nomeRel(){
+  const p = pessoa(UI.rel && UI.rel.pid);
+  const m = (UI.rel && UI.rel.escopo === "todas") ? "todas" : (S.rotuloAtivo || "fatura");
+  return semAcento("fatura " + (p ? p.nome : "") + " " + m)
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function abrirRelatorio(){
+  fecharRelatorio(true);
+  const el = document.createElement("div");
+  el.id = "rel";
+  el.innerHTML = '<div class="rel-bar">'
+    + '<button class="pri" data-act="relprint">Salvar em PDF</button>'
+    + '<button data-act="relbaixar">Baixar .html</button>'
+    + '<button data-act="relfechar">Fechar</button></div>'
+    + '<div class="rel-pg">' + corpoRelatorio(UI.rel.pid, UI.rel.escopo) + '</div>';
+  document.body.appendChild(el);
+  document.body.style.overflow = "hidden";
+}
+function fecharRelatorio(so){
+  const e = document.getElementById("rel");
+  if (e) e.remove();
+  if (!so){ UI.rel = null; document.body.style.overflow = ""; }
+}
+function htmlRelatorio(){
+  const pg = document.querySelector("#rel .rel-pg");
+  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + esc(nomeRel()) + '</title><style>' + CSS_REL
+    + '#rel{position:static;overflow:visible}</style></head>'
+    + '<body style="margin:0;background:#fff"><div id="rel"><div class="rel-pg">'
+    + (pg ? pg.innerHTML : "") + '</div></div></body></html>';
+}
+
+
 const REGRAS_CAT = [
   [/caesb|\bceb\b|neoenergia|flexpag|neobsb|picpay credi|boleto|iptu|ipva|condominio/i, "Boletos"],
   [/\bsky\b|netflix|spotify|disney|prime canais|amazon music|globoplay|\bhbo\b|paramount|deezer|youtube premium|telecine/i, "Streamings"],
@@ -1223,7 +1390,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.5";
+const VERSAO = "4.6";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -2108,7 +2275,8 @@ const sheets = {};
 
 sheets.exportar = () => {
   const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual",
-                                 contas:true, formato:"planilha"});
+                                 contas:true, formato:"planilha",
+                                 relp:(S.pessoas[0]||{}).id});
   return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
     <h3>Exportar gastos</h3>
     <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Cada linha traz o valor já dividido e a categoria, pronto para somar.</p>
@@ -2130,6 +2298,12 @@ sheets.exportar = () => {
     <p style="font-size:12.5px;color:var(--mute);margin:8px 2px 0">${t.formato!=="tabela"
       ? "Um bloco por pessoa e por cartão: data, estabelecimento, descrição, categoria, parcela, quem paga e valor, com TOTAL no fim."
       : "Uma linha por pessoa por lançamento, com valor total e valor já dividido — bom para somar e filtrar."}</p>
+    <label class="f">Relatório para enviar (PDF)</label>
+    <select data-act="xrelp">
+      ${S.pessoas.map(p=>`<option value="${p.id}"${t.relp===p.id?" selected":""}>${esc(p.nome)}</option>`).join("")}
+    </select>
+    <button class="btn pri" data-act="xrel">Abrir relatório</button>
+    <p style="font-size:12.5px;color:var(--mute);margin:8px 2px 16px">Só o que essa pessoa deve, com o ícone da marca, data, estabelecimento, descrição, parcela e valor. Abre em tela cheia; o botão Salvar em PDF usa a impressão do navegador.</p>
     <label class="f">Como enviar</label>
     <button class="btn pri" data-act="xshare">Compartilhar (Drive, WhatsApp…)</button>
     <button class="btn" data-act="xsheets">Copiar para colar no Sheets</button>
@@ -3408,6 +3582,16 @@ document.addEventListener("click", ev => {
         (ign ? "\n" + ign + " ignorados por já estarem previstos." : ""));
     }
 
+    case "xrel": {
+      const t = UI.tmp || {};
+      const rp = t.relp || (S.pessoas[0] && S.pessoas[0].id);
+      if (!rp) return alert("Cadastre uma pessoa antes de gerar o relatório.");
+      UI.rel = {pid: rp, escopo: t.escopo || "atual"};
+      UI.sheet = null; UI.tmp = null; render(); abrirRelatorio(); return;
+    }
+    case "relprint": window.print(); return;
+    case "relfechar": fecharRelatorio(); return render();
+    case "relbaixar": baixar(nomeRel() + ".html", htmlRelatorio(), "text/html;charset=utf-8"); return;
     case "xcsv": { const t=UI.tmp; if(!valida(t))return; baixar(nomeArquivo(t,"csv"), saidaCSV(t), "text/csv;charset=utf-8"); UI.sheet=null; return render(); }
     case "xsheets": { const t=UI.tmp; if(!valida(t))return;
       return copiar(saidaTSV(t), "Copiado. Abra o Google Sheets, toque numa célula e cole — vai separar em colunas sozinho."); }
@@ -3519,6 +3703,7 @@ document.addEventListener("change", ev => {
     case "xpend": UI.tmp.pend = el.checked; return;
     case "xcontas": UI.tmp.contas = el.checked; return;
     case "xescopo": UI.tmp.escopo = el.value; return;
+    case "xrelp": UI.tmp.relp = el.value; return;
     case "nfcartao": UI.tmp.cartao = el.value; return;
     case "orfonte": UI.tmp.fonte = el.value; return render();
     case "cf": UI.tmp.f[el.dataset.k] = el.value; return render();
@@ -3585,7 +3770,8 @@ document.addEventListener("keydown", e => {
   const alvo = e.target;
   const digitando = alvo && /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName || "");
   if (e.key === "Escape"){
-    if (UI.sheet){ UI.sheet = null; render(); }
+    if (UI.rel){ fecharRelatorio(); render(); }
+    else if (UI.sheet){ UI.sheet = null; render(); }
     else if (digitando) alvo.blur();
     return;
   }
@@ -3616,6 +3802,7 @@ document.addEventListener("keydown", e => {
   }
 });
 
+document.head.insertAdjacentHTML("beforeend", "<style>" + CSS_REL + "</style>");
 migrar();
 aplicarTema();
 if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)")
