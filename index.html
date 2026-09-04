@@ -475,6 +475,15 @@ html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A124
 .pill .n{flex:1;font-size:15px;font-weight:600}
 .pill .a{font-size:15px;white-space:nowrap}
 .pill .ch{color:var(--faint);font-size:18px;line-height:1}
+.barra{margin-bottom:15px}
+.barra:last-child{margin-bottom:0}
+.barra .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+.barra .h span{font-size:12.5px;color:var(--mute)}
+.barra .h b{font-size:12.5px;white-space:nowrap}
+.barra .t{height:9px;border-radius:99px;background:var(--soft);overflow:hidden}
+.barra .t i{display:block;height:100%;border-radius:99px;transition:width .25s ease,background-color .25s ease}
+.barra .p{margin:6px 0 0;font-size:11.5px;color:var(--faint);line-height:1.45}
+.linha small{display:block;font-size:11px;color:var(--faint);font-weight:400;margin-top:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -1552,7 +1561,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "5.0";
+const VERSAO = "5.1";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -2484,35 +2493,78 @@ const fonteEhCartao = f => !!f && f.startsWith("cart:");
 
 /* ---------- os números do Resumo ---------- */
 function panorama(m){
-  const rec = (S.receitas||[]).reduce((s,r)=>s+(r.valor||0), 0);
-  // o que for pago no cartão já está na fatura: não soma duas vezes
-  const somaFora = arr => arr.reduce((s,x)=> s + (fonteEhCartao(x.fonteRec) ? 0 : (x.valor||0)), 0);
-  const fixas   = somaFora(S.contas || []);
-  const prev    = somaFora(S.previstas || []);
-  const nprev   = somaFora(S.naoprev || []);
-  const fs      = faturasAPagar(m);
+  const rec  = doMes(S.receitas, m).reduce((s,r)=>s+(r.valor||0), 0);
+  const recOk = doMes(S.receitas, m).filter(r=>estaMarcado(r.id,m)).reduce((s,r)=>s+(r.valor||0), 0);
+  const cheia = arr => arr.reduce((s,x)=>s+(x.valor||0), 0);
+  // o que for pago no cartão já está na fatura: entra na exibição, mas não na conta
+  const fora  = arr => arr.reduce((s,x)=> s + (fonteEhCartao(x.fonteRec) ? 0 : (x.valor||0)), 0);
+  const pagos = arr => arr.filter(x=>estaMarcado(x.id,m)).reduce((s,x)=>s+(x.valor||0), 0);
+  const P = doMes(S.previstas, m), N = doMes(S.naoprev, m);
+  const rc = resumoContas(m), fs = faturasAPagar(m);
   const faturas = fs.reduce((s,x)=>s+x.valor, 0);
-  const t       = totaisMes(m);
-  return {rec, fixas, prev, nprev, faturas, cartaoMes: t.cartoes, porPessoa: t.porPessoa,
-          total: t.total, hoje: rec - (fixas + prev + nprev + faturas)};
+  const fatPago = fs.filter(x=>x.pago).reduce((s,x)=>s+x.valor, 0);
+  const t = totaisMes(m);
+  const comprometido = rc.total + fora(P) + fora(N) + faturas;
+  const quitado = rc.pago + pagos(P) + pagos(N) + fatPago;
+  return {rec, recOk, fixas: rc.total, prev: cheia(P), nprev: cheia(N),
+          faturas, cartaoMes: t.cartoes, porPessoa: t.porPessoa, total: t.total,
+          comprometido, quitado,
+          pctComp: rec > 0 ? comprometido / rec : (comprometido ? 1.5 : 0),
+          pctQuit: comprometido > 0 ? quitado / comprometido : 0,
+          hoje: rec - comprometido};
 }
+function corSemaforo(p){ return p <= .6 ? "var(--pos)" : p <= .9 ? "var(--atn)" : "var(--neg)"; }
+function barra(rot, pct, dir, nota, cor){
+  const l = Math.max(0, Math.min(1, pct));
+  return `<div class="barra"><div class="h"><span>${rot}</span><b class="num" style="color:${cor}">${dir}</b></div>
+    <div class="t"><i style="width:${(l*100).toFixed(1)}%;background:${cor}"></i></div>
+    ${nota ? `<p class="p">${nota}</p>` : ""}</div>`;
+}
+
+function mesnav(){
+  return `<div class="top"><div class="mesnav">
+    <button data-act="mesResumo" data-v="-1" aria-label="Mês anterior">‹</button>
+    <div class="m">${esc(compLabel(S.mesContas))}</div>
+    <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
+  </div></div>`;
+}
+
+/* um item aparece no mês? "todo mês" e "sem data" sempre; data única só no mês dela */
+function noMes(x, m){
+  const q = x.quando;
+  if (!q || q.modo !== "data") return true;
+  return String(q.data || "").slice(0, 7) === m;
+}
+const doMes = (arr, m) => (arr || []).filter(x => noMes(x, m));
 
 /* ---------- Resumo ---------- */
 function viewResumo(){
-  const m = S.mesContas, p = panorama(m), ac = acertoMes(m);
-  const linha = (rot, v, forte) =>
-    `<div class="linha${forte?" forte":""}"><span>${rot}</span><b class="num">${brl(v)}</b></div>`;
-  return `<div class="top">
-    <div class="mesnav">
-      <button data-act="mesResumo" data-v="-1" aria-label="Mês anterior">‹</button>
-      <div class="m">${esc(compLabel(m))}</div>
-      <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
-    </div></div>
+  const m = S.mesContas, p = panorama(m);
+  const linha = (rot, v, forte, sub) =>
+    `<div class="linha${forte?" forte":""}"><span>${rot}${sub?`<small>${sub}</small>`:""}</span>
+      <b class="num">${brl(v)}</b></div>`;
+  const pc = corSemaforo(p.pctComp), estouro = p.comprometido - p.rec;
+  return mesnav() + `
     <div class="hero">
       <div class="lbl">${p.hoje < 0 ? "Falta para fechar o mês" : "Tenho hoje"}</div>
       <div class="big num" style="${p.hoje<0?"color:var(--rui)":""}">${brl(p.hoje)}</div>
       <div class="legend" style="margin-top:2px"><span>receitas menos tudo que devo neste mês</span></div>
     </div>
+    <div class="body" style="padding-bottom:0"><div class="card">
+      ${barra("Comprometido das receitas",
+              p.pctComp,
+              (p.pctComp*100).toFixed(0) + "%",
+              p.rec <= 0 ? "Cadastre suas receitas para acompanhar."
+              : estouro > 0 ? "Passou das receitas em " + brl(estouro) + "."
+              : "Sobram " + brl(-estouro) + " depois de tudo.",
+              pc)}
+      ${barra("Já quitado do mês",
+              p.pctQuit,
+              brl(p.quitado) + " de " + brl(p.comprometido),
+              p.comprometido ? (p.pctQuit >= 1 ? "Mês fechado." :
+                "Faltam " + brl(p.comprometido - p.quitado) + " a pagar.") : "",
+              "var(--ac)")}
+    </div></div>
     <div class="body">
       <h2>No mês</h2>
       <div class="card"><div class="linhas">
@@ -2520,7 +2572,7 @@ function viewResumo(){
         ${linha("Despesas fixas", p.fixas)}
         ${linha("Gastos previstos", p.prev)}
         ${linha("Gastos não previstos", p.nprev)}
-        ${linha("Gastos no cartão", p.cartaoMes)}
+        ${linha("Compras no cartão", p.cartaoMes, false, "informativo — já contado na linha abaixo")}
         ${linha("Faturas em aberto", p.faturas, true)}
       </div></div>
       ${p.total ? `<h2>A cobrar de cada pessoa</h2>
@@ -2533,9 +2585,6 @@ function viewResumo(){
             <span class="ch">›</span></button>`).join("")}
       </div></div>
       <button class="btn" data-act="sheet" data-v="exportar">Exportar e enviar</button>` : ""}
-      ${ac.linhas.length ? `<h2>Acerto</h2><div class="card"><div class="linhas">
-        ${ac.linhas.map(l=>`<div class="linha"><span>${esc(l.txt)}</span><b class="num">${brl(l.v)}</b></div>`).join("")}
-      </div></div>` : ""}
     </div>${navbar()}`;
 }
 
@@ -2575,10 +2624,10 @@ sheets.pessoaDet = () => {
 
 /* ---------- Receita ---------- */
 function viewReceita(){
-  const m = S.mesContas, L = S.receitas || [];
+  const m = S.mesContas, L = doMes(S.receitas, m);
   const tot = L.reduce((s,r)=>s+(r.valor||0), 0);
   const receb = L.filter(r=>estaMarcado(r.id,m)).reduce((s,r)=>s+(r.valor||0), 0);
-  return `<div class="top"><div class="hero" style="margin:0">
+  return mesnav() + `<div class="top" style="padding-top:0"><div class="hero" style="margin:0">
       <div class="lbl">É certo que vou receber</div>
       <div class="big num">${brl(tot)}</div>
       ${tot ? `<div class="legend"><span>${brl(receb)} já recebido</span></div>` : ""}
@@ -2623,7 +2672,7 @@ function viewDespesas(){
     corpo = `<div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Adicionar despesa fixa</button></div>` + corpo;
   } else {
     const k = seg === "previstas" ? "prevista" : "naoprev";
-    const L = listaDe(k);
+    const L = doMes(listaDe(k), m);
     tot = L.reduce((s,x)=>s+(x.valor||0), 0);
     rot = seg === "previstas" ? "Gastos previstos do mês" : "Gastos não previstos do mês";
     corpo = `<div class="cta"><button class="pri" data-act="finNovo" data-v="${k}">+ Adicionar gasto</button></div>`
@@ -2640,7 +2689,7 @@ function viewDespesas(){
           <div class="v num">${brl(x.valor)}</div></div>`;}).join("")}</div>`
         : `<p class="vazio">Nada aqui neste mês.</p>`);
   }
-  return `<div class="top"><div class="hero" style="margin:0">
+  return mesnav() + `<div class="top" style="padding-top:0"><div class="hero" style="margin:0">
       <div class="lbl">${rot}</div><div class="big num">${brl(tot)}</div></div></div>
     <div class="segs">${abas.map(([k,n])=>
       `<button data-act="segDesp" data-v="${k}" data-on="${seg===k?1:0}">${n}</button>`).join("")}</div>
