@@ -423,6 +423,24 @@ html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A124
   .sheetbox{animation:slidein .18s cubic-bezier(.4,0,.2,1)}
   @keyframes slidein{from{transform:translateX(28px);opacity:.4}to{transform:none;opacity:1}}
 }
+
+/* ---------- v4.8: calculadora de salário líquido ---------- */
+.salgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.salgrid .um{grid-column:1 / -1}
+.saltab{width:100%;border-collapse:collapse;margin-top:4px}
+.saltab th{font-size:11px;font-weight:600;color:var(--mute);text-align:right;
+  padding:0 0 7px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.06em}
+.saltab th:first-child{text-align:left}
+.saltab td{padding:8px 0;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
+.saltab td:first-child{text-align:left;font-size:13.5px}
+.saltab td small{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+.saltab tr.tot td{font-weight:700;border-bottom:2px solid var(--ink)}
+.saltab td.zero{color:var(--faint)}
+.salliq{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  margin-top:14px;padding:13px;background:var(--acsoft);border-radius:var(--rs)}
+.salliq span{font-size:14px;font-weight:700;min-width:0}
+.salliq b{font-size:22px;letter-spacing:-.03em;white-space:nowrap}
+.salnota{font-size:11.5px;color:var(--faint);margin:12px 2px 0;line-height:1.55}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -849,6 +867,140 @@ function htmlRelatorio(){
 }
 
 
+/* ============================================================
+   v4.8 — salário líquido
+   Tabelas oficiais de 2026. INSS: Portaria MPS/MF 13/2026.
+   IRRF: tabela progressiva vigente desde mai/2025 + redutor da
+   Lei 15.270/2025, que zera o imposto até R$ 5.000 e decresce
+   até R$ 7.350. Conferem com a folha real de referência.
+   ATUALIZAR TODO JANEIRO.
+   ============================================================ */
+const INSS_FAIXAS = [[1621.00,.075],[2902.84,.09],[4354.27,.12],[8475.55,.14]];
+const IRRF_FAIXAS = [[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],
+                     [4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IRRF_SIMPLIFICADO = 607.20;   // substitui as deduções legais quando compensa
+const IRRF_REDUTOR_MAX  = 312.89;   // teto do redutor de 2026
+const CEM = x => Math.round(x * 100) / 100;
+
+function calcInss(base){
+  let ant = 0, tot = 0; const faixas = [];
+  for (const [lim, aliq] of INSS_FAIXAS){
+    if (base <= ant) break;
+    const parte = Math.min(base, lim) - ant;
+    if (parte > 0.004){ tot += parte * aliq; faixas.push({ate:Math.min(base,lim), aliq, v:parte*aliq}); }
+    ant = lim;
+  }
+  return {valor: CEM(tot), faixas};
+}
+
+function calcIrrf(tributavel, inssV){
+  // a base usa o que for mais vantajoso: INSS real ou o desconto simplificado
+  const abate = Math.max(inssV, IRRF_SIMPLIFICADO);
+  const base = Math.max(0, tributavel - abate);
+  const f = IRRF_FAIXAS.find(x => base <= x[0]);
+  let imp = Math.max(0, base * f[1] - f[2]);
+  let red = 0;
+  if (tributavel <= 5000) red = Math.min(imp, IRRF_REDUTOR_MAX);
+  else if (tributavel <= 7350) red = Math.max(0, 978.62 - 0.133145 * tributavel);
+  return {valor: CEM(Math.max(0, imp - red)), base: CEM(base),
+          aliq: f[1], simplificado: abate === IRRF_SIMPLIFICADO, redutor: CEM(Math.min(red, imp))};
+}
+
+function calcSalario(d){
+  const horaNormal = d.bruto / 220;                 // jornada de 44h semanais
+  const he = CEM(horaNormal * 1.5 * (d.he || 0));   // 50% de acréscimo, sem outros adicionais
+  const vt = CEM((d.dias || 0) * (d.vtDia || 0));
+  const va = CEM((d.dias || 0) * (d.vaDia || 0));
+  const tributavel = CEM(d.bruto + he);             // VT e VA não entram: não são salário
+  const i = calcInss(tributavel);
+  const r = calcIrrf(tributavel, i.valor);
+  const proventos = CEM(d.bruto + he + vt + va);
+  const descontos = CEM(i.valor + r.valor + (d.vtDesc || 0) + (d.outros || 0));
+  return {horaNormal:CEM(horaNormal), he, vt, va, tributavel, inss:i, irrf:r,
+          proventos, descontos, liquido: CEM(proventos - descontos),
+          vtTeto: CEM(d.bruto * 0.06)};
+}
+
+function tabelaSalario(d, c){
+  const li = (nome, sub, pro, des, zero) =>
+    `<tr><td>${nome}${sub?`<small>${sub}</small>`:""}</td>
+      <td class="num${pro?"":" zero"}">${pro?brl(pro):"–"}</td>
+      <td class="num${des?"":" zero"}">${des?brl(des):"–"}</td></tr>`;
+  const detInss = c.inss.faixas.length
+    ? c.inss.faixas.map(f => (f.aliq*100).toFixed(1).replace(".0","").replace(".",",")+"% até "+brl(f.ate)).join(" · ")
+    : "";
+  const alerta = (d.vtDesc > c.vt && c.vt > 0)
+    ? `<p class="salnota">O desconto do VT está maior que o próprio VT (${brl(c.vt)}). Pela Lei 7.418/85 você paga o menor entre 6% do salário e o custo real do vale.</p>` : "";
+  return `<table class="saltab">
+    <thead><tr><th>Eventos</th><th>Proventos</th><th>Descontos</th></tr></thead>
+    <tbody>
+      ${li("Salário bruto", "", d.bruto, 0)}
+      ${c.he ? li("Horas extras", (d.he||0).toLocaleString("pt-BR")+"h a 50% · hora normal "+brl(c.horaNormal), c.he, 0) : ""}
+      ${c.vt ? li("Vale-transporte", (d.dias||0)+" dias × "+brl(d.vtDia), c.vt, 0) : ""}
+      ${c.va ? li("Vale-alimentação", (d.dias||0)+" dias × "+brl(d.vaDia), c.va, 0) : ""}
+      ${li("INSS", detInss, 0, c.inss.valor)}
+      ${li("IRRF", c.irrf.valor ? "base "+brl(c.irrf.base) : (c.irrf.redutor ? "zerado pelo redutor de 2026" : "isento na faixa"), 0, c.irrf.valor)}
+      ${d.vtDesc ? li("Desconto do VT", "6% sobre o salário bruto", 0, d.vtDesc) : ""}
+      ${d.outros ? li("Outros descontos", "", 0, d.outros) : ""}
+      <tr class="tot"><td>Totais</td><td class="num">${brl(c.proventos)}</td><td class="num">${brl(c.descontos)}</td></tr>
+    </tbody></table>
+    <div class="salliq"><span>Salário líquido</span><b class="num">${brl(c.liquido)}</b></div>
+    ${alerta}
+    <p class="salnota">INSS pela tabela de 2026 (teto ${brl(8475.55)}). IRRF pela tabela progressiva com desconto simplificado de ${brl(IRRF_SIMPLIFICADO)} e o redutor da Lei 15.270/2025. VT e VA não entram na base do INSS nem do IRRF. Hora extra calculada sobre 220h mensais, sem reflexo de DSR.</p>`;
+}
+
+function lerSalario(){
+  const g = id => { const e = document.getElementById(id); return e ? num(e.value) : NaN; };
+  const ok = v => (isFinite(v) ? v : 0);
+  return {bruto:ok(g("sal_bruto")), dias:Math.max(0,Math.round(ok(g("sal_dias")))),
+          vtDia:ok(g("sal_vtdia")), vaDia:ok(g("sal_vadia")), he:ok(g("sal_he")),
+          vtDesc:ok(g("sal_vtdesc")), outros:ok(g("sal_outros"))};
+}
+
+/* recalcula sem re-renderizar a folha: re-render perderia o cursor a cada tecla */
+function recalcSalario(alvo){
+  const d = lerSalario();
+  if (alvo && alvo.id === "sal_bruto"){          // o 6% acompanha o bruto
+    const e = document.getElementById("sal_vtdesc");
+    if (e){ d.vtDesc = CEM(d.bruto * 0.06); e.value = d.vtDesc.toFixed(2).replace(".", ","); }
+  }
+  const res = document.getElementById("sal_res");
+  if (res) res.innerHTML = tabelaSalario(d, calcSalario(d));
+  S.salario = d; salvar();
+}
+
+sheets.salario = () => {
+  const d = S.salario;
+  const v = x => (x ? String(x).replace(".", ",") : "");
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Salário líquido</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Os valores recalculam enquanto você digita e ficam salvos para o mês seguinte.</p>
+    <div id="salform" class="salgrid">
+      <div class="um"><label class="f">Salário bruto</label>
+        <input id="sal_bruto" inputmode="decimal" value="${esc(v(d.bruto))}"></div>
+      <div><label class="f">Dias trabalhados</label>
+        <input id="sal_dias" inputmode="numeric" value="${esc(v(d.dias))}"></div>
+      <div><label class="f">Horas extras (50%)</label>
+        <input id="sal_he" inputmode="decimal" value="${esc(v(d.he))}"></div>
+      <div><label class="f">VT por dia</label>
+        <input id="sal_vtdia" inputmode="decimal" value="${esc(v(d.vtDia))}"></div>
+      <div><label class="f">VA por dia</label>
+        <input id="sal_vadia" inputmode="decimal" value="${esc(v(d.vaDia))}"></div>
+      <div><label class="f">Desconto do VT</label>
+        <input id="sal_vtdesc" inputmode="decimal" value="${esc(v(d.vtDesc))}"></div>
+      <div><label class="f">Outros descontos</label>
+        <input id="sal_outros" inputmode="decimal" value="${esc(v(d.outros))}"></div>
+    </div>
+    <div id="sal_res" style="margin-top:18px">${tabelaSalario(d, calcSalario(d))}</div>
+  </div></div>`;
+};
+
+document.addEventListener("input", ev => {
+  const t = ev.target;
+  if (t && t.closest && t.closest("#salform")) recalcSalario(t);
+});
+
+
 const REGRAS_CAT = [
   [/caesb|\bceb\b|neoenergia|flexpag|neobsb|picpay credi|boleto|iptu|ipva|condominio/i, "Boletos"],
   [/\bsky\b|netflix|spotify|disney|prime canais|amazon music|globoplay|\bhbo\b|paramount|deezer|youtube premium|telecine/i, "Streamings"],
@@ -924,6 +1076,7 @@ function migrar(){
   S.regrasCat = S.regrasCat || {};
   S.regras = S.regras || {};
   S.marcas = S.marcas || {};
+  S.salario = S.salario || {bruto:1790.26, dias:0, vtDia:0, vaDia:0, he:0, vtDesc:107.42, outros:0};
   S.aloc = S.aloc || {};
   if (!S.cats || !S.cats.length) S.cats = DEFAULT_CATS.slice();
   if (!S.rotuloAtivo || !S.cartaoAtivo){
@@ -1393,7 +1546,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.7";
+const VERSAO = "4.8";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -1879,7 +2032,7 @@ function viewContas(){
       ])}
     </div>
     <div class="body" style="padding-top:2px">
-      <div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Nova conta</button></div>
+      <div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Nova conta</button><button data-act="sheet" data-v="salario">Salário líquido</button></div>
       ${rp.faturas.length ? `<div class="sec"><h2>Faturas de cartão</h2></div>
       <div class="row">${rp.faturas.map(x => linhaFatura(x)).join("")}</div>` : ""}
       ${grupos.length ? grupos.map(([k, nome, itens]) => `
