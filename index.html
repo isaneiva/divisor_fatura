@@ -445,6 +445,36 @@ html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A124
 .salliq span{font-size:14px;font-weight:700;min-width:0}
 .salliq b{font-size:22px;letter-spacing:-.03em;white-space:nowrap}
 .salnota{font-size:11.5px;color:var(--faint);margin:12px 2px 0;line-height:1.55}
+
+/* ---------- v5: orçamento pessoal ---------- */
+.segs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:12px;margin:0 var(--pad) 14px}
+.segs button{flex:1;height:36px;border:0;border-radius:9px;background:none;font-size:13.5px;
+  font-weight:600;color:var(--mute);white-space:nowrap}
+.segs button[data-on="1"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.10)}
+.fin{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.fin:last-child{border-bottom:0}
+.fin .mk{flex:0 0 26px;width:26px;height:26px;border-radius:8px;font-size:13px}
+.fin .c{flex:1;min-width:0}
+.fin .c b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+.fin .c i{display:block;font-style:normal;font-size:12px;color:var(--mute);margin-top:2px}
+.fin .c u{display:block;text-decoration:none;font-size:11.5px;color:var(--faint);margin-top:3px}
+.fin .v{flex:0 0 auto;text-align:right;font-size:14.5px;white-space:nowrap;padding-top:1px}
+.fin.ok .c b,.fin.ok .v{text-decoration:line-through;opacity:.5}
+.atraso{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;
+  color:var(--rui);background:var(--ruisoft);border-radius:99px;padding:1px 7px;vertical-align:1px}
+.linhas{margin:0 var(--pad)}
+.linha{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:11px 0;border-bottom:1px solid var(--line)}
+.linha:last-child{border-bottom:0}
+.linha span{font-size:14.5px;color:var(--mute)}
+.linha b{font-size:15px;white-space:nowrap}
+.linha.forte span{color:var(--ink);font-weight:600}
+.pill{display:flex;align-items:center;gap:10px;width:100%;padding:12px 0;
+  border:0;border-bottom:1px solid var(--line);background:none;text-align:left}
+.pill:last-child{border-bottom:0}
+.pill .n{flex:1;font-size:15px;font-weight:600}
+.pill .a{font-size:15px;white-space:nowrap}
+.pill .ch{color:var(--faint);font-size:18px;line-height:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -1048,6 +1078,10 @@ function migrar(){
   S.regrasCat = S.regrasCat || {};
   S.regras = S.regras || {};
   S.marcas = S.marcas || {};
+  S.receitas  = S.receitas  || [];
+  S.previstas = S.previstas || [];
+  S.naoprev   = S.naoprev   || [];
+  S.marcados  = S.marcados  || {};   // "<id>|<AAAA-MM>" -> recebido/pago
   S.salario = S.salario || {bruto:1790.26, dias:0, vtDia:0, vaDia:0, he:0, vtDesc:107.42, outros:0};
   S.aloc = S.aloc || {};
   if (!S.cats || !S.cats.length) S.cats = DEFAULT_CATS.slice();
@@ -1518,7 +1552,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.8.2";
+const VERSAO = "5.0";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -1539,7 +1573,8 @@ function aplicarTema(){
 function render(){
   aplicarTema();
   const y = window.scrollY;
-  const PAGINAS = {inicio:viewInicio, lista:viewLista, contas:viewContas, orcamento:viewOrcamento, config:viewConfig};
+  const PAGINAS = {inicio:viewResumo, receita:viewReceita, despesas:viewDespesas, lista:viewLista,
+                   contas:viewContas, orcamento:viewOrcamento, config:viewConfig};
   document.getElementById("app").innerHTML = (PAGINAS[UI.view] || viewInicio)();
   document.getElementById("modal").innerHTML = UI.sheet ? sheets[UI.sheet]() : "";
   document.body.style.overflow = UI.sheet ? "hidden" : "";
@@ -1824,10 +1859,12 @@ const ICONES = {
   lista:  '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>',
   contas: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-2.6-1.6L13.8 21l-2.6-1.6L8.6 21 6 19.4V4.5a1 1 0 0 1 1-1Z"/><path d="M9.2 11.6l1.8 1.8 3.8-4"/></svg>',
   orcamento: '<svg viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 0-8.5 8.5"/><path d="M12 12V3.5"/><path d="M12 12l6 6"/></svg>',
+  receita: '<svg viewBox="0 0 24 24"><path d="M12 20V4"/><path d="M6.5 9.5 12 4l5.5 5.5"/><path d="M4 20h16"/></svg>',
+  despesas: '<svg viewBox="0 0 24 24"><path d="M4 6.5h16v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/><path d="M8 6.5V5a4 4 0 0 1 8 0v1.5"/><path d="M9 13h6"/></svg>',
   config: '<svg viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h2M11 16h8"/><circle cx="16" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>'
 };
 function navbar(){
-  const abas = [["inicio","Resumo"],["lista","Gastos"],["contas","Contas"],["orcamento","Metas"],["config","Ajustes"]];
+  const abas = [["inicio","Resumo"],["receita","Receita"],["despesas","Despesas"],["lista","Cartões"],["config","Ajustes"]];
   return `<div class="nav">${abas.map(([k,n])=>
     `<button class="navb" data-act="nav" data-v="${k}" data-on="${UI.view===k?1:0}">${ICONES[k]}<span>${n}</span></button>`
   ).join("")}</div>`;
@@ -2401,6 +2438,253 @@ function viewConfig(){
 /* ================= folhas ================= */
 const sheets = {};
 
+/* ============================================================
+   v5.0 — orçamento pessoal
+   Receitas, despesas fixas, gastos previstos e não previstos.
+   O módulo de cartões continua intacto por baixo: "Fixas" usa
+   o mesmo S.contas de antes, então nada é redigitado.
+   ============================================================ */
+const LISTAS = {
+  receita:  {chave:"receitas",  titulo:"Receita",      rot:"Fonte da receita", verbo:"receber"},
+  prevista: {chave:"previstas", titulo:"Gasto previsto",     rot:"Fonte do gasto", verbo:"pagar"},
+  naoprev:  {chave:"naoprev",   titulo:"Gasto não previsto", rot:"Fonte do gasto", verbo:"pagar"}
+};
+const listaDe = k => S[LISTAS[k].chave] || (S[LISTAS[k].chave] = []);
+const marcaChave = (id, m) => id + "|" + m;
+const estaMarcado = (id, m) => !!S.marcados[marcaChave(id, m)];
+
+/* quando: {modo:"dia"|"data"|"sem", dia:1-31, data:"AAAA-MM-DD"} */
+function quandoTexto(q){
+  if (!q || q.modo === "sem") return "sem data definida";
+  if (q.modo === "dia") return "dia " + q.dia + " de todo mês";
+  return q.data ? dia(q.data) + "/" + q.data.slice(0,4) : "sem data definida";
+}
+function quandoNoMes(q, m){
+  if (!q) return null;
+  if (q.modo === "dia"){
+    const [a, mes] = m.split("-").map(Number);
+    return m + "-" + String(Math.min(q.dia || 1, diasNoMes(a, mes))).padStart(2, "0");
+  }
+  if (q.modo === "data" && q.data) return q.data;
+  return null;
+}
+function diasAtraso(q, m, marcado){
+  if (marcado) return 0;
+  const d = quandoNoMes(q, m); if (!d) return 0;
+  const n = Math.round((new Date(hojeISO()+"T00:00") - new Date(d+"T00:00")) / 86400000);
+  return n > 0 ? n : 0;
+}
+function nomeFonte(f){
+  if (!f) return "";
+  if (f.startsWith("rec:")){ const r = (S.receitas||[]).find(x=>x.id===f.slice(4)); return r ? r.fonte : ""; }
+  if (f.startsWith("cart:")){ const c = S.cartoes.find(x=>x.id===f.slice(5)); return c ? c.nome : ""; }
+  return "";
+}
+const fonteEhCartao = f => !!f && f.startsWith("cart:");
+
+/* ---------- os números do Resumo ---------- */
+function panorama(m){
+  const rec = (S.receitas||[]).reduce((s,r)=>s+(r.valor||0), 0);
+  // o que for pago no cartão já está na fatura: não soma duas vezes
+  const somaFora = arr => arr.reduce((s,x)=> s + (fonteEhCartao(x.fonteRec) ? 0 : (x.valor||0)), 0);
+  const fixas   = somaFora(S.contas || []);
+  const prev    = somaFora(S.previstas || []);
+  const nprev   = somaFora(S.naoprev || []);
+  const fs      = faturasAPagar(m);
+  const faturas = fs.reduce((s,x)=>s+x.valor, 0);
+  const t       = totaisMes(m);
+  return {rec, fixas, prev, nprev, faturas, cartaoMes: t.cartoes, porPessoa: t.porPessoa,
+          total: t.total, hoje: rec - (fixas + prev + nprev + faturas)};
+}
+
+/* ---------- Resumo ---------- */
+function viewResumo(){
+  const m = S.mesContas, p = panorama(m), ac = acertoMes(m);
+  const linha = (rot, v, forte) =>
+    `<div class="linha${forte?" forte":""}"><span>${rot}</span><b class="num">${brl(v)}</b></div>`;
+  return `<div class="top">
+    <div class="mesnav">
+      <button data-act="mesResumo" data-v="-1" aria-label="Mês anterior">‹</button>
+      <div class="m">${esc(compLabel(m))}</div>
+      <button data-act="mesResumo" data-v="1" aria-label="Próximo mês">›</button>
+    </div></div>
+    <div class="hero">
+      <div class="lbl">${p.hoje < 0 ? "Falta para fechar o mês" : "Tenho hoje"}</div>
+      <div class="big num" style="${p.hoje<0?"color:var(--rui)":""}">${brl(p.hoje)}</div>
+      <div class="legend" style="margin-top:2px"><span>receitas menos tudo que devo neste mês</span></div>
+    </div>
+    <div class="body">
+      <h2>No mês</h2>
+      <div class="card"><div class="linhas">
+        ${linha("Receita", p.rec, true)}
+        ${linha("Despesas fixas", p.fixas)}
+        ${linha("Gastos previstos", p.prev)}
+        ${linha("Gastos não previstos", p.nprev)}
+        ${linha("Gastos no cartão", p.cartaoMes)}
+        ${linha("Faturas em aberto", p.faturas, true)}
+      </div></div>
+      ${p.total ? `<h2>A cobrar de cada pessoa</h2>
+      <div class="card"><div class="linhas">
+        ${S.pessoas.filter(x=>x.id!==S.euId).map(x=>`
+          <button class="pill" data-act="sheet" data-v="pessoaDet" data-p="${x.id}">
+            <i class="dot" style="background:${CORES[x.cor%8]};width:14px;height:14px;border-radius:4px"></i>
+            <span class="n">${esc(x.nome)}</span>
+            <span class="a num">${brl(p.porPessoa[x.id]||0)}</span>
+            <span class="ch">›</span></button>`).join("")}
+      </div></div>
+      <button class="btn" data-act="sheet" data-v="exportar">Exportar e enviar</button>` : ""}
+      ${ac.linhas.length ? `<h2>Acerto</h2><div class="card"><div class="linhas">
+        ${ac.linhas.map(l=>`<div class="linha"><span>${esc(l.txt)}</span><b class="num">${brl(l.v)}</b></div>`).join("")}
+      </div></div>` : ""}
+    </div>${navbar()}`;
+}
+
+/* detalhe de uma pessoa: categorias e depois a lista */
+sheets.pessoaDet = () => {
+  const pid = (UI.tmp||{}).p, per = pessoa(pid), m = S.mesContas;
+  if (!per) return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1"><h3>Pessoa não encontrada</h3></div></div>`;
+  const itens = itensDoMes(m).filter(it => it.aloc.includes(pid))
+    .map(it => ({...it, parte: it.v / it.aloc.length}));
+  const porCat = {};
+  itens.forEach(it => porCat[it.cat] = (porCat[it.cat]||0) + it.parte);
+  const cats = Object.entries(porCat).sort((a,b)=>b[1]-a[1]);
+  const tot = itens.reduce((s,it)=>s+it.parte, 0);
+  const mx = cats.length ? cats[0][1] : 1;
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${esc(per.nome)}</h3>
+    <div class="hero" style="margin:0 0 16px"><div class="lbl">Deve neste mês</div>
+      <div class="big num">${brl(tot)}</div></div>
+    <h2 style="margin-top:0">Por categoria</h2>
+    <div class="linhas" style="margin:0 0 18px">
+      ${cats.map(([c,v])=>`<div class="linha"><span>${esc(c)}
+        <span style="display:block;height:3px;width:${Math.round(v/mx*100)}%;max-width:150px;
+          background:${corCat(c)};border-radius:99px;margin-top:5px"></span></span>
+        <b class="num">${brl(v)}</b></div>`).join("") || `<p class="vazio">Nada neste mês.</p>`}
+    </div>
+    <h2 style="margin-top:0">Lançamentos</h2>
+    <div class="linhas" style="margin:0">
+      ${itens.sort((a,b)=>String(a.d)<String(b.d)?-1:1).map(it=>{
+        const mv = marcaVis(it.g);
+        return `<div class="fin">${avatarMarca(mv,"")}
+          <div class="c"><b>${esc(mv.rotulo || it.g)}</b>
+            <i>${esc(dia(it.d)||"")}${it.aloc.length>1?" · dividido por "+it.aloc.length:""} · ${esc(it.cat)}</i></div>
+          <div class="v num">${brl(it.parte)}</div></div>`;}).join("")}
+    </div>
+  </div></div>`;
+};
+
+/* ---------- Receita ---------- */
+function viewReceita(){
+  const m = S.mesContas, L = S.receitas || [];
+  const tot = L.reduce((s,r)=>s+(r.valor||0), 0);
+  const receb = L.filter(r=>estaMarcado(r.id,m)).reduce((s,r)=>s+(r.valor||0), 0);
+  return `<div class="top"><div class="hero" style="margin:0">
+      <div class="lbl">É certo que vou receber</div>
+      <div class="big num">${brl(tot)}</div>
+      ${tot ? `<div class="legend"><span>${brl(receb)} já recebido</span></div>` : ""}
+    </div></div>
+    <div class="body">
+      <div class="cta"><button class="pri" data-act="finNovo" data-v="receita">+ Adicionar receita</button></div>
+      ${L.length ? `<div class="card">${L.map(r=>{
+        const ok = estaMarcado(r.id, m);
+        return `<div class="fin${ok?" ok":""}">
+          <button class="mk" data-act="finMarca" data-i="${r.id}" aria-label="${ok?"Desmarcar":"Marcar como recebido"}">${ok?"✓":""}</button>
+          <button class="c" style="border:0;background:none;text-align:left;padding:0"
+            data-act="finEdit" data-v="receita" data-i="${r.id}">
+            <b>${esc(r.fonte)}</b><i>${esc(quandoTexto(r.quando))}</i>
+            ${r.obs?`<u>${esc(r.obs)}</u>`:""}</button>
+          <div class="v num">${brl(r.valor)}</div></div>`;}).join("")}</div>`
+      : `<p class="vazio">Nenhuma receita cadastrada.</p>`}
+      <h2>Salário líquido</h2>
+      <button class="btn" data-act="sheet" data-v="salario">Abrir calculadora</button>
+    </div>${navbar()}`;
+}
+
+/* ---------- Despesas: fixas | previstas | não previstas ---------- */
+function viewDespesas(){
+  const m = S.mesContas;
+  const seg = UI.segDesp || "fixas";
+  const abas = [["fixas","Fixas"],["previstas","Previstas"],["naoprev","Não previstas"]];
+  let corpo = "", tot = 0, rot = "";
+
+  if (seg === "fixas"){
+    const rc = resumoContas(m);
+    tot = rc.total; rot = "É certo que devo pagar";
+    corpo = rc.lista.length ? `<div class="card">${rc.lista.map(x=>{
+      const at = x.dias != null && x.dias < 0 && !x.pago ? -x.dias : 0;
+      return `<div class="fin${x.pago?" ok":""}">
+        <button class="mk" data-act="pagarConta" data-i="${x.c.id}" aria-label="${x.pago?"Desmarcar":"Marcar como paga"}">${x.pago?"✓":""}</button>
+        <button class="c" style="border:0;background:none;text-align:left;padding:0" data-act="sheet" data-v="editarConta" data-i="${x.c.id}">
+          <b>${esc(x.c.nome)}${at?`<span class="atraso">${at}d em atraso</span>`:""}</b>
+          <i>${x.venc?dia(x.venc):"sem data definida"}${x.c.fonteRec?" · paga com "+esc(nomeFonte(x.c.fonteRec)):""}</i>
+          ${x.c.obs?`<u>${esc(x.c.obs)}</u>`:""}</button>
+        <div class="v num">${brl(x.valor)}</div></div>`;}).join("")}</div>`
+      : `<p class="vazio">Nenhuma despesa fixa.</p>`;
+    corpo = `<div class="cta"><button class="pri" data-act="sheet" data-v="editarConta">+ Adicionar despesa fixa</button></div>` + corpo;
+  } else {
+    const k = seg === "previstas" ? "prevista" : "naoprev";
+    const L = listaDe(k);
+    tot = L.reduce((s,x)=>s+(x.valor||0), 0);
+    rot = seg === "previstas" ? "Gastos previstos do mês" : "Gastos não previstos do mês";
+    corpo = `<div class="cta"><button class="pri" data-act="finNovo" data-v="${k}">+ Adicionar gasto</button></div>`
+      + (L.length ? `<div class="card">${L.map(x=>{
+        const ok = estaMarcado(x.id, m), at = diasAtraso(x.quando, m, ok);
+        return `<div class="fin${ok?" ok":""}">
+          <button class="mk" data-act="finMarca" data-i="${x.id}" aria-label="${ok?"Desmarcar":"Marcar como pago"}">${ok?"✓":""}</button>
+          <button class="c" style="border:0;background:none;text-align:left;padding:0"
+            data-act="finEdit" data-v="${k}" data-i="${x.id}">
+            <b>${esc(x.fonte)}${at?`<span class="atraso">${at}d em atraso</span>`:""}</b>
+            <i>${esc(quandoTexto(x.quando))}${x.fonteRec?" · paga com "+esc(nomeFonte(x.fonteRec)):""}</i>
+            ${x.dataCompra?`<u>comprar em ${esc(dia(x.dataCompra))}</u>`:""}
+            ${x.obs?`<u>${esc(x.obs)}</u>`:""}</button>
+          <div class="v num">${brl(x.valor)}</div></div>`;}).join("")}</div>`
+        : `<p class="vazio">Nada aqui neste mês.</p>`);
+  }
+  return `<div class="top"><div class="hero" style="margin:0">
+      <div class="lbl">${rot}</div><div class="big num">${brl(tot)}</div></div></div>
+    <div class="segs">${abas.map(([k,n])=>
+      `<button data-act="segDesp" data-v="${k}" data-on="${seg===k?1:0}">${n}</button>`).join("")}</div>
+    <div class="body" style="padding-top:0">${corpo}
+      <h2>Metas por categoria</h2>
+      <button class="btn" data-act="nav" data-v="orcamento">Abrir metas</button>
+    </div>${navbar()}`;
+}
+
+/* ---------- folha única de receita / gasto ---------- */
+sheets.finItem = () => {
+  const t = UI.tmp, cfg = LISTAS[t.lista], nova = !t.id;
+  const q = t.quando || {modo:"sem", dia:1, data:""};
+  const fontes = [["", "Não definida"]]
+    .concat((S.receitas||[]).filter(r=>r.id!==t.id).map(r=>["rec:"+r.id, r.fonte]))
+    .concat(S.cartoes.map(c=>["cart:"+c.id, c.nome + " (cartão)"]));
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>${nova?"Nova":"Editar"} ${cfg.titulo.toLowerCase()}</h3>
+    <label class="f">${cfg.rot}</label>
+    <input data-act="finF" data-foco value="${esc(t.fonte||"")}" placeholder="${t.lista==="receita"?"Salário líquido":"Compras de mercado"}">
+    <label class="f">Valor</label>
+    <input data-act="finV" inputmode="decimal" value="${t.valor?String(t.valor).replace(".",","):""}">
+    ${t.lista!=="receita"?`<label class="f">Fonte que vou usar para pagar</label>
+    <select data-act="finR">${fontes.map(([v,n])=>
+      `<option value="${esc(v)}"${(t.fonteRec||"")===v?" selected":""}>${esc(n)}</option>`).join("")}</select>`:""}
+    ${t.lista==="prevista"?`<label class="f">Data da compra (opcional)</label>
+    <input type="date" data-act="finDC" value="${esc(t.dataCompra||"")}">`:""}
+    <label class="f">Data de ${cfg.verbo==="receber"?"recebimento":"pagamento"}</label>
+    <div class="segs" style="margin:0 0 10px">
+      ${[["dia","Todo mês"],["data","Data única"],["sem","Sem data"]].map(([k,n])=>
+        `<button data-act="finQM" data-v="${k}" data-on="${q.modo===k?1:0}">${n}</button>`).join("")}
+    </div>
+    ${q.modo==="dia"?`<input data-act="finQD" inputmode="numeric" value="${q.dia||1}" placeholder="dia do mês">`:""}
+    ${q.modo==="data"?`<input type="date" data-act="finQT" value="${esc(q.data||"")}">`:""}
+    <label class="f">Observações</label>
+    <textarea data-act="finO" rows="2" placeholder="se houver algo importante">${esc(t.obs||"")}</textarea>
+    <div class="cta" style="margin-top:16px">
+      <button class="pri" data-act="finSalvar">Salvar</button>
+      ${nova?"":`<button data-act="finApagar">Apagar</button>`}
+    </div>
+  </div></div>`;
+};
+
+
 sheets.salario = () => {
   const d = S.salario;
   const v = x => (x ? String(x).replace(".", ",") : "");
@@ -2431,6 +2715,24 @@ document.addEventListener("input", ev => {
   const t = ev.target;
   if (t && t.closest && t.closest("#salform")) recalcSalario(t);
 });
+
+/* campos da folha de receita/gasto: grava no rascunho sem redesenhar */
+function campoFin(ev){
+  const el = ev.target.closest && ev.target.closest("[data-act]");
+  if (!el || !UI.tmp) return;
+  const q = () => (UI.tmp.quando = UI.tmp.quando || {modo:"sem", dia:1, data:""});
+  switch (el.dataset.act){
+    case "finF": UI.tmp.fonte = el.value; break;
+    case "finV": UI.tmp.valor = isFinite(num(el.value)) ? num(el.value) : 0; break;
+    case "finR": UI.tmp.fonteRec = el.value; break;
+    case "finDC": UI.tmp.dataCompra = el.value; break;
+    case "finO": UI.tmp.obs = el.value; break;
+    case "finQD": q().modo = "dia"; q().dia = Math.min(31, Math.max(1, parseInt(el.value,10) || 1)); break;
+    case "finQT": q().modo = "data"; q().data = el.value; break;
+  }
+}
+document.addEventListener("input", campoFin);
+document.addEventListener("change", campoFin);
 
 
 sheets.exportar = () => {
@@ -2856,6 +3158,13 @@ sheets.editarConta = () => {
       <i style="background:${corCat(f.cat)}"></i>${esc(f.cat)}</button>
     <label class="f">Quem paga</label>
     <select data-act="cf" data-k="pagador">${S.pessoas.map(p=>`<option value="${p.id}"${f.pagador===p.id?" selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+    <label class="f">Fonte que vou usar para pagar</label>
+    <select data-act="cf" data-k="fonteRec">${[["","Não definida"]]
+      .concat((S.receitas||[]).map(r=>["rec:"+r.id, r.fonte]))
+      .concat(S.cartoes.map(c=>["cart:"+c.id, c.nome+" (cartão)"]))
+      .map(([v2,n2])=>`<option value="${esc(v2)}"${(f.fonteRec||"")===v2?" selected":""}>${esc(n2)}</option>`).join("")}</select>
+    <label class="f">Observações</label>
+    <textarea data-act="cf" data-k="obs" rows="2" placeholder="se houver algo importante">${esc(f.obs||"")}</textarea>
     <label class="f">Dividida entre</label>
     <div class="chips">${S.pessoas.map(p=>{
       const on = (f.pessoas||[]).includes(p.id);
@@ -3413,7 +3722,53 @@ document.addEventListener("click", ev => {
       if (v === "novaFatura" && el.dataset.c) UI.tmp = {cartao: el.dataset.c, rotulo: ""};
       if (v === "mudarMes") UI.tmp = {fid: el.dataset.f};
       if (v === "editarConta") UI.tmp = el.dataset.i ? {id: el.dataset.i} : {};
+      if (v === "pessoaDet") UI.tmp = {p: el.dataset.p};
       return render();
+    case "segDesp": UI.segDesp = v; window.scrollTo(0,0); return render();
+    case "finNovo":
+      UI.sheet = "finItem";
+      UI.tmp = {lista:v, fonte:"", valor:0, fonteRec:"", obs:"", quando:{modo:"sem", dia:1, data:""}};
+      return render();
+    case "finEdit": {
+      const it = listaDe(v).find(x => x.id === el.dataset.i);
+      if (!it) return;
+      UI.sheet = "finItem";
+      UI.tmp = Object.assign({lista:v}, JSON.parse(JSON.stringify(it)));
+      UI.tmp.quando = UI.tmp.quando || {modo:"sem", dia:1, data:""};
+      return render();
+    }
+    case "finMarca": {
+      const k = marcaChave(el.dataset.i, S.mesContas);
+      if (S.marcados[k]) delete S.marcados[k]; else S.marcados[k] = true;
+      salvar(); return render();
+    }
+    case "finQM":
+      UI.tmp.quando = UI.tmp.quando || {};
+      UI.tmp.quando.modo = v;
+      if (v === "dia" && !UI.tmp.quando.dia) UI.tmp.quando.dia = 1;
+      return render();
+    case "finSalvar": {
+      const t = UI.tmp;
+      if (!String(t.fonte||"").trim()) return alert("Dê um nome a este item.");
+      const obj = {fonte:String(t.fonte).trim(), valor:+t.valor||0, obs:String(t.obs||"").trim(),
+                   fonteRec:t.fonteRec||"", quando:t.quando||{modo:"sem"},
+                   dataCompra:t.dataCompra||""};
+      const L = listaDe(t.lista);
+      if (t.id) Object.assign(L.find(x=>x.id===t.id), obj);
+      else L.push(Object.assign({id: uid("fn")}, obj));
+      salvar(); UI.sheet=null; UI.tmp=null;
+      UI.view = t.lista === "receita" ? "receita" : "despesas";
+      if (t.lista !== "receita") UI.segDesp = t.lista === "prevista" ? "previstas" : "naoprev";
+      return render();
+    }
+    case "finApagar": {
+      const t = UI.tmp;
+      if (!confirm("Apagar \"" + (t.fonte||"este item") + "\"?")) return;
+      const L = listaDe(t.lista), i2 = L.findIndex(x=>x.id===t.id);
+      if (i2 >= 0) L.splice(i2, 1);
+      delete S.marcados[marcaChave(t.id, S.mesContas)];
+      salvar(); UI.sheet=null; UI.tmp=null; return render();
+    }
     case "vercat": UI.sheet = "verCat"; UI.tmp = {cat: el.dataset.c, escopo: "atual"}; return render();
     case "catcriar": {
       const nome = ((UI.tmp&&UI.tmp.q)||"").trim(); if (!nome) return;
@@ -3654,10 +4009,11 @@ document.addEventListener("click", ev => {
       const v2 = num(String(f.valor).replace(/[R$\s]/g,""));
       const obj = {nome:f.nome.trim(), valor: isNaN(v2)?0:v2, dia:+f.dia||1, tipo:f.tipo,
                    data:f.data, cat:f.cat, pagador:f.pagador, pessoas:f.pessoas||[],
+                   fonteRec:f.fonteRec||"", obs:(f.obs||"").trim(),
                    desde:f.desde || S.mesContas, ate:f.ate||null};
       if (UI.tmp.id){ Object.assign(S.contas.find(x=>x.id===UI.tmp.id), obj); }
       else S.contas.push(Object.assign({id:uid("ct")}, obj));
-      salvar(); UI.sheet=null; UI.tmp=null; UI.view="contas"; return render();
+      salvar(); UI.sheet=null; UI.tmp=null; UI.view="despesas"; UI.segDesp="fixas"; return render();
     }
     case "cfapagar": {
       const id = UI.tmp.id;
