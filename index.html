@@ -969,38 +969,6 @@ function recalcSalario(alvo){
   S.salario = d; salvar();
 }
 
-sheets.salario = () => {
-  const d = S.salario;
-  const v = x => (x ? String(x).replace(".", ",") : "");
-  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
-    <h3>Salário líquido</h3>
-    <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Os valores recalculam enquanto você digita e ficam salvos para o mês seguinte.</p>
-    <div id="salform" class="salgrid">
-      <div class="um"><label class="f">Salário bruto</label>
-        <input id="sal_bruto" inputmode="decimal" value="${esc(v(d.bruto))}"></div>
-      <div><label class="f">Dias trabalhados</label>
-        <input id="sal_dias" inputmode="numeric" value="${esc(v(d.dias))}"></div>
-      <div><label class="f">Horas extras (50%)</label>
-        <input id="sal_he" inputmode="decimal" value="${esc(v(d.he))}"></div>
-      <div><label class="f">VT por dia</label>
-        <input id="sal_vtdia" inputmode="decimal" value="${esc(v(d.vtDia))}"></div>
-      <div><label class="f">VA por dia</label>
-        <input id="sal_vadia" inputmode="decimal" value="${esc(v(d.vaDia))}"></div>
-      <div><label class="f">Desconto do VT</label>
-        <input id="sal_vtdesc" inputmode="decimal" value="${esc(v(d.vtDesc))}"></div>
-      <div><label class="f">Outros descontos</label>
-        <input id="sal_outros" inputmode="decimal" value="${esc(v(d.outros))}"></div>
-    </div>
-    <div id="sal_res" style="margin-top:18px">${tabelaSalario(d, calcSalario(d))}</div>
-  </div></div>`;
-};
-
-document.addEventListener("input", ev => {
-  const t = ev.target;
-  if (t && t.closest && t.closest("#salform")) recalcSalario(t);
-});
-
-
 const REGRAS_CAT = [
   [/caesb|\bceb\b|neoenergia|flexpag|neobsb|picpay credi|boleto|iptu|ipva|condominio/i, "Boletos"],
   [/\bsky\b|netflix|spotify|disney|prime canais|amazon music|globoplay|\bhbo\b|paramount|deezer|youtube premium|telecine/i, "Streamings"],
@@ -1546,7 +1514,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.8";
+const VERSAO = "4.8.1";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
@@ -2428,6 +2396,38 @@ function viewConfig(){
 
 /* ================= folhas ================= */
 const sheets = {};
+
+sheets.salario = () => {
+  const d = S.salario;
+  const v = x => (x ? String(x).replace(".", ",") : "");
+  return `<div class="sheet" data-act="fechar"><div class="sheetbox" data-stop="1">
+    <h3>Salário líquido</h3>
+    <p style="font-size:14px;color:var(--mute);margin:0 0 16px">Os valores recalculam enquanto você digita e ficam salvos para o mês seguinte.</p>
+    <div id="salform" class="salgrid">
+      <div class="um"><label class="f">Salário bruto</label>
+        <input id="sal_bruto" inputmode="decimal" value="${esc(v(d.bruto))}"></div>
+      <div><label class="f">Dias trabalhados</label>
+        <input id="sal_dias" inputmode="numeric" value="${esc(v(d.dias))}"></div>
+      <div><label class="f">Horas extras (50%)</label>
+        <input id="sal_he" inputmode="decimal" value="${esc(v(d.he))}"></div>
+      <div><label class="f">VT por dia</label>
+        <input id="sal_vtdia" inputmode="decimal" value="${esc(v(d.vtDia))}"></div>
+      <div><label class="f">VA por dia</label>
+        <input id="sal_vadia" inputmode="decimal" value="${esc(v(d.vaDia))}"></div>
+      <div><label class="f">Desconto do VT</label>
+        <input id="sal_vtdesc" inputmode="decimal" value="${esc(v(d.vtDesc))}"></div>
+      <div><label class="f">Outros descontos</label>
+        <input id="sal_outros" inputmode="decimal" value="${esc(v(d.outros))}"></div>
+    </div>
+    <div id="sal_res" style="margin-top:18px">${tabelaSalario(d, calcSalario(d))}</div>
+  </div></div>`;
+};
+
+document.addEventListener("input", ev => {
+  const t = ev.target;
+  if (t && t.closest && t.closest("#salform")) recalcSalario(t);
+});
+
 
 sheets.exportar = () => {
   const t = UI.tmp || (UI.tmp = {sel:S.pessoas.map(p=>p.id), pend:false, escopo:"atual",
