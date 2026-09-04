@@ -427,13 +427,17 @@ html[data-tema="escuro"] .btn.pri,html[data-tema="quente"] .btn.pri{color:#1A124
 /* ---------- v4.8: calculadora de salário líquido ---------- */
 .salgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .salgrid .um{grid-column:1 / -1}
-.saltab{width:100%;border-collapse:collapse;margin-top:4px}
-.saltab th{font-size:11px;font-weight:600;color:var(--mute);text-align:right;
-  padding:0 0 7px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.06em}
-.saltab th:first-child{text-align:left}
-.saltab td{padding:8px 0;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
-.saltab td:first-child{text-align:left;font-size:13.5px}
-.saltab td small{display:block;font-size:11px;color:var(--faint);margin-top:2px}
+/* largura fixa: sem isso a coluna de eventos engole as outras duas
+   e o valor quebra em "R$" / "1.790,26" */
+.saltab{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:4px}
+.saltab th{font-size:10.5px;font-weight:600;color:var(--mute);text-align:right;
+  padding:0 0 7px 8px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.03em}
+.saltab th:first-child{width:40%;text-align:left;padding-left:0}
+.saltab th:nth-child(2),.saltab th:nth-child(3){width:30%}
+.saltab td{padding:8px 0 8px 8px;border-bottom:1px solid var(--line);text-align:right;
+  font-size:12.5px;white-space:nowrap}
+.saltab td:first-child{text-align:left;padding-left:0;font-size:13.5px;white-space:normal}
+.saltab td small{display:block;font-size:11px;color:var(--faint);margin-top:2px;white-space:normal}
 .saltab tr.tot td{font-weight:700;border-bottom:2px solid var(--ink)}
 .saltab td.zero{color:var(--faint)}
 .salliq{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
@@ -1514,7 +1518,7 @@ function mudarCategoria(grupo, cat){
 }
 
 /* ================= render ================= */
-const VERSAO = "4.8.1";
+const VERSAO = "4.8.2";
 const TEMAS = [
   ["auto",   "Automático",    "linear-gradient(135deg,#F0F1F6 50%,#262624 50%)"],
   ["claro",  "Claro",         "#F0F1F6"],
